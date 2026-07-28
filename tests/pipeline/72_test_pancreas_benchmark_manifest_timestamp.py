@@ -1,10 +1,9 @@
 """Tests for adult pancreas benchmark manifest timestamps."""
 
-import importlib.util
+import importlib
 import json
 import re
 import sys
-from pathlib import Path
 
 import pandas as pd
 
@@ -23,16 +22,9 @@ class _FakeAdata:
 
 
 def _load_benchmark_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/pancreas_benchmark.py"
-    spec = importlib.util.spec_from_file_location(
-        "applications.scrna.pancreas_benchmark", script_path
-    )
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    module_name = "applications.scrna.pancreas_benchmark"
+    sys.modules.pop(module_name, None)
+    return importlib.import_module(module_name)
 
 
 def test_pancreas_benchmark_manifest_and_summary_record_generated_timestamp(monkeypatch, tmp_path):

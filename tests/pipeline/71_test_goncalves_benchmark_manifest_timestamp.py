@@ -1,11 +1,10 @@
 """Tests for Goncalves benchmark manifest timestamps."""
 
 import builtins
-import importlib.util
+import importlib
 import json
 import re
 import sys
-from pathlib import Path
 
 import pandas as pd
 
@@ -25,15 +24,9 @@ class _FakeAdata:
 
 
 def _load_benchmark_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/goncalves_benchmark.py"
-    spec = importlib.util.spec_from_file_location(
-        "goncalves_pancreas_progenitor_benchmark", script_path
-    )
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    module_name = "applications.scrna.goncalves_benchmark"
+    sys.modules.pop(module_name, None)
+    return importlib.import_module(module_name)
 
 
 def test_goncalves_module_imports_without_anndata(monkeypatch):

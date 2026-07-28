@@ -17,7 +17,7 @@ import pandas as pd
 
 from benchmarks.cloud.aws_alpha_grid_search import sync_path_to_s3, sync_s3_to_path
 from benchmarks.cloud.aws_selected_tail_equation_study import current_git_state
-from benchmarks.diagnostics.spectral.tree_strategy_semantic_panel import (
+from benchmarks.diagnostics.spectral.stability.tree_strategy_semantic_panel import (
     DEFAULT_BLOB_RESULTS_DIR,
     DEFAULT_DIAGNOSTICS_RESULTS_DIR,
     SCHEMA_VERSION,

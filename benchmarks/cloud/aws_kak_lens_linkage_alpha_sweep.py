@@ -23,7 +23,7 @@ from benchmarks.cloud.aws_alpha_grid_search import (
     sync_s3_to_path,
 )
 from benchmarks.cloud.aws_selected_tail_equation_study import current_git_state
-from benchmarks.diagnostics.spectral.kak_lens_alpha_sweep import (
+from benchmarks.diagnostics.spectral.adaptive_cosine.kak_lens_alpha_sweep import (
     DEFAULT_LENSES,
     LensSpec,
     parse_float_list,
@@ -193,7 +193,7 @@ def _run_group(
     command = [
         sys.executable,
         "-m",
-        "benchmarks.diagnostics.spectral.kak_lens_alpha_sweep",
+        "benchmarks.diagnostics.spectral.adaptive_cosine.kak_lens_alpha_sweep",
         "--input",
         str(configured.input_path),
         "--main-assignments",

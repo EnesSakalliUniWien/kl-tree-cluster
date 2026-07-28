@@ -13,7 +13,6 @@ from tree_break_selection.tree.feature_space import FeatureSpace
 
 from ...projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     compute_spectral_decomposition,
 )
 
@@ -104,7 +103,6 @@ def compute_child_parent_spectral_context(
     feature_space: FeatureSpace | None = None,
     include_internal_barycenters: bool = False,
     internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 ) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for the edge gate."""
     start_sec = perf_counter()
@@ -116,7 +114,6 @@ def compute_child_parent_spectral_context(
         projection_basis_dimension=projection_basis_dimension,
         include_internal_barycenters=bool(include_internal_barycenters),
         internal_distribution_mode=str(internal_distribution_mode),
-        mp_row_count_mode=str(mp_row_count_mode),
     )
 
     _validate_spectral_context_outputs(
@@ -152,7 +149,6 @@ def compute_child_parent_spectral_context(
 
 __all__ = [
     "EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
-    "MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS",
     "SpectralContext",
     "compute_child_parent_spectral_context",
 ]

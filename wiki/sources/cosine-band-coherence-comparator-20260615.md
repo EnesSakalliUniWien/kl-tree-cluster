@@ -5,9 +5,9 @@ status: reviewed
 updated: 2026-06-15
 sources:
   - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
-  - benchmarks/diagnostics/spectral/cosine_band_coherence_comparator.py
-  - tests/validation/135_test_cosine_band_coherence_comparator.py
-  - benchmarks/diagnostics/spectral/adaptive_cosine_kak_benchmark_probe.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/cosine_band_coherence_comparator.py
+  - tests/validation/spectral/adaptive_cosine/135_test_cosine_band_coherence_comparator.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_benchmark_probe.py
   - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/manifest.json
   - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_rows.csv
   - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/manifest.json
@@ -69,7 +69,7 @@ coherence evidence.
 
 ## Evidence
 
-- `tests/validation/135_test_cosine_band_coherence_comparator.py` verifies the
+- `tests/validation/spectral/adaptive_cosine/135_test_cosine_band_coherence_comparator.py` verifies the
   fixed c2ef band contract and coherence summaries.
 - The implementation cites the old scripts as source evidence but runs through
   the current diagnostic framework.

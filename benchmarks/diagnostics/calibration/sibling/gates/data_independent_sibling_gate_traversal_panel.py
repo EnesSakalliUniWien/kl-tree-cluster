@@ -64,7 +64,7 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
     summarize_production_admissibility_contracts,
 )
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
     parse_names,

@@ -27,7 +27,7 @@ from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_g
 )
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.util.time import format_timestamp_utc
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
     parse_names,

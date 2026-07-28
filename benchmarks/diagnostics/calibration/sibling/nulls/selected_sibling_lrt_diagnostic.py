@@ -13,6 +13,10 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
+
+from tree_break_selection.plot.backend import configure_matplotlib_backend
+
+configure_matplotlib_backend()
 from typing import Sequence
 
 import networkx as nx

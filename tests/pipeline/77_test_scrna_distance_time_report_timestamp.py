@@ -1,21 +1,13 @@
 """Tests for scRNA distance/time model report timestamps."""
 
-import importlib.util
+import importlib
 import sys
-from pathlib import Path
 
 
 def _load_pancreas_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/pancreas_benchmark.py"
-    spec = importlib.util.spec_from_file_location(
-        "applications.scrna.pancreas_benchmark", script_path
-    )
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    module_name = "applications.scrna.pancreas_benchmark"
+    sys.modules.pop(module_name, None)
+    return importlib.import_module(module_name)
 
 
 def test_distance_time_model_report_records_generated_timestamp(tmp_path):

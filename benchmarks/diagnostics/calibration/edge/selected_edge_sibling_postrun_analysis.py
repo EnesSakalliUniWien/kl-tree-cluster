@@ -1,7 +1,7 @@
 """Post-run analysis for enriched selected-edge sibling artifacts.
 
 This diagnostic consumes ``selected_edge_geometry_siblings.csv`` files emitted
-by ``benchmarks.validation.selected_edge_type1_geometry`` and writes
+by ``benchmarks.validation.statistics.selected_edge_type1_geometry`` and writes
 distribution-shape plus selected edge+sibling equation summaries. It is
 diagnostic-only and does not install a production calibration rule.
 """

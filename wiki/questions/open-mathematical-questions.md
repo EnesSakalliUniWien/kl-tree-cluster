@@ -44,7 +44,7 @@ sources:
   - wiki/sources/recursive-method-followups-20260604.md
   - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_weight_rule_validation.py
   - raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/sibling_null_weight_rule_summary.csv
-  - benchmarks/diagnostics/spectral/sibling_projection_dimension_rule_grid.py
+  - benchmarks/diagnostics/spectral/mp/sibling_projection_dimension_rule_grid.py
   - raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/sibling_projection_dimension_rule_grid.csv
   - raw/assets/benchmark-results/mp_kmin_q14_q15_smoke_20260604/mp_kmin_contract_smoke.csv
   - wiki/sources/barycentric-method-literature-request-20260604.md
@@ -92,8 +92,8 @@ sources:
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
-  - benchmarks/validation/method_constants_manifest.py
-  - benchmarks/validation/feature_covariance_calibration.py
+  - benchmarks/validation/contracts/method_constants_manifest.py
+  - benchmarks/validation/statistics/feature_covariance_calibration.py
   - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
   - benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py
   - benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py
@@ -865,7 +865,7 @@ coupled to the Marchenko--Pastur dimension rule, the minimum spectral dimension
 floor, and the row set used to estimate the local spectral basis.
 The repository now includes a strict scaffold for this specific validation
 target in
-`benchmarks/validation/selected_pca_projected_wald_calibration.py`. That
+`benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py`. That
 scaffold simulates a fixed-membership Gaussian sibling null while selecting the
 PCA rows and MP dimension from the same local null-whitened rows used by the
 contrast. It is intentionally not evidence for hierarchy construction,
@@ -940,7 +940,7 @@ remaining mathematical question is validation and high-dimensional extension,
 not contract shape: high-cardinality categorical calibration, continuous
 finite-sample covariance behavior, and a validated low-rank or regularized
 continuous covariance model still need targeted simulation evidence.
-`benchmarks/validation/feature_covariance_calibration.py` now provides the
+`benchmarks/validation/statistics/feature_covariance_calibration.py` now provides the
 strict evidence generator for the first two targets. Its current scope is the
 local sibling-null Wald statistic in the full tangent space, so it does not
 close questions about selected PCA projections, MP dimension selection, sibling
@@ -1909,7 +1909,7 @@ is only `0.16343`.
   fixed-subspace edge-opening boundary/action fields, edge/sibling
   z-relationship fields, and tie-cell status for discrete/nonsmooth
   representatives.
-- `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
+- `benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py` defines
   the selected-PCA projected-Wald validation scaffold.
 - `wiki/analyses/selected-pca-projected-wald-validation.md` summarizes the
   first locked selected-PCA validation run and records the internal-row
@@ -1920,7 +1920,7 @@ is only `0.16343`.
   unrecoverability.
 - `wiki/analyses/manuscript-life-science-readiness.md` records the open
   biological application choice.
-- `benchmarks/validation/method_constants_manifest.py` enumerates the active
+- `benchmarks/validation/contracts/method_constants_manifest.py` enumerates the active
   method constants that still need validation artifacts.
 - `wiki/sources/alpha-grid-full-20260604.md` records the AWS full-suite alpha
   grid over `25` alpha pairs and separates benchmark evidence from Type-I

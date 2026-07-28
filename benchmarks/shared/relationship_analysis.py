@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tree_break_selection.plot.backend import configure_matplotlib_backend
+
+configure_matplotlib_backend()
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

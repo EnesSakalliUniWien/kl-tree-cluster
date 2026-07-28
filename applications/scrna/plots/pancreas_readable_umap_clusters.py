@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from shutil import copyfile
 
 import matplotlib
 
@@ -186,12 +185,8 @@ def main() -> None:
     fig.savefig(png_path, dpi=260)
     fig.savefig(pdf_path)
     plt.close(fig)
-    copyfile(png_path, output_dir / "tbs_readable_umap_clusters_ge50.png")
-    copyfile(pdf_path, output_dir / "tbs_readable_umap_clusters_ge50.pdf")
-
     summary = pd.DataFrame(summary_rows)
     summary.to_csv(output_dir / "tbs_readable_umap_clusters_all_colored_summary.csv", index=False)
-    summary.to_csv(output_dir / "tbs_readable_umap_clusters_ge50_summary.csv", index=False)
     print(f"Wrote {png_path}")
     print(f"Wrote {pdf_path}")
 

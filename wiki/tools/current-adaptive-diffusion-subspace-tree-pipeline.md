@@ -4,7 +4,7 @@ type: tool
 status: reviewed
 updated: 2026-06-18
 sources:
-  - applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py
+  - applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py
 tags:
   - pipeline
   - allgo
@@ -16,7 +16,7 @@ tags:
 
 ## Summary
 
-Use `applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py`
+Use `applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py`
 as the full current-method pipeline for GO feature matrices. It must create
 the same directory structure for every input matrix: a timestamped experiment
 root under `results/analyses/`, method-separated PDFs, connected manifests,
@@ -27,7 +27,7 @@ rankings, and one artifact-complete directory per cosine subspace.
 Run the pipeline with an explicit feature matrix:
 
 ```bash
-MPLBACKEND=Agg python applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py \
+MPLBACKEND=Agg python applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py \
   --input /path/to/feature_matrix.tsv
 ```
 
@@ -65,7 +65,7 @@ order for audit.
 
 ## Evidence
 
-- `applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py`
+- `applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py`
   derives the experiment root and artifact prefix from the input matrix name
   and writes the full connected artifact structure in one run.
 

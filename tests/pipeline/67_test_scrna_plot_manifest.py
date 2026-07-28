@@ -1,19 +1,13 @@
 """Tests for scRNA plot manifest metadata."""
 
-import importlib.util
+import importlib
 import json
 import re
 from pathlib import Path
 
 
 def _load_scrna_plot_pipeline_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/plot_pipeline.py"
-    spec = importlib.util.spec_from_file_location("run_scrna_plot_pipeline", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("applications.scrna.plot_pipeline")
 
 
 def test_plot_manifest_json_records_generated_timestamp(tmp_path):

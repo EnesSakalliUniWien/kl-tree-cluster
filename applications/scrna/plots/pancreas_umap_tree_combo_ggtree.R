@@ -402,25 +402,13 @@ combo <- wrap_plots(rows, ncol = 1) +
 
 png_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree.png")
 pdf_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree.pdf")
-all_clusters_png_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_all_clusters_ggtree.png")
-all_clusters_pdf_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_all_clusters_ggtree.pdf")
-legacy_png_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_ggtree.png")
-legacy_pdf_path <- file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_ggtree.pdf")
 
 ggsave(png_path, combo, width = 24, height = 60, dpi = 300, bg = "white", limitsize = FALSE)
 ggsave(pdf_path, combo, width = 24, height = 60, bg = "white", limitsize = FALSE)
-file.copy(png_path, all_clusters_png_path, overwrite = TRUE)
-file.copy(pdf_path, all_clusters_pdf_path, overwrite = TRUE)
-file.copy(png_path, legacy_png_path, overwrite = TRUE)
-file.copy(pdf_path, legacy_pdf_path, overwrite = TRUE)
 
 manifest <- data.frame(
   png = png_path,
   pdf = pdf_path,
-  all_clusters_png = all_clusters_png_path,
-  all_clusters_pdf = all_clusters_pdf_path,
-  legacy_png = legacy_png_path,
-  legacy_pdf = legacy_pdf_path,
   audit_csv = file.path(output_dir, "tbs_umap_tree_highlighting_audit.csv"),
   exact_clade_clusters = sum(audit_rows$exact_clade),
   non_exact_clade_clusters = sum(!audit_rows$exact_clade),
@@ -433,7 +421,7 @@ manifest <- data.frame(
 )
 write.csv(
   manifest,
-  file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_ggtree_outputs.csv"),
+  file.path(output_dir, "tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree_outputs.csv"),
   row.names = FALSE
 )
 print(manifest)

@@ -81,13 +81,13 @@ The `benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_00
 
 ```bash
 # Clustering
-python applications/endotypes/run_feature_matrix_with_umap.py \
+python applications/endotypes/pipelines/run_feature_matrix_with_umap.py \
     --input data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
     --output-dir benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005 \
     --edge-alpha 0.05 --sibling-alpha 0.05
 
 # Biological analysis
-python applications/endotypes/analyze_hc_clusters.py \
+python applications/endotypes/analysis/analyze_hc_clusters.py \
     --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
     --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv \
     -o benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/bio_analysis

@@ -216,62 +216,11 @@ class TestSpectralKFloor:
             atol=1e-10,
         )
 
-    def test_legacy_internal_barycenter_spectral_path_adds_threshold_rows(self):
-        """Legacy diagnostic mode appends descendant internal distributions."""
-        import networkx as nx
-        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
-            MP_ROW_COUNT_LEGACY_STACKED_ROWS,
-            compute_spectral_decomposition,
-        )
-
-        tree = nx.DiGraph()
-        tree.add_edges_from(
-            [
-                ("root", "I0"),
-                ("root", "L2"),
-                ("I0", "L0"),
-                ("I0", "L1"),
-            ]
-        )
-        for leaf in ("L0", "L1", "L2"):
-            tree.nodes[leaf]["label"] = leaf
-            tree.nodes[leaf]["is_leaf"] = True
-        tree.nodes["I0"]["is_leaf"] = False
-        tree.nodes["root"]["is_leaf"] = False
-        tree.nodes["I0"]["distribution"] = np.array([0.5, 0.0])
-        tree.nodes["root"]["distribution"] = np.array([1.0 / 3.0, 1.0 / 3.0])
-
-        leaf_data = pd.DataFrame(
-            [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]],
-            index=["L0", "L1", "L2"],
-            columns=["F0", "F1"],
-        )
-
-        current = compute_spectral_decomposition(
-            tree,
-            leaf_data,
-            minimum_projection_dimension=1,
-        )
-        legacy = compute_spectral_decomposition(
-            tree,
-            leaf_data,
-            minimum_projection_dimension=1,
-            include_internal_barycenters=True,
-            mp_row_count_mode=MP_ROW_COUNT_LEGACY_STACKED_ROWS,
-        )
-
-        assert current.effective_independent_rows_by_node["root"] == 3
-        assert current.mp_threshold_rows_by_node["root"] == 3
-        assert legacy.effective_independent_rows_by_node["root"] == 3
-        assert legacy.mp_threshold_rows_by_node["root"] == 4
-        assert legacy.mp_threshold_rows_by_node["I0"] == 2
-
     def test_branch_length_internal_state_changes_internal_spectral_rows(self):
         """Branch-length state rows are a separate diagnostic from empirical barycenters."""
         import networkx as nx
         from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
             INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
-            MP_ROW_COUNT_LEGACY_STACKED_ROWS,
             compute_spectral_decomposition,
         )
 
@@ -317,14 +266,6 @@ class TestSpectralKFloor:
         assert branch_length.effective_independent_rows_by_node["root"] == 3
         assert empirical.mp_threshold_rows_by_node["root"] == 3
         assert branch_length.mp_threshold_rows_by_node["root"] == 3
-        legacy_inflated = compute_spectral_decomposition(
-            tree,
-            leaf_data,
-            minimum_projection_dimension=1,
-            include_internal_barycenters=True,
-            mp_row_count_mode=MP_ROW_COUNT_LEGACY_STACKED_ROWS,
-        )
-        assert legacy_inflated.mp_threshold_rows_by_node["root"] == 4
         assert not np.allclose(
             empirical.full_component_eigenvalues_by_node["root"],
             branch_length.full_component_eigenvalues_by_node["root"],

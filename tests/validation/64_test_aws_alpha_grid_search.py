@@ -15,7 +15,7 @@ from benchmarks.cloud.aws_alpha_grid_search import (
     parse_case_names,
     resolve_shard_index,
 )
-from benchmarks.validation.alpha_grid_search import alpha_pair_id
+from benchmarks.validation.sweeps.alpha_grid_search import alpha_pair_id
 
 
 def _write_alpha_shard(

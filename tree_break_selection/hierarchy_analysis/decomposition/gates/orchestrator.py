@@ -38,7 +38,6 @@ from ...statistics.child_parent_divergence.child_parent_divergence_annotation.sp
 )
 from ...statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 )
 from ...statistics.sibling_divergence.fixed_subspace_annotation import (
     FIXED_SUBSPACE_SIBLING_GATE_METHODS,
@@ -158,7 +157,6 @@ def build_gate_annotation_config_metadata(
     adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -204,7 +202,6 @@ def build_gate_annotation_config_metadata(
         ),
         spectral_include_internal_barycenters=bool(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         continuous_covariance_policy=validate_continuous_covariance_policy(
             continuous_covariance_policy
         ),
@@ -383,7 +380,6 @@ def run_gate_annotation_pipeline(
     adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -557,7 +553,6 @@ def run_gate_annotation_pipeline(
         spectral_projection_basis_dimension=adaptive_projection_basis_dimension,
         spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         continuous_covariance_policy=continuous_covariance_policy,
         continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
@@ -726,7 +721,6 @@ def run_gate_annotation_pipeline(
             adaptive_projection_dimension_energy_fraction=(adaptive_projection_fraction),
             spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
             spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-            spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
             continuous_covariance_policy=continuous_covariance_policy,
             continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
             edge_branch_length_variance_policy=edge_branch_length_variance_policy,

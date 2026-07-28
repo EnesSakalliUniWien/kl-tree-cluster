@@ -26,7 +26,7 @@ from benchmarks.diagnostics.calibration.traversal.retained_pass_through_topology
     build_traversal_network_context_rows,
 )
 from benchmarks.shared.util.time import format_timestamp_utc
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
 )

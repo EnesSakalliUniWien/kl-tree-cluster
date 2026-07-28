@@ -125,7 +125,6 @@ def test_current_support_profiles_are_exposed_without_rescued_legacy() -> None:
     assert "spectral_include_internal_barycenters" not in current
     assert branch_length["spectral_include_internal_barycenters"] is True
     assert branch_length["spectral_internal_distribution_mode"] == "branch_length_state"
-    assert branch_length["spectral_mp_row_count_mode"] == "leaf_effective_rows"
     assert branch_length["enforce_internal_support_thresholds"] is True
     assert bandwidth["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"

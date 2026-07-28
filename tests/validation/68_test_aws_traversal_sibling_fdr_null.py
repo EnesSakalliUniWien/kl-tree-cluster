@@ -13,7 +13,7 @@ from benchmarks.cloud.aws_traversal_sibling_fdr_null import (
     merge_shards,
     resolve_shard_index,
 )
-from benchmarks.validation.traversal_sibling_fdr_null import FdrLayer
+from benchmarks.validation.statistics.traversal_sibling_fdr_null import FdrLayer
 
 
 def _write_shard(

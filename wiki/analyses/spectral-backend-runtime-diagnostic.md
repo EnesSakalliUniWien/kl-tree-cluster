@@ -4,7 +4,7 @@ type: analysis
 status: reviewed
 updated: 2026-06-01
 sources:
-  - benchmarks/diagnostics/spectral/profile_spectral_backends.py
+  - benchmarks/diagnostics/spectral/mp/profile_spectral_backends.py
   - benchmarks/results/diagnostics/spectral_backend_profile_20260526.csv
   - benchmarks/results/diagnostics/spectral_backend_profile_broader_20260526.csv
   - benchmarks/results/diagnostics/spectral_backend_profile_after_diagonal_vectorization_20260526.csv

@@ -1,9 +1,8 @@
 """Regression tests for MNIST Plotly 3D hover labels."""
 
-import importlib.util
+import importlib
 import json
 import sys
-from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -54,13 +53,7 @@ def test_3d_plotly_writer_shows_number_on_hover_and_visible_text(
 
 
 def _load_mnist_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/mnist/plot_interactive.py"
-    spec = importlib.util.spec_from_file_location("plot_mnist_tbs_analysis_plotly", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("applications.mnist.plot_interactive")
 
 
 def test_2d_report_hover_shows_number_before_sample():

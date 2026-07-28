@@ -1,6 +1,6 @@
 """Tests for Goncalves progenitor analysis plot timestamps."""
 
-import importlib.util
+import importlib
 from pathlib import Path
 
 import pandas as pd
@@ -8,16 +8,7 @@ from matplotlib.figure import Figure
 
 
 def _load_analysis_module():
-    script_path = (
-        Path(__file__).resolve().parents[2]
-        / "applications/scrna/analysis/analyze_goncalves_progenitors.py"
-    )
-    spec = importlib.util.spec_from_file_location("analyze_goncalves_tbs_progenitors", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("applications.scrna.analysis.analyze_goncalves_progenitors")
 
 
 def test_goncalves_meeting_plot_records_timestamp_before_save(monkeypatch, tmp_path):

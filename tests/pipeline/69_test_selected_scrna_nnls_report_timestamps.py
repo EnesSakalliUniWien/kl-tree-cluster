@@ -1,22 +1,13 @@
 """Tests for generated timestamps in selected scRNA NNLS report figures."""
 
-import importlib.util
-from pathlib import Path
+import importlib
 
 import pandas as pd
 from matplotlib.figure import Figure
 
 
 def _load_report_module():
-    script_path = (
-        Path(__file__).resolve().parents[2] / "applications/scrna/plots/selected_nnls_report.py"
-    )
-    spec = importlib.util.spec_from_file_location("plot_selected_scrna_nnls_report", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("applications.scrna.plots.selected_nnls_report")
 
 
 def test_standalone_png_pages_have_timestamp_before_save(monkeypatch, tmp_path):

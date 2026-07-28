@@ -6,7 +6,7 @@ updated: 2026-07-28
 sources:
   - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_postrun_analysis.py
   - tests/validation/calibration/edge/95_test_selected_edge_sibling_postrun_analysis.py
-  - benchmarks/validation/selected_edge_type1_geometry.py
+  - benchmarks/validation/statistics/selected_edge_type1_geometry.py
   - benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py
   - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_null_equation.py
   - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py

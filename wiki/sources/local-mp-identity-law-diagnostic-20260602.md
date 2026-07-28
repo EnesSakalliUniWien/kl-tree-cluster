@@ -4,8 +4,8 @@ type: source
 status: reviewed
 updated: 2026-06-03
 sources:
-  - benchmarks/diagnostics/spectral/local_mp_identity_law_diagnostic.py
-  - tests/validation/54_test_local_mp_identity_law_diagnostic.py
+  - benchmarks/diagnostics/spectral/mp/local_mp_identity_law_diagnostic.py
+  - tests/validation/spectral/mp/54_test_local_mp_identity_law_diagnostic.py
   - raw/assets/benchmark-results/local_mp_identity_law_20260602_representative/manifest.json
   - raw/assets/benchmark-results/local_mp_identity_law_20260602_representative/case_summary.csv
   - raw/assets/benchmark-results/local_mp_identity_law_20260602_representative/node_spectrum.csv
@@ -119,10 +119,10 @@ local population-spectrum model after null whitening.
 
 ## Evidence
 
-- `benchmarks/diagnostics/spectral/local_mp_identity_law_diagnostic.py`
+- `benchmarks/diagnostics/spectral/mp/local_mp_identity_law_diagnostic.py`
   implements the screen and writes `case_summary.csv`, `node_spectrum.csv`, and
   `manifest.json`.
-- `tests/validation/54_test_local_mp_identity_law_diagnostic.py` validates the
+- `tests/validation/spectral/mp/54_test_local_mp_identity_law_diagnostic.py` validates the
   closed-form MP support, numerical positive-spectrum quantiles, centered
   self-whitening scale, strong-spike detection, and insufficient-row status.
 - `raw/assets/benchmark-results/local_mp_identity_law_20260602_representative/manifest.json`

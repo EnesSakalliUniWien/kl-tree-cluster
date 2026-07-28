@@ -40,7 +40,7 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
     summarize_production_admissibility_contracts,
 )
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _build_tree_from_data,
     _case_contract,
     _select_cases,
@@ -726,11 +726,6 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--selected-topology-penalties",
         default=",".join(str(value) for value in DEFAULT_SELECTED_TOPOLOGY_PENALTIES),
     )
-    parser.add_argument(
-        "--selected-topology-penalty",
-        type=float,
-        help="Deprecated single-penalty alias for --selected-topology-penalties.",
-    )
     parser.add_argument("--replicates", type=int, default=50)
     parser.add_argument("--base-seed", type=int, default=20260613)
     parser.add_argument("--min-rows", type=int, default=100)
@@ -740,10 +735,8 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = _parse_args(argv)
-    selected_topology_penalties = (
-        (float(args.selected_topology_penalty),)
-        if args.selected_topology_penalty is not None
-        else tuple(float(value) for value in parse_names(args.selected_topology_penalties))
+    selected_topology_penalties = tuple(
+        float(value) for value in parse_names(args.selected_topology_penalties)
     )
     outputs = run_data_independent_sibling_gate_panel(
         DataIndependentSiblingGateConfig(

@@ -1,7 +1,7 @@
 {
   "manifest_schema_version": "method_constant_validation_manifest/v1",
   "created_utc": "2026-06-13T23:13:32Z",
-  "generated_by": "benchmarks.validation.method_constants_manifest",
+  "generated_by": "benchmarks.validation.contracts.method_constants_manifest",
   "source_paths": [
     {
       "path": "benchmarks/results/run_20260523_113745Z_isolated_cases",

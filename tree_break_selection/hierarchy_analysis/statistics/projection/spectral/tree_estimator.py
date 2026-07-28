@@ -41,12 +41,7 @@ from tree_break_selection.tree.feature_space import (
     validate_feature_matrix,
 )
 
-from .marchenko_pastur import (
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
-    MP_ROW_COUNT_LEGACY_STACKED_ROWS,
-    _get_n_jobs,
-    _process_node,
-)
+from .marchenko_pastur import _get_n_jobs, _process_node
 from .node_spectral_result import NodeSpectralResult
 from .node_spectral_task import NodeSpectralTask
 from .spectral_decomposition_result import SpectralDecompositionResult
@@ -64,11 +59,6 @@ INTERNAL_DISTRIBUTION_MODES = (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
 )
-MP_ROW_COUNT_MODES = (
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
-    MP_ROW_COUNT_LEGACY_STACKED_ROWS,
-)
-
 _EDGE_LENGTH_KEYS = ("branch_length", "length", "weight")
 _BRANCH_LENGTH_STATE_RELATIVE_FLOOR = 1e-6
 
@@ -79,15 +69,6 @@ def _validate_internal_distribution_mode(internal_distribution_mode: str) -> str
         raise ValueError(
             "Unknown internal spectral distribution mode "
             f"{internal_distribution_mode!r}; allowed={INTERNAL_DISTRIBUTION_MODES!r}."
-        )
-    return mode
-
-
-def _validate_mp_row_count_mode(mp_row_count_mode: str) -> str:
-    mode = str(mp_row_count_mode)
-    if mode not in MP_ROW_COUNT_MODES:
-        raise ValueError(
-            f"Unknown MP row-count mode {mp_row_count_mode!r}; allowed={MP_ROW_COUNT_MODES!r}."
         )
     return mode
 
@@ -204,12 +185,10 @@ def _build_spectral_tasks(
     feature_space: FeatureSpace,
     include_internal_barycenters: bool = False,
     internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
     feature_count = int(feature_space.raw_dimension)
     internal_distribution_mode = _validate_internal_distribution_mode(internal_distribution_mode)
-    mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     descendant_internal_nodes_by_node = (
         precompute_descendant_internal_nodes(tree) if include_internal_barycenters else {}
     )
@@ -251,7 +230,6 @@ def _build_spectral_tasks(
                 node_id,
                 feature_space,
             ),
-            mp_row_count_mode=mp_row_count_mode,
         )
         for node_id in internal_node_ids
     ]
@@ -323,7 +301,6 @@ def compute_spectral_decomposition(
     feature_space: FeatureSpace | None = None,
     include_internal_barycenters: bool = False,
     internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     projection_basis_dimension: int | None = None,
 ) -> SpectralDecompositionResult:
     """Compute MP dimension metadata, PCA projections, and eigenvalues.
@@ -347,8 +324,8 @@ def compute_spectral_decomposition(
         Opt-in tree-filtered spectral path. When True, descendant internal node
         distributions are appended to the node-local spectral matrix before
         eigendecomposition. These rows are deterministic barycenters of the
-        leaves, so the default MP row-count mode keeps the descendant leaf count
-        as the threshold row count.
+        leaves. The MP threshold remains calibrated to the descendant leaf
+        count because the appended rows are deterministic rather than independent.
     internal_distribution_mode
         Which opt-in internal rows to append. ``"empirical_barycenter"`` uses
         the stored leaf-count subtree barycenters. ``"branch_length_state"``
@@ -356,12 +333,6 @@ def compute_spectral_decomposition(
         child precision proportional to descendant support divided by edge
         length. The mode has no effect unless ``include_internal_barycenters``
         is true.
-    mp_row_count_mode
-        ``"leaf_effective_rows"`` keeps MP thresholding calibrated to descendant
-        leaves even when internal rows are appended. ``"legacy_stacked_rows"``
-        reproduces the commit-era stacked-row threshold as an explicit
-        diagnostic comparator.
-
     Returns
     -------
     SpectralDecompositionResult
@@ -372,7 +343,6 @@ def compute_spectral_decomposition(
     """
     spectral_start_sec = perf_counter()
     internal_distribution_mode = _validate_internal_distribution_mode(internal_distribution_mode)
-    mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
     feature_count = active_feature_space.contrast_dimension
     leaf_feature_matrix = validate_feature_matrix(
@@ -413,7 +383,6 @@ def compute_spectral_decomposition(
         feature_space=active_feature_space,
         include_internal_barycenters=bool(include_internal_barycenters),
         internal_distribution_mode=internal_distribution_mode,
-        mp_row_count_mode=mp_row_count_mode,
     )
 
     # Data is sliced lazily inside each worker (not pre-materialised here).
@@ -498,8 +467,5 @@ __all__ = [
     "INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE",
     "INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER",
     "INTERNAL_DISTRIBUTION_MODES",
-    "MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS",
-    "MP_ROW_COUNT_LEGACY_STACKED_ROWS",
-    "MP_ROW_COUNT_MODES",
     "compute_spectral_decomposition",
 ]

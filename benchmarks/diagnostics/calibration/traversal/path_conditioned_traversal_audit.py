@@ -39,7 +39,7 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once
 from benchmarks.shared.util.time import format_timestamp_utc
-from benchmarks.validation.selected_edge_type1_geometry import parse_names
+from benchmarks.validation.statistics.selected_edge_type1_geometry import parse_names
 
 SCHEMA_VERSION = "path_conditioned_traversal_audit/v1"
 STUDY_ROLE = "diagnostic_path_conditioned_traversal_audit_not_policy"

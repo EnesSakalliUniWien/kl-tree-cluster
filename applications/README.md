@@ -6,8 +6,8 @@ benchmark orchestration contracts in `benchmarks/shared/`.
 
 | Application | Primary entrypoint | Purpose |
 | --- | --- | --- |
-| Endotypes / GO annotation | `python applications/endotypes/run_go_annotation_feature_matrix_pipeline.py --help` | Feature-matrix quality, adaptive cosine subspaces, endotype/reference comparison, annotation, and report packaging |
-| Endotype KAK geometry | `python applications/endotypes/kak_signal_adaptive_umap_tree_page.py --help` | KAK/cosine geometry and tree pages from matrix-probe outputs |
+| Endotypes / GO annotation | `python applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py --help` | Feature-matrix quality, adaptive cosine subspaces, endotype/reference comparison, annotation, and report packaging |
+| Endotype KAK geometry | `python applications/endotypes/plots/kak_signal_adaptive_umap_tree_page.py --help` | KAK/cosine geometry and tree pages from matrix-probe outputs |
 | Pancreas scRNA | `python applications/scrna/pancreas_benchmark.py --help` | Adult pancreas benchmark and TBS application |
 | Goncalves fetal pancreas | `python applications/scrna/goncalves_benchmark.py --help` | Fetal pancreas/endocrine lineage application |
 | scRNA space separation | `python applications/scrna/analyze_space_decomposition.py --help` | Invariant/equivariant diagnostic through the main method interface |

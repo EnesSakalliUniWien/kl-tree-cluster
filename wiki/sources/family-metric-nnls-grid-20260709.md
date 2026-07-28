@@ -4,8 +4,8 @@ type: source
 status: reviewed
 updated: 2026-07-09
 sources:
-  - benchmarks/validation/family_metric_nnls_grid.py
-  - tests/validation/197_test_family_metric_nnls_grid.py
+  - benchmarks/validation/sweeps/family_metric_nnls_grid.py
+  - tests/validation/sweeps/197_test_family_metric_nnls_grid.py
   - reports/family_metric_nnls_grid_20260709/family_metric_nnls_report.md
   - reports/family_metric_nnls_grid_20260709/family_metric_nnls_cells.csv
   - reports/family_metric_nnls_grid_20260709/family_metric_nnls_selection.csv
@@ -118,7 +118,7 @@ repair.
 - `reports/family_metric_nnls_grid_20260709/family_metric_nnls_manifest.json`
   records completeness, label integrity, label-free selector invariance, and
   explicit `no_promotion` status.
-- `tests/validation/197_test_family_metric_nnls_grid.py` verifies exact
+- `tests/validation/sweeps/197_test_family_metric_nnls_grid.py` verifies exact
   Hamming, cosine, and categorical block-distance identities, finite
   continuous/SBM embeddings, and artifact generation.
 

@@ -12,7 +12,7 @@ from time import perf_counter
 import pandas as pd
 
 from benchmarks.shared.env import resolve_aws_batch_shard_index as resolve_shard_index
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     DEFAULT_EDGE_ALPHA_GRID,
     DEFAULT_MODES,
     SelectedEdgeGeometryConfig,

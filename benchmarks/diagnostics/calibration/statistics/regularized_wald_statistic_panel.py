@@ -27,7 +27,7 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _annotate_edges,
     _case_contract,
     _prepare_tree_for_mode,

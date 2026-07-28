@@ -28,8 +28,6 @@ logger = logging.getLogger(__name__)
 # Default thread count for joblib.Parallel eigendecomposition.
 # Set TBS_N_JOBS env var to override (e.g. "1" to disable parallelism).
 _DEFAULT_MIN_NODES_FOR_PARALLEL = 8
-MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS = "leaf_effective_rows"
-MP_ROW_COUNT_LEGACY_STACKED_ROWS = "legacy_stacked_rows"
 
 
 def _empty_stage_timings() -> dict[str, float]:
@@ -82,7 +80,6 @@ def _process_node(
     """
     descendant_leaf_row_indices = spectral_task.row_indices
     internal_distribution_vectors = spectral_task.internal_distributions
-    mp_row_count_mode = str(spectral_task.mp_row_count_mode)
     stage_timings = _empty_stage_timings()
 
     if len(descendant_leaf_row_indices) < 2:
@@ -148,15 +145,7 @@ def _process_node(
             stage_timings=stage_timings,
         )
 
-    if mp_row_count_mode == MP_ROW_COUNT_LEGACY_STACKED_ROWS:
-        mp_threshold_rows = int(descendant_feature_matrix.shape[0])
-    elif mp_row_count_mode == MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS:
-        mp_threshold_rows = int(len(descendant_leaf_row_indices))
-    else:
-        raise ValueError(
-            f"Unknown MP row-count mode {mp_row_count_mode!r}; "
-            f"allowed={(MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS, MP_ROW_COUNT_LEGACY_STACKED_ROWS)!r}."
-        )
+    mp_threshold_rows = int(len(descendant_leaf_row_indices))
 
     dimension_estimate = estimate_marchenko_pastur_dimension(
         eigendecomposition_result.eigenvalues,
@@ -211,8 +200,6 @@ def _process_node(
 
 
 __all__ = [
-    "MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS",
-    "MP_ROW_COUNT_LEGACY_STACKED_ROWS",
     "_DEFAULT_MIN_NODES_FOR_PARALLEL",
     "_get_n_jobs",
     "_process_node",

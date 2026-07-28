@@ -4,7 +4,7 @@ type: source
 status: reviewed
 updated: 2026-06-27
 sources:
-  - benchmarks/validation/alpha_structure_sweep.py
+  - benchmarks/validation/sweeps/alpha_structure_sweep.py
   - benchmarks/results/alpha_structure_sweep_focus_20260627/alpha_structure_manifest.json
   - benchmarks/results/alpha_structure_sweep_focus_20260627/alpha_structure_summary.csv
   - benchmarks/results/alpha_structure_sweep_focus_20260627/alpha_partition_transitions.csv
@@ -25,7 +25,7 @@ tags:
 
 ## Summary
 
-`benchmarks/validation/alpha_structure_sweep.py` adds a methodological alpha
+`benchmarks/validation/sweeps/alpha_structure_sweep.py` adds a methodological alpha
 sweep for TBS-family benchmark runs. It treats edge alpha and sibling alpha as
 separate axes, reruns selected benchmark cases at each alpha pair, and writes
 benchmark metrics, node p-value margins, traversal p-value margins, partition
@@ -75,10 +75,10 @@ production defaults or claim selected-tree Type-I error calibration.
 
 ## Evidence
 
-- `uv run --all-extras ruff check benchmarks/validation/alpha_structure_sweep.py`
+- `uv run --all-extras ruff check benchmarks/validation/sweeps/alpha_structure_sweep.py`
   passed.
 - `uv run --all-extras python -m py_compile
-  benchmarks/validation/alpha_structure_sweep.py` passed.
+  benchmarks/validation/sweeps/alpha_structure_sweep.py` passed.
 - `benchmarks/results/alpha_structure_sweep_focus_20260627/alpha_structure_summary.csv`
   has `24` structural rows from four cases, two methods, and four alpha pairs
   with successful computed-result records.

@@ -1,6 +1,6 @@
 """Tests for generated timestamps in scRNA audit markdown reports."""
 
-import importlib.util
+import importlib
 import json
 import re
 import sys
@@ -10,14 +10,9 @@ import pandas as pd
 
 
 def _load_script(name: str):
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/analysis" / name
-    spec = importlib.util.spec_from_file_location(script_path.stem, script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[script_path.stem] = module
-    spec.loader.exec_module(module)
-    return module
+    module_name = f"applications.scrna.analysis.{Path(name).stem}"
+    sys.modules.pop(module_name, None)
+    return importlib.import_module(module_name)
 
 
 def _assert_generated_at(path: Path) -> None:

@@ -4,25 +4,25 @@ type: source
 status: reviewed
 updated: 2026-06-12
 sources:
-  - benchmarks/diagnostics/spectral/adaptive_cosine_kak_benchmark_probe.py
-  - benchmarks/diagnostics/spectral/adaptive_cosine_kak_matrix_probe.py
-  - benchmarks/diagnostics/spectral/adaptive_cosine_kak_diffusion_matrix_probe.py
-  - benchmarks/diagnostics/spectral/kak_lens_alpha_sweep.py
-  - benchmarks/diagnostics/spectral/kak_lens_feature_axis_clustering.py
-  - benchmarks/diagnostics/spectral/kak_feature_subspace_clustering.py
-  - benchmarks/diagnostics/spectral/tree_strategy_semantic_panel.py
-  - benchmarks/diagnostics/spectral/covariance_axis_stability.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_benchmark_probe.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_matrix_probe.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_diffusion_matrix_probe.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/kak_lens_alpha_sweep.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/kak_lens_feature_axis_clustering.py
+  - benchmarks/diagnostics/spectral/adaptive_cosine/kak_feature_subspace_clustering.py
+  - benchmarks/diagnostics/spectral/stability/tree_strategy_semantic_panel.py
+  - benchmarks/diagnostics/spectral/stability/covariance_axis_stability.py
   - benchmarks/cloud/aws_kak_lens_linkage_alpha_sweep.py
   - benchmarks/cloud/aws_tree_strategy_semantic_panel.py
   - tree_break_selection/plot/cluster_tree_visualization.py
   - tests/validation/82_test_aws_kak_lens_linkage_alpha_sweep.py
-  - tests/validation/83_test_covariance_axis_stability.py
-  - tests/validation/84_test_kak_lens_feature_axis_clustering.py
-  - tests/validation/85_test_tree_strategy_semantic_panel.py
-  - tests/validation/86_test_kak_feature_subspace_clustering.py
+  - tests/validation/spectral/stability/83_test_covariance_axis_stability.py
+  - tests/validation/spectral/adaptive_cosine/84_test_kak_lens_feature_axis_clustering.py
+  - tests/validation/spectral/stability/85_test_tree_strategy_semantic_panel.py
+  - tests/validation/spectral/adaptive_cosine/86_test_kak_feature_subspace_clustering.py
   - tests/visualization/71_test_cluster_tree_visualization.py
-  - applications/endotypes/kak_signal_adaptive_umap_tree_page.py
-  - applications/endotypes/run_feature_matrix_with_umap.py
+  - applications/endotypes/plots/kak_signal_adaptive_umap_tree_page.py
+  - applications/endotypes/pipelines/run_feature_matrix_with_umap.py
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_default_20260605/kak_benchmark_probe_rows.csv
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_enforced_20260605/kak_benchmark_probe_rows.csv
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_full_gate_bundle_20260605/kak_benchmark_probe_rows.csv
@@ -403,9 +403,9 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
 
 ## Evidence
 
-- `benchmarks/diagnostics/spectral/adaptive_cosine_kak_benchmark_probe.py`
+- `benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_benchmark_probe.py`
   contains the current-compatible diagnostic runner.
-- `benchmarks/diagnostics/spectral/adaptive_cosine_kak_matrix_probe.py`
+- `benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_matrix_probe.py`
   contains the feature-matrix counterpart.
 - `benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_default_20260605/kak_benchmark_probe_rows.csv`
   and `benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_enforced_20260605/kak_benchmark_probe_rows.csv`
@@ -416,7 +416,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_spectral_blocks_gate_bundle_20260605/matrix_kak_probe_summary.csv`
   and `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_spectral_blocks_support_enforced_20260605/matrix_kak_probe_summary.csv`
   contain the combined Julia GO matrix default and support-enforced summaries.
-- `applications/endotypes/kak_signal_adaptive_umap_tree_page.py` restores the visualization
+- `applications/endotypes/plots/kak_signal_adaptive_umap_tree_page.py` restores the visualization
   layer against current matrix-probe outputs and adds per-sample and per-merge
   geometry diagnostics.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_20260606/kak_signal_adaptive_block_geometry_summary.csv`
@@ -438,7 +438,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   is the NMI ranking plot for the Julia rerun.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_umap_tree_page.png`
   is the consolidated Julia diagnostic page sorted by reference NMI.
-- `applications/endotypes/run_feature_matrix_with_umap.py` was updated to use the
+- `applications/endotypes/pipelines/run_feature_matrix_with_umap.py` was updated to use the
   current gate-annotation bundle path before recreating the historical
   full-matrix method outputs.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/09_full_data_method_reference_comparison_20260610/all_method_and_kak_reference_comparison.csv`
@@ -452,27 +452,27 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   effect visible.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/09_full_data_method_reference_comparison_20260610/selected_method_reference_comparison_bars.png`
   compares ARI, NMI, and log cluster count for the selected rows.
-- `benchmarks/diagnostics/spectral/adaptive_cosine_kak_diffusion_matrix_probe.py`
+- `benchmarks/diagnostics/spectral/adaptive_cosine/adaptive_cosine_kak_diffusion_matrix_probe.py`
   contains the separated-space diffusion diagnostic.
-- `benchmarks/diagnostics/spectral/kak_lens_alpha_sweep.py` contains the
+- `benchmarks/diagnostics/spectral/adaptive_cosine/kak_lens_alpha_sweep.py` contains the
   focused alpha sweep for selected KAK/cosine diagnostic lenses against the
   fixed full adaptive diffusion main context tree.
-- `benchmarks/diagnostics/spectral/kak_lens_feature_axis_clustering.py`
+- `benchmarks/diagnostics/spectral/adaptive_cosine/kak_lens_feature_axis_clustering.py`
   contains the exact raw KAK/cosine lens-axis feature-loading map and clustering
   diagnostic.
-- `benchmarks/diagnostics/spectral/kak_feature_subspace_clustering.py`
+- `benchmarks/diagnostics/spectral/adaptive_cosine/kak_feature_subspace_clustering.py`
   contains the feature-side eigenvariant subspace clustering diagnostic, where
   features rather than genes are tree leaves.
-- `tests/validation/84_test_kak_lens_feature_axis_clustering.py` checks that
+- `tests/validation/spectral/adaptive_cosine/84_test_kak_lens_feature_axis_clustering.py` checks that
   recovered feature axes reconstruct raw cosine sample coordinates and that
   common/variant feature connection scores are well-formed.
-- `tests/validation/86_test_kak_feature_subspace_clustering.py` checks the
+- `tests/validation/spectral/adaptive_cosine/86_test_kak_feature_subspace_clustering.py` checks the
   feature-side `Q_B sqrt(Lambda_B)` coordinate construction and active-feature
   selection.
-- `benchmarks/diagnostics/spectral/covariance_axis_stability.py` contains the
+- `benchmarks/diagnostics/spectral/stability/covariance_axis_stability.py` contains the
   covariance/PCA axis stability diagnostic using feature resampling,
   sign-aligned axis comparison, and Procrustes top-subspace alignment.
-- `tests/validation/83_test_covariance_axis_stability.py` checks sign
+- `tests/validation/spectral/stability/83_test_covariance_axis_stability.py` checks sign
   invariance, Procrustes rotation invariance, and a low-rank synthetic
   covariance-axis stability case.
 - `benchmarks/cloud/aws_kak_lens_linkage_alpha_sweep.py` contains the AWS

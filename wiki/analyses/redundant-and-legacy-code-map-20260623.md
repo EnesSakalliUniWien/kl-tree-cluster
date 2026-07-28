@@ -15,8 +15,8 @@ sources:
   - benchmarks/shared/audit_utils.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/tbs_tree_context.py
-  - benchmarks/validation/feature_covariance_calibration.py
-  - benchmarks/validation/selected_pca_projected_wald_calibration.py
+  - benchmarks/validation/statistics/feature_covariance_calibration.py
+  - benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py
 tags:
   - code-audit
   - legacy
@@ -72,8 +72,8 @@ without contract tests would create more risk than the duplication currently
 does, so this pass records the seam instead of applying a bulk rewrite.
 
 The two validation programs
-`benchmarks/validation/feature_covariance_calibration.py` and
-`benchmarks/validation/selected_pca_projected_wald_calibration.py` still share
+`benchmarks/validation/statistics/feature_covariance_calibration.py` and
+`benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py` still share
 report-contract and interval helpers. This is the highest-value remaining
 consolidation once their output schemas are covered by focused tests.
 

@@ -1,5 +1,9 @@
 """PDF-focused utility helpers for benchmark plotting and report assembly."""
 
+from tree_break_selection.plot.backend import configure_matplotlib_backend
+
+configure_matplotlib_backend()
+
 from .figure_split import split_collected_figs_to_pdfs
 from .image_concat import (
     concat_manifold_plots,

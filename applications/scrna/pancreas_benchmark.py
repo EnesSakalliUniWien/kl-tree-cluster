@@ -709,7 +709,6 @@ def _decompose_with_hypothetical_edge_annotations(
             gate_config.spectral_include_internal_barycenters
         ),
         spectral_internal_distribution_mode=str(gate_config.spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(gate_config.spectral_mp_row_count_mode),
         continuous_covariance_policy=str(gate_config.continuous_covariance_policy),
         continuous_covariance_min_child_leaf_count=int(
             gate_config.continuous_covariance_min_child_leaf_count

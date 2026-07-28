@@ -54,12 +54,12 @@ Expected outcome categories:
 
 ## File Structure
 
-- Create `benchmarks/validation/traversal_sibling_fdr_null.py`
+- Create `benchmarks/validation/statistics/traversal_sibling_fdr_null.py`
   - Layered simulation runner for sibling FDR under controlled null structures.
   - Emits one row per simulation and one row per tested sibling node.
 - Create `benchmarks/cloud/aws_traversal_sibling_fdr_null.py`
   - AWS Batch shard/merge wrapper for the runner.
-- Create `tests/validation/67_test_traversal_sibling_fdr_null.py`
+- Create `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py`
   - Unit tests for simulation contracts and FDR summaries.
 - Create `tests/validation/68_test_aws_traversal_sibling_fdr_null.py`
   - Shard/merge contract tests.
@@ -73,15 +73,15 @@ Expected outcome categories:
 ## Task 1: Define The FDR Simulation Contract
 
 **Files:**
-- Create: `benchmarks/validation/traversal_sibling_fdr_null.py`
-- Test: `tests/validation/67_test_traversal_sibling_fdr_null.py`
+- Create: `benchmarks/validation/statistics/traversal_sibling_fdr_null.py`
+- Test: `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py`
 
 - [ ] **Step 1: Write failing contract tests**
 
 ```python
 from __future__ import annotations
 
-from benchmarks.validation.traversal_sibling_fdr_null import (
+from benchmarks.validation.statistics.traversal_sibling_fdr_null import (
     FdrLayer,
     TraversalSiblingFdrConfig,
     classify_fdr_outcome,
@@ -139,10 +139,10 @@ def test_config_rejects_invalid_alpha() -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/67_test_traversal_sibling_fdr_null.py
+pytest -q tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 ```
 
-Expected: import failure because `benchmarks.validation.traversal_sibling_fdr_null` does not exist.
+Expected: import failure because `benchmarks.validation.statistics.traversal_sibling_fdr_null` does not exist.
 
 - [ ] **Step 3: Implement the contract skeleton**
 
@@ -229,7 +229,7 @@ def classify_fdr_outcome(*, layer: FdrLayer, mean_fdp: float, alpha: float) -> s
 Run:
 
 ```bash
-pytest -q tests/validation/67_test_traversal_sibling_fdr_null.py
+pytest -q tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 ```
 
 Expected: all tests pass.
@@ -237,15 +237,15 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/traversal_sibling_fdr_null.py tests/validation/67_test_traversal_sibling_fdr_null.py
+git add benchmarks/validation/statistics/traversal_sibling_fdr_null.py tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 git commit -m "Add traversal sibling FDR diagnostic contract"
 ```
 
 ## Task 2: Implement Synthetic Valid-P FDR Layer
 
 **Files:**
-- Modify: `benchmarks/validation/traversal_sibling_fdr_null.py`
-- Test: `tests/validation/67_test_traversal_sibling_fdr_null.py`
+- Modify: `benchmarks/validation/statistics/traversal_sibling_fdr_null.py`
+- Test: `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py`
 
 - [ ] **Step 1: Add failing synthetic-layer test**
 
@@ -347,7 +347,7 @@ def run_traversal_sibling_fdr_layer(config: TraversalSiblingFdrConfig) -> dict[s
 Run:
 
 ```bash
-pytest -q tests/validation/67_test_traversal_sibling_fdr_null.py
+pytest -q tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 ```
 
 Expected: pass.
@@ -355,15 +355,15 @@ Expected: pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add benchmarks/validation/traversal_sibling_fdr_null.py tests/validation/67_test_traversal_sibling_fdr_null.py
+git add benchmarks/validation/statistics/traversal_sibling_fdr_null.py tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 git commit -m "Validate sibling BH on valid null p values"
 ```
 
 ## Task 3: Fixed-Tree Sibling Wald Calibration Layer
 
 **Files:**
-- Modify: `benchmarks/validation/traversal_sibling_fdr_null.py`
-- Test: `tests/validation/67_test_traversal_sibling_fdr_null.py`
+- Modify: `benchmarks/validation/statistics/traversal_sibling_fdr_null.py`
+- Test: `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py`
 
 - [ ] **Step 1: Add test that fixed-tree layer records calibration status**
 
@@ -396,7 +396,7 @@ Implementation rule:
 - [ ] **Step 3: Run focused test**
 
 ```bash
-pytest -q tests/validation/67_test_traversal_sibling_fdr_null.py::test_fixed_tree_wald_layer_reports_calibration_status
+pytest -q tests/validation/statistics/67_test_traversal_sibling_fdr_null.py::test_fixed_tree_wald_layer_reports_calibration_status
 ```
 
 Expected: pass.
@@ -404,15 +404,15 @@ Expected: pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add benchmarks/validation/traversal_sibling_fdr_null.py tests/validation/67_test_traversal_sibling_fdr_null.py
+git add benchmarks/validation/statistics/traversal_sibling_fdr_null.py tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 git commit -m "Add fixed tree sibling FDR calibration layer"
 ```
 
 ## Task 4: Selected-Tree And Inflated Selected-Tree Layers
 
 **Files:**
-- Modify: `benchmarks/validation/traversal_sibling_fdr_null.py`
-- Test: `tests/validation/67_test_traversal_sibling_fdr_null.py`
+- Modify: `benchmarks/validation/statistics/traversal_sibling_fdr_null.py`
+- Test: `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py`
 
 - [ ] **Step 1: Add tests for explicit unsupported states**
 
@@ -443,7 +443,7 @@ Implementation rule:
 - [ ] **Step 3: Run selected-tree tests**
 
 ```bash
-pytest -q tests/validation/67_test_traversal_sibling_fdr_null.py::test_selected_tree_layers_report_strict_support_failures
+pytest -q tests/validation/statistics/67_test_traversal_sibling_fdr_null.py::test_selected_tree_layers_report_strict_support_failures
 ```
 
 Expected: pass.
@@ -451,7 +451,7 @@ Expected: pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add benchmarks/validation/traversal_sibling_fdr_null.py tests/validation/67_test_traversal_sibling_fdr_null.py
+git add benchmarks/validation/statistics/traversal_sibling_fdr_null.py tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
 git commit -m "Add selected tree sibling FDR calibration layers"
 ```
 
@@ -472,7 +472,7 @@ from benchmarks.cloud.aws_traversal_sibling_fdr_null import (
     AwsTraversalSiblingFdrConfig,
     make_shard_spec,
 )
-from benchmarks.validation.traversal_sibling_fdr_null import FdrLayer
+from benchmarks.validation.statistics.traversal_sibling_fdr_null import FdrLayer
 
 
 def test_make_shard_spec_distributes_replicates_by_modulo() -> None:
@@ -528,7 +528,7 @@ git commit -m "Add AWS traversal sibling FDR diagnostic"
 - [ ] **Step 1: Run algorithm-only smoke**
 
 ```bash
-python -m benchmarks.validation.traversal_sibling_fdr_null \
+python -m benchmarks.validation.statistics.traversal_sibling_fdr_null \
   --layers synthetic_valid_p \
   --case-names synthetic_balanced_binary_tree \
   --replicates 200 \
@@ -545,7 +545,7 @@ Expected:
 - [ ] **Step 2: Run binary fixed/selected smoke**
 
 ```bash
-python -m benchmarks.validation.traversal_sibling_fdr_null \
+python -m benchmarks.validation.statistics.traversal_sibling_fdr_null \
   --layers fixed_tree_wald,selected_tree_wald,selected_tree_inflated \
   --case-names binary_2clusters \
   --replicates 20 \

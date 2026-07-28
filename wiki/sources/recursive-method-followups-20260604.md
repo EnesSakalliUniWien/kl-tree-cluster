@@ -12,8 +12,8 @@ sources:
   - tests/validation/calibration/sibling/nulls/69_test_sibling_null_weight_rule_validation.py
   - raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/manifest.json
   - raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/sibling_null_weight_rule_summary.csv
-  - benchmarks/diagnostics/spectral/sibling_projection_dimension_rule_grid.py
-  - tests/validation/70_test_sibling_projection_dimension_rule_grid.py
+  - benchmarks/diagnostics/spectral/mp/sibling_projection_dimension_rule_grid.py
+  - tests/validation/spectral/mp/70_test_sibling_projection_dimension_rule_grid.py
   - raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/manifest.json
   - raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/sibling_projection_dimension_rule_grid.csv
   - raw/assets/benchmark-results/mp_kmin_q14_q15_smoke_20260604/mp_kmin_contract_smoke.csv

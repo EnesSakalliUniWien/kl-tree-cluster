@@ -112,9 +112,9 @@ Examples:
 - `quick_start.py`
 - `benchmarks/smoke/run_subset.py`
 - `benchmarks/regression/run_gate.py`
-- `applications/endotypes/run_feature_matrix_with_umap.py`
-- `applications/endotypes/analyze_hc_clusters.py`
-- `applications/endotypes/assess_method_correctness.py`
+- `applications/endotypes/pipelines/run_feature_matrix_with_umap.py`
+- `applications/endotypes/analysis/analyze_hc_clusters.py`
+- `applications/endotypes/analysis/assess_method_correctness.py`
 
 Recommendation:
 

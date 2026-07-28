@@ -4,9 +4,9 @@ type: source
 status: reviewed
 updated: 2026-06-04
 sources:
-  - benchmarks/validation/traversal_sibling_fdr_null.py
+  - benchmarks/validation/statistics/traversal_sibling_fdr_null.py
   - benchmarks/cloud/aws_traversal_sibling_fdr_null.py
-  - tests/validation/67_test_traversal_sibling_fdr_null.py
+  - tests/validation/statistics/67_test_traversal_sibling_fdr_null.py
   - tests/validation/68_test_aws_traversal_sibling_fdr_null.py
   - raw/assets/benchmark-results/traversal_sibling_fdr_smoke_20260604/synthetic/traversal_sibling_fdr_summary.csv
   - raw/assets/benchmark-results/traversal_sibling_fdr_smoke_20260604/binary/traversal_sibling_fdr_summary.csv
@@ -56,11 +56,11 @@ The diagnostic has four layers:
 
 ## Evidence
 
-- `benchmarks/validation/traversal_sibling_fdr_null.py` defines the layered
+- `benchmarks/validation/statistics/traversal_sibling_fdr_null.py` defines the layered
   diagnostic runner and writes simulation, summary, and manifest files.
 - `benchmarks/cloud/aws_traversal_sibling_fdr_null.py` defines the AWS
   shard/merge wrapper for larger runs.
-- `tests/validation/67_test_traversal_sibling_fdr_null.py` verifies the layer
+- `tests/validation/statistics/67_test_traversal_sibling_fdr_null.py` verifies the layer
   contract, FDR summary logic, strict support-failure classification, and
   local output writing.
 - `tests/validation/68_test_aws_traversal_sibling_fdr_null.py` verifies

@@ -4,7 +4,7 @@ type: source
 status: reviewed
 updated: 2026-06-18
 sources:
-  - applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py
+  - applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py
   - results/analyses/allgo_new_interactome_current_adaptive_diffusion_subspace_tree_20260618_175237/README.md
   - results/analyses/allgo_new_interactome_current_adaptive_diffusion_subspace_tree_20260618_175237/ARTIFACT_INDEX.md
   - results/analyses/allgo_new_interactome_current_adaptive_diffusion_subspace_tree_20260618_175237/experiment_config.json

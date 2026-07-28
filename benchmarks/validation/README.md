@@ -3,6 +3,14 @@
 This directory contains strict scaffolds for tracking and generating validation
 evidence that is not yet complete in the manuscript.
 
+Programs are grouped by responsibility:
+
+- `contracts/` defines report and evidence-manifest contracts.
+- `statistics/` validates covariance, selected tests, and error control.
+- `sweeps/` explores alpha and method-family parameter grids.
+- `tree/` compares construction methods, topology, and literature policies.
+- `manifests/` stores the validation manifest data consumed by the contracts.
+
 The method-constant manifest is deliberately strict:
 
 - it enumerates every method constant currently requiring validation;
@@ -59,7 +67,7 @@ misspecification.
 Run an alpha-grid benchmark diagnostic over the active TBS path:
 
 ```bash
-uv run python -m benchmarks.validation.alpha_grid_search \
+uv run python -m benchmarks.validation.sweeps.alpha_grid_search \
   --suite full \
   --edge-alphas 0.0001,0.0003,0.001,0.003,0.01 \
   --sibling-alphas 0.001,0.003,0.01,0.03,0.1 \
@@ -72,7 +80,7 @@ constants. It is not a proof of selected-tree Type-I error control.
 Run a selected-edge Type-I geometry smoke over binary null cases:
 
 ```bash
-uv run python -m benchmarks.validation.selected_edge_type1_geometry run \
+uv run python -m benchmarks.validation.statistics.selected_edge_type1_geometry run \
   --suite binary \
   --case-names binary_2clusters \
   --modes fixed_tree,selected_tree \
@@ -99,7 +107,7 @@ uv run python -m benchmarks.diagnostics.analysis.selected_edge_geometry_analysis
 Run a traversal-aligned sibling-FDR smoke:
 
 ```bash
-uv run python -m benchmarks.validation.traversal_sibling_fdr_null \
+uv run python -m benchmarks.validation.statistics.traversal_sibling_fdr_null \
   --layers synthetic_valid_p \
   --case-names synthetic_balanced_binary_tree \
   --replicates 200 \
@@ -111,7 +119,7 @@ uv run python -m benchmarks.validation.traversal_sibling_fdr_null \
 Run the binary fixed-tree, selected-tree, and inflated layers:
 
 ```bash
-uv run python -m benchmarks.validation.traversal_sibling_fdr_null \
+uv run python -m benchmarks.validation.statistics.traversal_sibling_fdr_null \
   --layers fixed_tree_wald,selected_tree_wald,selected_tree_inflated \
   --suite binary \
   --case-names binary_2clusters \
@@ -130,7 +138,7 @@ change alpha defaults.
 Create a manifest skeleton:
 
 ```bash
-uv run python -m benchmarks.validation.method_constants_manifest create \
+uv run python -m benchmarks.validation.contracts.method_constants_manifest create \
   benchmarks/results/04_generic_benchmark_runs/run_20260325_134017Z \
   --output benchmarks/validation/manifests/method_constant_validation_manifest.json
 ```
@@ -138,27 +146,27 @@ uv run python -m benchmarks.validation.method_constants_manifest create \
 Validate a manifest:
 
 ```bash
-uv run python -m benchmarks.validation.method_constants_manifest validate \
+uv run python -m benchmarks.validation.contracts.method_constants_manifest validate \
   benchmarks/validation/manifests/method_constant_validation_manifest.json
 ```
 
 List constants:
 
 ```bash
-uv run python -m benchmarks.validation.method_constants_manifest constants
+uv run python -m benchmarks.validation.contracts.method_constants_manifest constants
 ```
 
 Create a missing-evidence manifest for feature covariance:
 
 ```bash
-uv run python -m benchmarks.validation.feature_covariance_calibration manifest \
+uv run python -m benchmarks.validation.statistics.feature_covariance_calibration manifest \
   --output benchmarks/validation/manifests/feature_covariance_validation_manifest.json
 ```
 
 Run a feature-covariance calibration simulation:
 
 ```bash
-uv run python -m benchmarks.validation.feature_covariance_calibration run \
+uv run python -m benchmarks.validation.statistics.feature_covariance_calibration run \
   --replicates 1000 \
   --seed 20260601 \
   --output benchmarks/results/validation/feature_covariance_calibration.json \
@@ -168,21 +176,21 @@ uv run python -m benchmarks.validation.feature_covariance_calibration run \
 Validate a feature-covariance manifest or report:
 
 ```bash
-uv run python -m benchmarks.validation.feature_covariance_calibration validate \
+uv run python -m benchmarks.validation.statistics.feature_covariance_calibration validate \
   benchmarks/results/validation/feature_covariance_calibration.json
 ```
 
 Create a missing-evidence manifest for selected-PCA projected-Wald calibration:
 
 ```bash
-uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration manifest \
+uv run python -m benchmarks.validation.statistics.selected_pca_projected_wald_calibration manifest \
   --output benchmarks/validation/manifests/selected_pca_projected_wald_validation_manifest.json
 ```
 
 Run a selected-PCA projected-Wald calibration simulation:
 
 ```bash
-uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration run \
+uv run python -m benchmarks.validation.statistics.selected_pca_projected_wald_calibration run \
   --replicates 1000 \
   --seed 20260601 \
   --output benchmarks/results/validation/selected_pca_projected_wald_calibration.json \
@@ -192,7 +200,7 @@ uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration r
 Validate a selected-PCA manifest or report:
 
 ```bash
-uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration validate \
+uv run python -m benchmarks.validation.statistics.selected_pca_projected_wald_calibration validate \
   benchmarks/results/validation/selected_pca_projected_wald_calibration.json
 ```
 

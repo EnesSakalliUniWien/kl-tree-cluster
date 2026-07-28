@@ -19,7 +19,6 @@ class NodeSpectralTask:
     null_distribution: np.ndarray
     feature_space: FeatureSpace
     continuous_covariance_by_block: dict[str, np.ndarray] | None
-    mp_row_count_mode: str
 
 
 __all__ = ["NodeSpectralTask"]

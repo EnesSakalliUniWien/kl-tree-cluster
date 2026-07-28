@@ -4,7 +4,7 @@ type: analysis
 status: reviewed
 updated: 2026-06-05
 sources:
-  - benchmarks/validation/selected_pca_projected_wald_calibration.py
+  - benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py
   - benchmarks/validation/manifests/selected_pca_projected_wald_validation_manifest.json
   - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.json
   - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.csv
@@ -98,7 +98,7 @@ fixed no longer approximates the actual selected reference law.
 - `benchmarks/results/validation/selected_pca_projected_wald_calibration_check_20260605.csv`
   records the current-worktree rerun used to check that the locked conclusion
   still reproduces.
-- `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
+- `benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py` defines
   the scaffold and validation contract.
 - `tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py`
   documents the current production leaf-only spectral orchestration. The

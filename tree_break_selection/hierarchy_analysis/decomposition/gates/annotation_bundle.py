@@ -20,7 +20,6 @@ from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.
 )
 from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 )
 from tree_break_selection.tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
@@ -44,7 +43,6 @@ class GateAnnotationConfigMetadata:
     adaptive_projection_dimension_energy_fraction: float | None = None
     spectral_include_internal_barycenters: bool = False
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT

@@ -11,7 +11,7 @@ sources:
   - wiki/analyses/traversal-neighborhood-method-comparison.md
   - wiki/analyses/edge-gate-distance-time-contract-20260623.md
   - wiki/questions/open-mathematical-questions.md
-  - benchmarks/validation/alpha_structure_sweep.py
+  - benchmarks/validation/sweeps/alpha_structure_sweep.py
   - benchmarks/results/alpha_structure_sweep_cartesian_20260627/alpha_structure_summary.csv
   - benchmarks/results/alpha_structure_sweep_hamming_nn_q4_q5_20260627/alpha_structure_summary.csv
 tags:

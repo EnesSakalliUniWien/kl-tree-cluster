@@ -39,7 +39,7 @@ from benchmarks.diagnostics.calibration.selected.family.selected_family_traversa
     validate_methods,
 )
 from benchmarks.shared.runners.tbs_runner import _run_tbs_method
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
     parse_names,

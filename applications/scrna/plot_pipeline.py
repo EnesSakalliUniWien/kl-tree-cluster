@@ -41,7 +41,6 @@ MANIFEST_FIELDS = [
     "stage",
     "role",
     "canonical",
-    "alias_of",
     "generator_script",
     "input_tables",
     "intended_question",
@@ -151,7 +150,6 @@ def base_row(
     stage: str,
     role: str,
     canonical: bool,
-    alias_of: str = "",
     generator_script: str,
     input_tables: str,
     intended_question: str,
@@ -172,7 +170,6 @@ def base_row(
         "stage": stage,
         "role": role,
         "canonical": "true" if canonical else "false",
-        "alias_of": alias_of,
         "generator_script": generator_script,
         "input_tables": input_tables,
         "intended_question": intended_question,
@@ -237,26 +234,6 @@ def add_known_rows(dataset: str, output_dir: Path, rows: dict[str, dict[str, Any
             input_tables="method_assignments.csv;*_tree_edges.csv",
             intended_question="Review each TBS UMAP beside its full radial tree using the same cluster colors.",
         )
-        add(
-            f"tbs_umap_cluster_radial_tree_combo_all_clusters_ggtree.{suffix}",
-            stage="tbs_umap_tree_review",
-            role="alias",
-            canonical=False,
-            alias_of="tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree",
-            generator_script="applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R",
-            input_tables="method_assignments.csv;*_tree_edges.csv",
-            intended_question="Compatibility alias for the scaled all-cluster TBS UMAP/tree review plot.",
-        )
-        add(
-            f"tbs_umap_cluster_radial_tree_combo_ggtree.{suffix}",
-            stage="tbs_umap_tree_review",
-            role="alias",
-            canonical=False,
-            alias_of="tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree",
-            generator_script="applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R",
-            input_tables="method_assignments.csv;*_tree_edges.csv",
-            intended_question="Legacy compatibility alias for the scaled all-cluster TBS UMAP/tree review plot.",
-        )
     add(
         "tbs_branch_time_sensitivity.png",
         stage="tbs_diagnostics",
@@ -277,16 +254,6 @@ def add_known_rows(dataset: str, output_dir: Path, rows: dict[str, dict[str, Any
                 generator_script="applications/scrna/plots/pancreas_readable_umap_clusters.py",
                 input_tables="method_assignments.csv",
                 intended_question="Standalone TBS UMAP view with every final cluster colored.",
-            )
-            add(
-                f"tbs_readable_umap_clusters_ge50.{suffix}",
-                stage="tbs_umap_review",
-                role="alias",
-                canonical=False,
-                alias_of="tbs_readable_umap_clusters_all_colored",
-                generator_script="applications/scrna/plots/pancreas_readable_umap_clusters.py",
-                input_tables="method_assignments.csv",
-                intended_question="Compatibility alias; only labels, not colors, are thresholded at 50 cells.",
             )
         for stem in [
             "pancreas_progenitor_signature_comparison",
@@ -515,24 +482,6 @@ def classify_extra_plot(
     )
 
 
-def validate_aliases(rows: list[dict[str, Any]]) -> None:
-    target_by_key = {
-        (Path(row["path"]).stem, row["format"]): row for row in rows if row["status"] == "present"
-    }
-    for row in rows:
-        if row["role"] != "alias" or row["status"] != "present":
-            continue
-        target = target_by_key.get((row["alias_of"], row["format"]))
-        if target is None:
-            row["status"] = "alias_target_missing"
-            row["notes"] = _append_note(row["notes"], "Alias target is missing from manifest.")
-        elif row["sha256"] == target["sha256"]:
-            row["notes"] = _append_note(row["notes"], "Alias hash matches target.")
-        else:
-            row["status"] = "alias_mismatch"
-            row["notes"] = _append_note(row["notes"], "Alias hash differs from target.")
-
-
 def _append_note(notes: str, extra: str) -> str:
     return f"{notes} {extra}".strip() if notes else extra
 
@@ -555,7 +504,6 @@ def build_manifest(dataset: str, output_dir: Path) -> list[dict[str, Any]]:
         )
 
     rows = [rows_by_name[name] for name in sorted(rows_by_name)]
-    validate_aliases(rows)
     return rows
 
 

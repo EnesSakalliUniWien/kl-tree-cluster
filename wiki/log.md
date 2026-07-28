@@ -5357,6 +5357,16 @@ verification, and maintenance events here in chronological order.
   paths without aliases, removed the unreferenced edge diagnostic, and
   consolidated multiscale UMAP rendering on the maintained plotting engine and
   selected-family runner.
+- Completed the next hygiene tranche by enforcing the file-safe Matplotlib
+  backend at directly executable plotting seams, removing live compatibility
+  plot filenames and deprecated CLI aliases, and deleting the obsolete MP
+  stacked-row option throughout decomposition, runners, manifests, and tests.
+  Reorganized endotype applications, validation programs, and spectral
+  diagnostics into responsibility packages with mirrored tests and canonical
+  package imports only. Removed unused direct dependencies and refreshed the
+  lockfile. Verification passed Ruff, wiki lint, the 171-test focused tranche,
+  the 332-test documented quick suite, the end-to-end quick start, and the
+  14-case representative benchmark smoke without a native plotting crash.
 
 ## Evidence
 

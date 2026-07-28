@@ -31,7 +31,6 @@ from .child_parent_divergence_tree_bh import (
 from .spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     SpectralContext,
     compute_child_parent_spectral_context,
 )
@@ -49,7 +48,6 @@ def annotate_child_parent_divergence(
     spectral_projection_basis_dimension: int | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -73,7 +71,6 @@ def annotate_child_parent_divergence(
         spectral_projection_basis_dimension=spectral_projection_basis_dimension,
         spectral_include_internal_barycenters=spectral_include_internal_barycenters,
         spectral_internal_distribution_mode=spectral_internal_distribution_mode,
-        spectral_mp_row_count_mode=spectral_mp_row_count_mode,
         continuous_covariance_policy=continuous_covariance_policy,
         continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
@@ -96,7 +93,6 @@ def annotate_child_parent_divergence_with_context(
     spectral_projection_basis_dimension: int | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -132,7 +128,6 @@ def annotate_child_parent_divergence_with_context(
         projection_basis_dimension=spectral_projection_basis_dimension,
         include_internal_barycenters=bool(spectral_include_internal_barycenters),
         internal_distribution_mode=str(spectral_internal_distribution_mode),
-        mp_row_count_mode=str(spectral_mp_row_count_mode),
     )
 
     test_kwargs = {

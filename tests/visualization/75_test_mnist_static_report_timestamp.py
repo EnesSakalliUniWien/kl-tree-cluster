@@ -1,20 +1,13 @@
 """Regression tests for static MNIST report timestamps."""
 
-import importlib.util
+import importlib
 import re
-from pathlib import Path
 
 import pandas as pd
 
 
 def _load_static_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/mnist/plot_report.py"
-    spec = importlib.util.spec_from_file_location("plot_mnist_tbs_analysis_report", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("applications.mnist.plot_report")
 
 
 def test_static_mnist_report_records_generated_timestamp(monkeypatch, tmp_path):

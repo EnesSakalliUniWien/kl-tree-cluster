@@ -17,7 +17,7 @@ from time import perf_counter
 import pandas as pd
 
 from benchmarks.shared.env import resolve_aws_batch_shard_index as resolve_shard_index
-from benchmarks.validation.alpha_grid_search import (
+from benchmarks.validation.sweeps.alpha_grid_search import (
     DEFAULT_EDGE_ALPHA_GRID,
     DEFAULT_SIBLING_ALPHA_GRID,
     AlphaGridConfig,

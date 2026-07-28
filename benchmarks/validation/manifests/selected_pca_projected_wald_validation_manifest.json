@@ -1,7 +1,7 @@
 {
   "manifest_schema_version": "selected_pca_projected_wald_calibration/v1",
   "created_utc": "2026-06-01T16:45:40Z",
-  "generated_by": "benchmarks.validation.selected_pca_projected_wald_calibration",
+  "generated_by": "benchmarks.validation.statistics.selected_pca_projected_wald_calibration",
   "validation_design": "fixed_membership_gaussian_sibling_null_with_data_selected_pca",
   "targets": [
     {

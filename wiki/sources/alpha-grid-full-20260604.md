@@ -4,7 +4,7 @@ type: source
 status: reviewed
 updated: 2026-06-04
 sources:
-  - benchmarks/validation/alpha_grid_search.py
+  - benchmarks/validation/sweeps/alpha_grid_search.py
   - benchmarks/cloud/aws_alpha_grid_search.py
   - raw/assets/benchmark-results/alpha_grid_full_20260604/aws_alpha_grid_manifest.json
   - raw/assets/benchmark-results/alpha_grid_full_20260604/alpha_grid_summary.csv
@@ -69,7 +69,7 @@ not a proof of selected-tree Type-I error control.
   records one summary row per alpha pair.
 - `raw/assets/benchmark-results/alpha_grid_full_20260604/alpha_grid_results.csv`
   records one result row per alpha pair and benchmark case.
-- `benchmarks/validation/alpha_grid_search.py` defines the local alpha-grid
+- `benchmarks/validation/sweeps/alpha_grid_search.py` defines the local alpha-grid
   runner and records that the output is diagnostic benchmark evidence, not a
   selected-tree Type-I error proof.
 - `benchmarks/cloud/aws_alpha_grid_search.py` defines the AWS shard and merge

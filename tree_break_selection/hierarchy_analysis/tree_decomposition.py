@@ -50,7 +50,6 @@ from .statistics.child_parent_divergence.child_parent_divergence_annotation.spec
 )
 from .statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 )
 from .statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
@@ -106,7 +105,6 @@ class TreeDecomposition:
         adaptive_projection_dimension_energy_fraction: float | None = None,
         spectral_include_internal_barycenters: bool = False,
         spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-        spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
         continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
         continuous_covariance_min_child_leaf_count: int = (
             DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -204,7 +202,6 @@ class TreeDecomposition:
         )
         self._spectral_include_internal_barycenters = bool(spectral_include_internal_barycenters)
         self._spectral_internal_distribution_mode = str(spectral_internal_distribution_mode)
-        self._spectral_mp_row_count_mode = str(spectral_mp_row_count_mode)
         self._continuous_covariance_policy = validate_continuous_covariance_policy(
             continuous_covariance_policy
         )
@@ -431,7 +428,6 @@ class TreeDecomposition:
             ),
             spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
             spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
-            spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
             continuous_covariance_policy=self._continuous_covariance_policy,
             continuous_covariance_min_child_leaf_count=(
                 self._continuous_covariance_min_child_leaf_count
@@ -509,7 +505,6 @@ class TreeDecomposition:
                 ),
                 spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
                 spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
-                spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
                 continuous_covariance_policy=self._continuous_covariance_policy,
                 continuous_covariance_min_child_leaf_count=(
                     self._continuous_covariance_min_child_leaf_count

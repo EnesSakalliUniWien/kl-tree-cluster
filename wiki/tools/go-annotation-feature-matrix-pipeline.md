@@ -4,13 +4,13 @@ type: tool
 status: reviewed
 updated: 2026-06-23
 sources:
-  - applications/endotypes/run_go_annotation_feature_matrix_pipeline.py
-  - applications/endotypes/inventory_go_annotation_datasets.py
-  - applications/endotypes/build_subspace_gene_annotation_pdf.py
-  - applications/endotypes/export_subspace_cluster_rosters.py
-  - applications/endotypes/audit_go_cluster_meaningfulness.py
+  - applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py
+  - applications/endotypes/analysis/inventory_go_annotation_datasets.py
+  - applications/endotypes/reports/build_subspace_gene_annotation_pdf.py
+  - applications/endotypes/reports/export_subspace_cluster_rosters.py
+  - applications/endotypes/analysis/audit_go_cluster_meaningfulness.py
   - scripts/rest_request.py
-  - applications/endotypes/audit_go_annotation_analysis_levels.py
+  - applications/endotypes/analysis/audit_go_annotation_analysis_levels.py
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
   - data/feature_matrices/feature_matrix_allGO_new_interactome.tsv
   - results/analyses/go_annotation_dataset_inventory_20260619/go_annotation_dataset_inventory.csv
@@ -46,7 +46,7 @@ tags:
 
 ## Summary
 
-Use `applications/endotypes/run_go_annotation_feature_matrix_pipeline.py` as the
+Use `applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py` as the
 consistent entry point for GO annotation feature-matrix analyses. The active
 datasets are `feature_matrix_julia_allGO_new.tsv` and
 `feature_matrix_allGO_new_interactome.tsv`, both under
@@ -60,7 +60,7 @@ different analysis levels rather than competing final reports.
 Plan or run the canonical pipeline with an explicit feature matrix:
 
 ```bash
-MPLBACKEND=Agg python applications/endotypes/run_go_annotation_feature_matrix_pipeline.py \
+MPLBACKEND=Agg python applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py \
   --input data/feature_matrices/feature_matrix_julia_allGO_new.tsv
 ```
 
@@ -129,10 +129,10 @@ byte-identical to the Julia matrix but non-canonical; it should not be used as
 an input path.
 
 Systematic subspace gene-annotation outputs are built by the wrapper through
-`applications/endotypes/export_subspace_cluster_rosters.py` and
-`applications/endotypes/build_subspace_gene_annotation_pdf.py`. These scripts remain
+`applications/endotypes/reports/export_subspace_cluster_rosters.py` and
+`applications/endotypes/reports/build_subspace_gene_annotation_pdf.py`. These scripts remain
 directly runnable for repair/debugging, but ordinary analysis runs should enter
-through `applications/endotypes/run_go_annotation_feature_matrix_pipeline.py` so the
+through `applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py` so the
 radial trees, PDFs, audit tables, input copy, and upload summary stay in one
 contract. The roster exporter creates a
 `subspaces/rank##_weighting_block_name/` directory for every
@@ -175,7 +175,7 @@ resolved to UniProt protein metadata in each report. Non-protein or unresolved
 symbols remain shown as local gene symbols.
 
 The 2026-06-19 cluster meaningfulness audit uses
-`applications/endotypes/audit_go_cluster_meaningfulness.py` as an internal
+`applications/endotypes/analysis/audit_go_cluster_meaningfulness.py` as an internal
 GO-coherence check. For each cluster it tests GO feature enrichment against the
 full feature matrix with a one-sided hypergeometric test and BH correction, then
 compares each eigenband to `30` random partitions preserving its cluster-size
@@ -212,23 +212,23 @@ internally enriched.
 
 ## Evidence
 
-- `applications/endotypes/run_go_annotation_feature_matrix_pipeline.py` writes the
+- `applications/endotypes/pipelines/run_go_annotation_feature_matrix_pipeline.py` writes the
   canonical stage commands, manifest, and dry-run plan.
-- `applications/endotypes/inventory_go_annotation_datasets.py` writes dataset,
+- `applications/endotypes/analysis/inventory_go_annotation_datasets.py` writes dataset,
   duplicate, result-root, and naming-convention inventories.
-- `applications/endotypes/build_subspace_gene_annotation_pdf.py` writes systematic
+- `applications/endotypes/reports/build_subspace_gene_annotation_pdf.py` writes systematic
   ranked two-page-per-subspace PDFs and accompanying cluster/gene
   interpretation CSVs.
-- `applications/endotypes/export_subspace_cluster_rosters.py` writes the complete
+- `applications/endotypes/reports/export_subspace_cluster_rosters.py` writes the complete
   per-subspace directory tree, radial tree plots, full-space, subspace, and
   tree-distance cluster embedding plots, complete cluster rosters, diagnostic
   failed-gate linkage-cut rosters, and long gene-membership tables.
-- `applications/endotypes/audit_go_cluster_meaningfulness.py` writes internal
+- `applications/endotypes/analysis/audit_go_cluster_meaningfulness.py` writes internal
   cluster meaningfulness calls, eigenband coherence calls, size-preserving null
   partition summaries, and top/weak cluster examples.
 - `scripts/rest_request.py` is the compact REST helper used for QuickGO and
   UniProt requests following the life-science research plugin skill contract.
-- `applications/endotypes/audit_go_annotation_analysis_levels.py` classifies existing
+- `applications/endotypes/analysis/audit_go_annotation_analysis_levels.py` classifies existing
   result roots by file signals such as matrix-quality summaries, assignment
   files, GO-IC rankings, method-split PDFs, connected manifests, subspace
   directories, and axis term-loading tables.

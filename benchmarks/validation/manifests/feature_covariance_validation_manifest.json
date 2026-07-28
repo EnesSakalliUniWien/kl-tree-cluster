@@ -1,7 +1,7 @@
 {
   "manifest_schema_version": "feature_covariance_calibration/v1",
   "created_utc": "2026-06-01T13:39:38Z",
-  "generated_by": "benchmarks.validation.feature_covariance_calibration",
+  "generated_by": "benchmarks.validation.statistics.feature_covariance_calibration",
   "validation_design": "fixed_full_tangent_sibling_wald_null",
   "targets": [
     {

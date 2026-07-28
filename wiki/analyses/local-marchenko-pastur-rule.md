@@ -13,10 +13,10 @@ sources:
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
-  - benchmarks/diagnostics/spectral/compare_mp_dimension_contracts.py
+  - benchmarks/diagnostics/spectral/mp/compare_mp_dimension_contracts.py
   - manuscript/sections/method/edge_test.tex
   - manuscript/sections/method/assumptions_validation.tex
-  - benchmarks/validation/method_constants_manifest.py
+  - benchmarks/validation/contracts/method_constants_manifest.py
   - raw/assets/mp-dimension-rule-analysis/20260525-controlled-spectrum-summary.md
   - raw/assets/mp-dimension-rule-analysis/20260525-dimension-contract-subset.csv
   - raw/assets/mp-dimension-rule-analysis/20260525-dimension-contract-finite-null-smoke.csv

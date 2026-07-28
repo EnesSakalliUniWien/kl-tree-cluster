@@ -41,7 +41,7 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
 )
 from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
     parse_names,

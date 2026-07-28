@@ -34,7 +34,6 @@ from tree_break_selection.hierarchy_analysis.statistics.distributional_action im
 )
 from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
     build_branch_length_distance_cache,
@@ -83,7 +82,6 @@ def run_tbs_on_distance(
     adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -270,7 +268,6 @@ def run_tbs_on_distance(
         ),
         spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         continuous_covariance_policy=continuous_covariance_policy,
         continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
@@ -334,7 +331,6 @@ def run_tbs_on_distance(
         ),
         spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         continuous_covariance_policy=continuous_covariance_policy,
         continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
@@ -403,7 +399,6 @@ def run_tbs_on_distance(
         "spectral_internal_distribution_mode": str(
             resolved_gate_config.spectral_internal_distribution_mode
         ),
-        "spectral_mp_row_count_mode": str(resolved_gate_config.spectral_mp_row_count_mode),
         "continuous_covariance_policy": str(resolved_gate_config.continuous_covariance_policy),
         "continuous_covariance_min_child_leaf_count": int(
             resolved_gate_config.continuous_covariance_min_child_leaf_count
@@ -506,7 +501,6 @@ def _run_tbs_method(
     adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
     continuous_covariance_min_child_leaf_count: int = (
         DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
@@ -571,7 +565,6 @@ def _run_tbs_method(
         ),
         spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         continuous_covariance_policy=continuous_covariance_policy,
         continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,

@@ -13,7 +13,9 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from benchmarks.validation.selected_edge_type1_geometry import run_selected_edge_replicate
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
+    run_selected_edge_replicate,
+)
 
 
 def _sibling_artifact() -> pd.DataFrame:

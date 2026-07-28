@@ -5,8 +5,8 @@ status: reviewed
 updated: 2026-06-05
 sources:
   - raw/inbox/gavish-donoho-optimal-hard-threshold-2014.txt
-  - benchmarks/diagnostics/spectral/mp_projection_dimension_behavior_sweep.py
-  - tests/validation/77_test_mp_projection_dimension_behavior_sweep.py
+  - benchmarks/diagnostics/spectral/mp/mp_projection_dimension_behavior_sweep.py
+  - tests/validation/spectral/mp/77_test_mp_projection_dimension_behavior_sweep.py
   - benchmarks/results/diagnostics/mp_projection_dimension_behavior_method_proof_20260605/mp_projection_dimension_behavior_summary.csv
   - benchmarks/results/diagnostics/mp_projection_dimension_behavior_method_proof_20260605/mp_projection_dimension_behavior_case_summary.csv
   - benchmarks/results/diagnostics/mp_projection_dimension_behavior_binary_20260605/mp_projection_dimension_behavior_summary.csv

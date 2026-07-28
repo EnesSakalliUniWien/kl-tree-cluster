@@ -113,7 +113,7 @@ Interpretation:
 
 ## File Structure
 
-- Create `benchmarks/validation/selected_edge_type1_geometry.py`
+- Create `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
   - Runs null simulations for fixed-tree, selected-tree, and selected-tree-plus-traversal modes.
   - Emits edge rows, sibling rows, final split rows, and run manifest.
 - Create `benchmarks/cloud/aws_selected_edge_type1_geometry.py`
@@ -122,7 +122,7 @@ Interpretation:
 - Create `benchmarks/diagnostics/analysis/selected_edge_geometry_analysis.py`
   - Fits descriptive models for selected edge/sibling tail behavior.
   - Tests whether scalar alpha adjustment, edge action, merge margin, eigen concentration, angular capture, topology, or combined equations explain false openings.
-- Create `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Create `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
   - Unit tests for simulation contracts and deterministic smoke runs.
 - Create `tests/validation/66_test_aws_selected_edge_type1_geometry.py`
   - Unit tests for sharding, merge validation, duplicate detection, and missing shard failure.
@@ -271,8 +271,8 @@ n_calibration_support_failures
 ## Task 1: Add Deterministic Selected-Edge Simulation Config
 
 **Files:**
-- Create: `benchmarks/validation/selected_edge_type1_geometry.py`
-- Test: `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Create: `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
+- Test: `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
 
 - [ ] **Step 1: Write config/dataclass tests**
 
@@ -281,7 +281,7 @@ Add this test:
 ```python
 from pathlib import Path
 
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     SelectedEdgeGeometryConfig,
     build_run_id,
     parse_alpha_grid,
@@ -321,14 +321,14 @@ def test_selected_edge_config_records_output_paths(tmp_path: Path) -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: import failure because the new module does not exist.
 
 - [ ] **Step 3: Implement config skeleton**
 
-Create `benchmarks/validation/selected_edge_type1_geometry.py` with:
+Create `benchmarks/validation/statistics/selected_edge_type1_geometry.py` with:
 
 ```python
 #!/usr/bin/env python3
@@ -348,7 +348,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA_VERSION = "selected_edge_type1_geometry/v1"
-GENERATED_BY = "benchmarks.validation.selected_edge_type1_geometry"
+GENERATED_BY = "benchmarks.validation.statistics.selected_edge_type1_geometry"
 DEFAULT_EDGE_ALPHA_GRID = (0.0001, 0.0003, 0.001, 0.003, 0.01)
 DEFAULT_MODES = ("fixed_tree", "selected_tree", "selected_tree_traversal")
 
@@ -486,7 +486,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: pass.
@@ -494,22 +494,22 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/selected_edge_type1_geometry.py tests/validation/65_test_selected_edge_type1_geometry.py
+git add benchmarks/validation/statistics/selected_edge_type1_geometry.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 git commit -m "validation: scaffold selected-edge geometry diagnostic"
 ```
 
 ## Task 2: Implement Null Case Regeneration Without Production Changes
 
 **Files:**
-- Modify: `benchmarks/validation/selected_edge_type1_geometry.py`
-- Test: `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Modify: `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
+- Test: `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
 
 - [ ] **Step 1: Add a deterministic null-regeneration test**
 
 Append:
 
 ```python
-from benchmarks.validation.selected_edge_type1_geometry import regenerate_null_case
+from benchmarks.validation.statistics.selected_edge_type1_geometry import regenerate_null_case
 
 
 def test_regenerate_null_case_preserves_shape_and_contract() -> None:
@@ -534,7 +534,7 @@ def test_regenerate_null_case_preserves_shape_and_contract() -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py::test_regenerate_null_case_preserves_shape_and_contract
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py::test_regenerate_null_case_preserves_shape_and_contract
 ```
 
 Expected: import failure for `regenerate_null_case`.
@@ -586,7 +586,7 @@ def regenerate_null_case(
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: pass.
@@ -594,22 +594,22 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/selected_edge_type1_geometry.py tests/validation/65_test_selected_edge_type1_geometry.py
+git add benchmarks/validation/statistics/selected_edge_type1_geometry.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 git commit -m "validation: add strict binary null regeneration"
 ```
 
 ## Task 3: Extract Selected-Tree Edge Rows
 
 **Files:**
-- Modify: `benchmarks/validation/selected_edge_type1_geometry.py`
-- Test: `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Modify: `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
+- Test: `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
 
 - [ ] **Step 1: Add smoke test for selected-tree edge rows**
 
 Append:
 
 ```python
-from benchmarks.validation.selected_edge_type1_geometry import run_selected_edge_replicate
+from benchmarks.validation.statistics.selected_edge_type1_geometry import run_selected_edge_replicate
 
 
 def test_run_selected_edge_replicate_emits_edge_rows() -> None:
@@ -641,7 +641,7 @@ def test_run_selected_edge_replicate_emits_edge_rows() -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py::test_run_selected_edge_replicate_emits_edge_rows
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py::test_run_selected_edge_replicate_emits_edge_rows
 ```
 
 Expected: import failure for `run_selected_edge_replicate`.
@@ -768,7 +768,7 @@ Also add strict extractor functions. If a required annotation column is missing,
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: pass.
@@ -776,15 +776,15 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/selected_edge_type1_geometry.py tests/validation/65_test_selected_edge_type1_geometry.py
+git add benchmarks/validation/statistics/selected_edge_type1_geometry.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 git commit -m "validation: emit selected-tree edge type-I rows"
 ```
 
 ## Task 4: Add Geometry Variables
 
 **Files:**
-- Modify: `benchmarks/validation/selected_edge_type1_geometry.py`
-- Test: `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Modify: `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
+- Test: `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
 
 - [ ] **Step 1: Add geometry schema test**
 
@@ -822,7 +822,7 @@ def test_edge_rows_include_geometry_variables() -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py::test_edge_rows_include_geometry_variables
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py::test_edge_rows_include_geometry_variables
 ```
 
 Expected: failure for missing variables.
@@ -875,7 +875,7 @@ def cosine_squared(left: np.ndarray, right: np.ndarray) -> float:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: pass.
@@ -883,15 +883,15 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/selected_edge_type1_geometry.py tests/validation/65_test_selected_edge_type1_geometry.py
+git add benchmarks/validation/statistics/selected_edge_type1_geometry.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 git commit -m "validation: add selected-edge geometry covariates"
 ```
 
 ## Task 5: Implement Fixed-Tree Control Mode
 
 **Files:**
-- Modify: `benchmarks/validation/selected_edge_type1_geometry.py`
-- Test: `tests/validation/65_test_selected_edge_type1_geometry.py`
+- Modify: `benchmarks/validation/statistics/selected_edge_type1_geometry.py`
+- Test: `tests/validation/statistics/65_test_selected_edge_type1_geometry.py`
 
 - [ ] **Step 1: Add fixed-tree contrast test**
 
@@ -939,7 +939,7 @@ def test_fixed_tree_and_selected_tree_modes_are_distinct() -> None:
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py::test_fixed_tree_and_selected_tree_modes_are_distinct
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py::test_fixed_tree_and_selected_tree_modes_are_distinct
 ```
 
 Expected: `fixed_tree` unsupported.
@@ -953,7 +953,7 @@ Build tree on `tree_seed` null data and test on independent `data_seed` null dat
 Run:
 
 ```bash
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 ```
 
 Expected: pass.
@@ -961,7 +961,7 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add benchmarks/validation/selected_edge_type1_geometry.py tests/validation/65_test_selected_edge_type1_geometry.py
+git add benchmarks/validation/statistics/selected_edge_type1_geometry.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py
 git commit -m "validation: add fixed-tree edge type-I baseline"
 ```
 
@@ -1146,7 +1146,7 @@ git commit -m "cloud: shard selected-edge type-I geometry diagnostic"
 Add:
 
 ```bash
-python -m benchmarks.validation.selected_edge_type1_geometry run \
+python -m benchmarks.validation.statistics.selected_edge_type1_geometry run \
   --suite binary \
   --case-names binary_2clusters \
   --modes fixed_tree,selected_tree \
@@ -1187,8 +1187,8 @@ Expected: writes model ranking CSV.
 Run:
 
 ```bash
-ruff check benchmarks/validation/selected_edge_type1_geometry.py benchmarks/cloud/aws_selected_edge_type1_geometry.py benchmarks/diagnostics/analysis/selected_edge_geometry_analysis.py tests/validation/65_test_selected_edge_type1_geometry.py tests/validation/66_test_aws_selected_edge_type1_geometry.py tests/pipeline/64_test_selected_edge_geometry_analysis_cli.py
-pytest -q tests/validation/65_test_selected_edge_type1_geometry.py tests/validation/66_test_aws_selected_edge_type1_geometry.py tests/pipeline/64_test_selected_edge_geometry_analysis_cli.py
+ruff check benchmarks/validation/statistics/selected_edge_type1_geometry.py benchmarks/cloud/aws_selected_edge_type1_geometry.py benchmarks/diagnostics/analysis/selected_edge_geometry_analysis.py tests/validation/statistics/65_test_selected_edge_type1_geometry.py tests/validation/66_test_aws_selected_edge_type1_geometry.py tests/pipeline/64_test_selected_edge_geometry_analysis_cli.py
+pytest -q tests/validation/statistics/65_test_selected_edge_type1_geometry.py tests/validation/66_test_aws_selected_edge_type1_geometry.py tests/pipeline/64_test_selected_edge_geometry_analysis_cli.py
 ```
 
 Expected: all pass.
@@ -1445,7 +1445,7 @@ git commit -m "wiki: record selected-edge type-I geometry evidence"
 
 ```bash
 pytest -q \
-  tests/validation/65_test_selected_edge_type1_geometry.py \
+  tests/validation/statistics/65_test_selected_edge_type1_geometry.py \
   tests/validation/66_test_aws_selected_edge_type1_geometry.py \
   tests/pipeline/64_test_selected_edge_geometry_analysis_cli.py
 ```
@@ -1457,7 +1457,7 @@ pytest -q \
   tests/statistics/41_test_multiple_testing_contracts.py \
   tests/statistics/43_test_traversal_aligned_sibling_fdr.py \
   tests/statistics/39_test_projected_wald_statistics.py \
-  tests/validation/51_test_selected_pca_projected_wald_calibration.py \
+  tests/validation/statistics/51_test_selected_pca_projected_wald_calibration.py \
   tests/validation/64_test_aws_alpha_grid_search.py
 ```
 

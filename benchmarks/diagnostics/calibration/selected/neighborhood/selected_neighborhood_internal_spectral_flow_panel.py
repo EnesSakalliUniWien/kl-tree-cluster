@@ -49,7 +49,7 @@ from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_g
     _generate_data_with_truth,
 )
 from benchmarks.shared.runners.tbs_runner import _run_tbs_method
-from benchmarks.validation.selected_edge_type1_geometry import (
+from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
     parse_names,

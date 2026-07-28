@@ -305,9 +305,6 @@ def run_clustering_result(
                         "empirical_barycenter",
                     )
                 ),
-                spectral_mp_row_count_mode=str(
-                    params.get("spectral_mp_row_count_mode", "leaf_effective_rows")
-                ),
                 continuous_covariance_policy=str(
                     params.get(
                         "continuous_covariance_policy",
