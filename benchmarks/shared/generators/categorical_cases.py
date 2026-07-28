@@ -79,9 +79,7 @@ def generate_phylogenetic_case(test_case: dict, seed: int | None) -> CaseDataRes
     n_categories = int(require_case_value(test_case, "n_categories", "Phylogenetic"))
     samples_per_taxon = int(require_case_value(test_case, "samples_per_taxon", "Phylogenetic"))
     mutation_rate = float(require_case_value(test_case, "mutation_rate", "Phylogenetic"))
-    root_concentration = float(
-        require_case_value(test_case, "root_concentration", "Phylogenetic")
-    )
+    root_concentration = float(require_case_value(test_case, "root_concentration", "Phylogenetic"))
 
     sample_dict, cluster_assignments, distributions, phylo_meta = generate_phylogenetic_data(
         n_taxa=n_taxa,

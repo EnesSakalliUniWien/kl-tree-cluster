@@ -27,8 +27,7 @@ def build_sibling_pair_record(
     """Construct a sibling-pair record from resolved statistical inputs."""
     if not np.isfinite(test_statistic):
         raise ValueError(
-            "Sibling pair record requires a finite test statistic; "
-            f"parent={parent_node_id!r}."
+            f"Sibling pair record requires a finite test statistic; parent={parent_node_id!r}."
         )
     if not np.isfinite(reference_scale) or reference_scale <= 0:
         raise ValueError(
@@ -42,8 +41,7 @@ def build_sibling_pair_record(
         )
     if not np.isfinite(p_value) or p_value < 0.0 or p_value > 1.0:
         raise ValueError(
-            "Sibling pair record requires a finite p-value in [0, 1]; "
-            f"parent={parent_node_id!r}."
+            f"Sibling pair record requires a finite p-value in [0, 1]; parent={parent_node_id!r}."
         )
     if not np.isfinite(sibling_null_weight) or not 0.0 <= sibling_null_weight <= 1.0:
         raise ValueError(

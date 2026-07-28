@@ -442,7 +442,9 @@ def classify_extra_plot(
             input_tables=f"{prefix}_tree_edges.csv;tbs_tree_branch_length_summary.csv",
             intended_question="Inspect branch-length distribution for one TBS run.",
             status=status,
-            notes="Current assignment column found." if status == "present" else "No matching current method_assignments column.",
+            notes="Current assignment column found."
+            if status == "present"
+            else "No matching current method_assignments column.",
         )
     if path.name.endswith("_tree_dendrogram.png"):
         status = "present" if prefix in current_methods else "orphaned_existing_file"
@@ -457,7 +459,9 @@ def classify_extra_plot(
             input_tables=f"{prefix}_tree_edges.csv",
             intended_question="Inspect a truncated dendrogram for one TBS run.",
             status=status,
-            notes="Current assignment column found." if status == "present" else "No matching current method_assignments column.",
+            notes="Current assignment column found."
+            if status == "present"
+            else "No matching current method_assignments column.",
         )
     if path.name.endswith("_clusters_radial_tree_ggtree.png") or path.name.endswith(
         "_clusters_radial_tree_ggtree.pdf"
@@ -474,9 +478,13 @@ def classify_extra_plot(
             input_tables=f"method_assignments.csv;{prefix}_tree_edges.csv",
             intended_question="Standalone full radial tree colored by final TBS clusters.",
             status=status,
-            notes="Current assignment column found." if status == "present" else "No matching current method_assignments column.",
+            notes="Current assignment column found."
+            if status == "present"
+            else "No matching current method_assignments column.",
         )
-    if path.name.endswith("_radial_tree_ggtree.png") or path.name.endswith("_radial_tree_ggtree.pdf"):
+    if path.name.endswith("_radial_tree_ggtree.png") or path.name.endswith(
+        "_radial_tree_ggtree.pdf"
+    ):
         status = "present" if prefix in current_methods else "orphaned_existing_file"
         return base_row(
             dataset=dataset,
@@ -489,7 +497,9 @@ def classify_extra_plot(
             input_tables=f"{prefix}_tree_edges.csv",
             intended_question="Standalone full radial tree colored by edge-gate state.",
             status=status,
-            notes="Current assignment column found." if status == "present" else "No matching current method_assignments column.",
+            notes="Current assignment column found."
+            if status == "present"
+            else "No matching current method_assignments column.",
         )
     return base_row(
         dataset=dataset,
@@ -507,9 +517,7 @@ def classify_extra_plot(
 
 def validate_aliases(rows: list[dict[str, Any]]) -> None:
     target_by_key = {
-        (Path(row["path"]).stem, row["format"]): row
-        for row in rows
-        if row["status"] == "present"
+        (Path(row["path"]).stem, row["format"]): row for row in rows if row["status"] == "present"
     }
     for row in rows:
         if row["role"] != "alias" or row["status"] != "present":
@@ -618,7 +626,9 @@ def main() -> None:
         run_commands(commands)
 
     rows = build_manifest(args.dataset, output_dir)
-    summary = write_manifest(dataset=args.dataset, output_dir=output_dir, rows=rows, commands=commands)
+    summary = write_manifest(
+        dataset=args.dataset, output_dir=output_dir, rows=rows, commands=commands
+    )
     print(
         f"Wrote {summary['manifest_csv']} "
         f"({summary['plot_count']} plots; statuses: {summary['status_counts']})"

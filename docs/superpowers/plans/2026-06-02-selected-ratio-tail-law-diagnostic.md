@@ -16,10 +16,10 @@ snippets; statistical thresholds are not read from `config.py`.
 
 ## File Structure
 
-- Modify `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- Modify `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   - Owns the selected-hierarchy geometry diagnostic.
   - Add diagnostic-only tail-law constants, context binning, held-out fold evaluation, production-admissibility checks, output writing, and manifest metadata.
-- Modify `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- Modify `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
   - Owns focused validation for selected-hierarchy geometry diagnostics.
   - Add synthetic context fields, explicit independent simulation ids, and tests for tail-law support reporting and admissibility decisions.
 - Create `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/`
@@ -65,8 +65,8 @@ git diff --stat
 Expected: changes are concentrated in:
 
 ```text
-benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
 wiki/analyses/selected-hierarchy-geometric-law-map.md
 wiki/analyses/selected-hierarchy-null-support-contract.md
 wiki/analyses/selected-hierarchy-selection-geometry.md
@@ -89,15 +89,15 @@ Expected: the directory is about `100K`, and the result tables are compact CSV/J
 ### Task 2: Add Tail-Law Tests First
 
 **Files:**
-- Modify: `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
-- Test: `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- Modify: `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
+- Test: `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
 
 - [ ] **Step 1: Import the new evaluator in the validation test**
 
 Add this imported name to the existing import block:
 
 ```python
-from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates import (
+from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_geometry_covariates import (
     evaluate_candidate_equation_holdout,
     evaluate_candidate_equations,
     evaluate_covariate_block_models,
@@ -183,7 +183,7 @@ assert (output_dir / "selected_ratio_tail_law.csv").exists()
 Run:
 
 ```bash
-uv run pytest tests/validation/53_test_selected_hierarchy_geometry_covariates.py::test_selected_ratio_tail_law_reports_context_support_and_holdout_error -q
+uv run pytest tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py::test_selected_ratio_tail_law_reports_context_support_and_holdout_error -q
 ```
 
 Expected before implementation: import failure for `evaluate_selected_ratio_tail_law` or missing `edge_action_bin`.
@@ -191,8 +191,8 @@ Expected before implementation: import failure for `evaluate_selected_ratio_tail
 ### Task 3: Implement Diagnostic-Only Tail-Law Evaluation
 
 **Files:**
-- Modify: `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
-- Test: `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- Modify: `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
+- Test: `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
 
 - [ ] **Step 1: Add canonical diagnostic constants**
 
@@ -523,8 +523,8 @@ Add this name to `__all__`:
 Run:
 
 ```bash
-ruff check benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py tests/validation/53_test_selected_hierarchy_geometry_covariates.py
-uv run pytest tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+ruff check benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
+uv run pytest tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
 ```
 
 Expected:
@@ -551,7 +551,7 @@ All checks passed!
 Run:
 
 ```bash
-uv run python -m benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates \
+uv run python -m benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_geometry_covariates \
   --case-names gauss_null_large,gauss_clear_medium,dim_diffuse_6c_136f,binary_low_noise_4c,cat_highcard_20cat_4c,cat_highd_3cat_500feat,overlap_heavy_4c_med_feat,phylo_dna_8taxa_med_mut,sbm_moderate \
   --n-replicates 200 \
   --seed 20260602 \
@@ -612,8 +612,8 @@ type: source
 status: reviewed
 updated: 2026-06-02
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+  - tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/geometry_summary_by_case.csv
@@ -679,10 +679,10 @@ production-admissible under the predeclared support contract.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   implements the descriptive selected-ratio tail-law table and explicit
   production-admissibility checks.
-- `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
   validates context support reporting, held-out exceedance estimation,
   admissibility failures, and output creation.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json`
@@ -772,8 +772,8 @@ wiki-lint passed
 Run:
 
 ```bash
-ruff check benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py tests/validation/53_test_selected_hierarchy_geometry_covariates.py
-uv run pytest tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+ruff check benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
+uv run pytest tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
 make wiki-lint
 git diff --check
 ```
@@ -819,8 +819,8 @@ Expected: status contains only the diagnostic code, focused tests, wiki updates,
 ### Task 7: Commit The Diagnostic Package
 
 **Files:**
-- Stage: `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
-- Stage: `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- Stage: `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
+- Stage: `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
 - Stage: `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/`
 - Stage: `wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md`
 - Stage: `wiki/index.md`
@@ -836,8 +836,8 @@ Run:
 
 ```bash
 git add \
-  benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py \
-  tests/validation/53_test_selected_hierarchy_geometry_covariates.py \
+  benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py \
+  tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py \
   raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200 \
   wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md \
   wiki/index.md \

@@ -38,9 +38,7 @@ def add_projection_dimension_rule_columns(records: pd.DataFrame) -> pd.DataFrame
     """Add candidate projection-dimension rule columns."""
     missing = REQUIRED_COLUMNS - set(records.columns)
     if missing:
-        raise ValueError(
-            f"Projection-dimension records are missing columns: {sorted(missing)!r}."
-        )
+        raise ValueError(f"Projection-dimension records are missing columns: {sorted(missing)!r}.")
     table = records.copy()
     current = pd.to_numeric(
         table["sibling_projection_dimension"],

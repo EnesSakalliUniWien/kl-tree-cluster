@@ -27,12 +27,8 @@ def test_scrna_benchmark_branch_time_rows_use_nnls_branch_lengths() -> None:
     for label, distance_source in nnls_rows.items():
         config = configs_by_label[label]
         assert config.distance_source == distance_source
-        assert config.params["edge_branch_length_variance_policy"] == (
-            "normalized_branch_length"
-        )
-        assert config.params["branch_length_optimization_method"] == (
-            "fixed_topology_nnls"
-        )
+        assert config.params["edge_branch_length_variance_policy"] == ("normalized_branch_length")
+        assert config.params["branch_length_optimization_method"] == ("fixed_topology_nnls")
         assert config.params["branch_length_optimization_target_metric"] == (
             "squared_standardized_euclidean"
         )
@@ -53,9 +49,7 @@ def test_scrna_benchmark_branch_time_rows_use_nnls_branch_lengths() -> None:
     for label, distance_source in raw_diagnostic_rows.items():
         config = configs_by_label[label]
         assert config.distance_source == distance_source
-        assert config.params["edge_branch_length_variance_policy"] == (
-            "normalized_branch_length"
-        )
+        assert config.params["edge_branch_length_variance_policy"] == ("normalized_branch_length")
         assert config.params["allow_linkage_ultrametric_branch_time"] is True
         assert "branch_length_optimization_method" not in config.params
 

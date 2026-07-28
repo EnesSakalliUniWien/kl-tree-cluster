@@ -114,9 +114,7 @@ def test_binary_split_action_matches_child_parent_variance_identity() -> None:
         right_count,
     )
 
-    parent_mean = (left_count * left_mean + right_count * right_mean) / (
-        left_count + right_count
-    )
+    parent_mean = (left_count * left_mean + right_count * right_mean) / (left_count + right_count)
     child_parent_action = left_count * np.sum((left_mean - parent_mean) ** 2)
     child_parent_action += right_count * np.sum((right_mean - parent_mean) ** 2)
     pairwise_action = (left_count * right_count / (left_count + right_count)) * np.sum(
@@ -283,9 +281,10 @@ def test_distributional_action_split_filter_none_annotates_without_changing_edge
     assert filtered["Child_Parent_Divergence_Significant"].equals(
         annotations["Child_Parent_Divergence_Significant"]
     )
-    assert filtered.loc["small", "Distributional_Action"] > filtered.loc[
-        "large", "Distributional_Action"
-    ]
+    assert (
+        filtered.loc["small", "Distributional_Action"]
+        > filtered.loc["large", "Distributional_Action"]
+    )
     assert bool(filtered.loc["large", "Distributional_Split_Action_Filter_Passes"])
     assert not bool(filtered.loc["large", "Distributional_Split_Action_Filtered"])
     assert metadata["distributional_action_split_filter_policy"] == (

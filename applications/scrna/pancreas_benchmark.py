@@ -317,10 +317,7 @@ def _method_configs(true_k: int) -> list[MethodConfig]:
         ),
         MethodConfig(
             "tbs_continuous_guarded_within_covariance",
-            (
-                "TBS raw-linkage branch-time diagnostic projected adaptive-k90 "
-                "alpha=0.01 edge=0.001"
-            ),
+            ("TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001"),
             tbs_raw_linkage_branch_time_params,
             needs_distance_condensed=True,
             distance_source="euclidean",
@@ -846,9 +843,7 @@ def _write_tbs_tree_diagnostics(
             "distributional_action_child_parent_mass_fraction": (
                 action_summary.child_parent_mass_fraction
             ),
-            "distributional_action_squared_displacement": (
-                action_summary.squared_displacement
-            ),
+            "distributional_action_squared_displacement": (action_summary.squared_displacement),
             "distributional_action": action_summary.action,
             "distributional_action_per_branch_length": (
                 action_summary.action / max(float(branch_length), 1e-12)
@@ -861,10 +856,11 @@ def _write_tbs_tree_diagnostics(
                 if column in annotations_df.columns:
                     row[column] = annotations_df.loc[child, column]
             for column in annotations_df.columns:
-                if column == "Distributional_Action" or column.startswith(
-                    "Distributional_Action_"
-                ) or column == "Distributional_Split_Action" or column.startswith(
-                    "Distributional_Split_Action_"
+                if (
+                    column == "Distributional_Action"
+                    or column.startswith("Distributional_Action_")
+                    or column == "Distributional_Split_Action"
+                    or column.startswith("Distributional_Split_Action_")
                 ):
                     row[column] = annotations_df.loc[child, column]
         rows.append(row)
@@ -1673,11 +1669,7 @@ def main() -> None:
     root = _project_root()
     input_h5ad = root / "raw" / "inbox" / "pancreas.h5ad"
     output_dir = args.output_dir or (
-        root
-        / "raw"
-        / "assets"
-        / "benchmark-results"
-        / "pancreas_scrna_cluster_benchmark_20260623"
+        root / "raw" / "assets" / "benchmark-results" / "pancreas_scrna_cluster_benchmark_20260623"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -49,15 +49,21 @@ def _write_fake_shard(root: Path, shard_index: int, replicate_indices: tuple[int
         )
         + "\n"
     )
-    pd.DataFrame({"replicate": list(replicate_indices), "edge_rejected": [False] * len(replicate_indices)}).to_csv(
+    pd.DataFrame(
+        {"replicate": list(replicate_indices), "edge_rejected": [False] * len(replicate_indices)}
+    ).to_csv(
         shard_dir / "selected_edge_geometry_edges.csv",
         index=False,
     )
-    pd.DataFrame({"replicate": list(replicate_indices), "sibling_rejected": [False] * len(replicate_indices)}).to_csv(
+    pd.DataFrame(
+        {"replicate": list(replicate_indices), "sibling_rejected": [False] * len(replicate_indices)}
+    ).to_csv(
         shard_dir / "selected_edge_geometry_siblings.csv",
         index=False,
     )
-    pd.DataFrame({"replicate": list(replicate_indices), "false_split": [False] * len(replicate_indices)}).to_csv(
+    pd.DataFrame(
+        {"replicate": list(replicate_indices), "false_split": [False] * len(replicate_indices)}
+    ).to_csv(
         shard_dir / "selected_edge_geometry_final.csv",
         index=False,
     )

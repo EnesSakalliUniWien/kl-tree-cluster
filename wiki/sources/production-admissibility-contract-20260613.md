@@ -2,17 +2,17 @@
 title: Production Admissibility Contract 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/production_admissibility_contract.py
-  - tests/validation/91_test_production_admissibility_contract.py
-  - benchmarks/diagnostics/calibration/selected_edge_sibling_null_equation.py
-  - benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py
-  - benchmarks/diagnostics/calibration/covariance_laplacian_panel.py
-  - benchmarks/diagnostics/calibration/selected_edge_sibling_postrun_analysis.py
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py
-  - benchmarks/diagnostics/calibration/null_law_decomposition_panel.py
+  - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py
+  - tests/validation/calibration/traversal/91_test_production_admissibility_contract.py
+  - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_null_equation.py
+  - benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py
+  - benchmarks/diagnostics/calibration/statistics/covariance_laplacian_panel.py
+  - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_postrun_analysis.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py
+  - benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py
   - wiki/analyses/null-edge-sibling-calibration-enhancement-plan.md
 tags:
   - source
@@ -69,21 +69,21 @@ component statuses into `production_admissible`, `diagnostic_only`, or
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/production_admissibility_contract.py`
+- `benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py`
   defines the dataframe API, CLI, normalized component output, summary output,
   and manifest.
-- `tests/validation/91_test_production_admissibility_contract.py` verifies
+- `tests/validation/calibration/traversal/91_test_production_admissibility_contract.py` verifies
   production-admissible, diagnostic-only, fail-closed, unknown-status, and
   output-writing cases, including the selected edge+sibling equation statuses.
-- `tests/validation/95_test_selected_edge_sibling_postrun_analysis.py` verifies
+- `tests/validation/calibration/edge/95_test_selected_edge_sibling_postrun_analysis.py` verifies
   that post-run distribution-shape mismatch produces a fail-closed production
   summary through this contract.
-- `tests/validation/96_test_differential_statistic_validity_panel.py` verifies
+- `tests/validation/calibration/statistics/96_test_differential_statistic_validity_panel.py` verifies
   that differential statistic-validity outputs feed the same fail-closed
   production-admissibility contract.
-- `tests/validation/97_test_regularized_wald_statistic_panel.py` verifies that
+- `tests/validation/calibration/statistics/97_test_regularized_wald_statistic_panel.py` verifies that
   regularized Wald outputs feed the same production-admissibility contract.
-- `tests/validation/98_test_null_law_decomposition_panel.py` verifies that
+- `tests/validation/calibration/statistics/98_test_null_law_decomposition_panel.py` verifies that
   null-law decomposition outputs feed the same production-admissibility
   contract.
 - [[null-edge-sibling-calibration-enhancement-plan]] calls for explicit

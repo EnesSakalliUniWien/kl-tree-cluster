@@ -2,11 +2,11 @@
 title: Data-Independent Sibling Gate Traversal Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
-  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
-  - tests/validation/100_test_data_independent_sibling_gate_traversal_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_traversal_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py
+  - tests/validation/calibration/sibling/gates/100_test_data_independent_sibling_gate_traversal_panel.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tests/statistics/31_test_registry_config_wiring.py
@@ -272,7 +272,7 @@ and reports cluster-level outcomes.
 
 ## Evidence
 
-- `tests/validation/100_test_data_independent_sibling_gate_traversal_panel.py`
+- `tests/validation/calibration/sibling/gates/100_test_data_independent_sibling_gate_traversal_panel.py`
   verifies summary statuses and output writing.
 - `raw/inbox/data-independent-sibling-gate-traversal-20260613.md` records the
   six-case binary/categorical traversal smoke, stricter transfer sweep, and

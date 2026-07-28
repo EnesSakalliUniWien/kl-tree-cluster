@@ -24,9 +24,7 @@ def _compute_sibling_z_scores(
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> np.ndarray:
     """Return the standardized sibling contrast vector."""
-    tree_time_normalizer = (
-        None if mean_branch_length is None else 2.0 * float(mean_branch_length)
-    )
+    tree_time_normalizer = None if mean_branch_length is None else 2.0 * float(mean_branch_length)
     return compute_whitened_wald_contrast(
         left_distribution,
         right_distribution,

@@ -2,10 +2,10 @@
 title: Selected Neighborhood Conditional Support Panel 2026-06-17
 type: source
 status: reviewed
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_conditional_support_panel.py
-  - tests/validation/187_test_selected_neighborhood_conditional_support_panel.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_conditional_support_panel.py
+  - tests/validation/calibration/selected/neighborhood/187_test_selected_neighborhood_conditional_support_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates
 tags:
   - source
@@ -60,10 +60,10 @@ hard-negative leaks. `overlap_extreme_4c` remains a hard negative.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_neighborhood_conditional_support_panel.py`
+- `benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_conditional_support_panel.py`
   implements the root-context join, row classifier, case summary, overall
   summary, and CLI.
-- `tests/validation/187_test_selected_neighborhood_conditional_support_panel.py`
+- `tests/validation/calibration/selected/neighborhood/187_test_selected_neighborhood_conditional_support_panel.py`
   covers hard-negative blocking, valid-root/missing-tail diagnostic support,
   selected-null leak detection, direct split separation, local support
   bottlenecks, root non-direct blocking, and output writing.

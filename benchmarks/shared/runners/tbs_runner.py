@@ -11,7 +11,6 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -41,6 +40,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neigh
     build_branch_length_distance_cache,
 )
 from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.tree.construction import DEFAULT_TREE_LINKAGE_METHOD
 from tree_break_selection.tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
     DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
@@ -127,8 +127,8 @@ def run_tbs_on_distance(
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
     allow_linkage_ultrametric_branch_time: bool = False,
-    passthrough: bool = config.PASSTHROUGH,
-    trace_level: str = "full",
+    passthrough: bool = True,
+    trace_level: str = "compact",
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
     stage_timings: dict[str, float] = {}
@@ -492,7 +492,7 @@ def _run_tbs_method(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray | None,
     sibling_significance_level: float,
-    tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
+    tree_linkage_method: str = DEFAULT_TREE_LINKAGE_METHOD,
     *,
     tree_builder: str = "linkage",
     tree_rooting: str = "linkage_root",
@@ -549,7 +549,7 @@ def _run_tbs_method(
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
     allow_linkage_ultrametric_branch_time: bool = False,
-    passthrough: bool = config.PASSTHROUGH,
+    passthrough: bool = True,
     trace_level: str = "full",
 ) -> MethodRunResult:
     return run_tbs_on_distance(

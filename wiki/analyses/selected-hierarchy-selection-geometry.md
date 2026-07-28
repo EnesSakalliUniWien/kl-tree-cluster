@@ -2,7 +2,7 @@
 title: Selected Hierarchy Selection Geometry
 type: analysis
 status: reviewed
-updated: 2026-06-02
+updated: 2026-07-28
 sources:
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/questions/open-mathematical-questions.md
@@ -15,8 +15,8 @@ sources:
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/sources/selected-tail-topology-refinement-20260603.md
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
-  - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_null_audit.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
   - tree_break_selection/tree/distributions.py
   - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py

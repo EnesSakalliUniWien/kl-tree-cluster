@@ -47,7 +47,8 @@ def _write_fixture(root: Path) -> tuple[Path, Path, Path]:
         ],
     )
     _write_csv(
-        blob / "13_subspace_lens_vs_main_adaptive_contexts_20260610/subspace_lens_vs_main_context_summary.csv",
+        blob
+        / "13_subspace_lens_vs_main_adaptive_contexts_20260610/subspace_lens_vs_main_context_summary.csv",
         [
             {
                 "lens_family": "raw_kak",

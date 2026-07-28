@@ -2,10 +2,10 @@
 title: Overlap Context-Negative Bayesian Topology Sensitivity 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_sensitivity.py
-  - tests/validation/133_test_overlap_context_negative_bayesian_topology_sensitivity.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_context_negative_bayesian_topology_sensitivity.py
+  - tests/validation/calibration/overlap/133_test_overlap_context_negative_bayesian_topology_sensitivity.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity/overlap_context_negative_bayesian_topology_sensitivity_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity/overlap_context_negative_bayesian_topology_sensitivity_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity/manifest.json
@@ -51,14 +51,14 @@ soft context term.
 
 ## Evidence
 
-- `tests/validation/133_test_overlap_context_negative_bayesian_topology_sensitivity.py`
+- `tests/validation/calibration/overlap/133_test_overlap_context_negative_bayesian_topology_sensitivity.py`
   verifies that topology-only and outgoing-topology-only profiles separate,
   while selected-family plus context stays fail-closed, and that the runner
   writes outputs.
 - Verification passed:
-  `pytest tests/validation/133_test_overlap_context_negative_bayesian_topology_sensitivity.py -q`
+  `pytest tests/validation/calibration/overlap/133_test_overlap_context_negative_bayesian_topology_sensitivity.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_sensitivity.py tests/validation/133_test_overlap_context_negative_bayesian_topology_sensitivity.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_bayesian_topology_sensitivity.py tests/validation/calibration/overlap/133_test_overlap_context_negative_bayesian_topology_sensitivity.py`.
 
 ## Links
 

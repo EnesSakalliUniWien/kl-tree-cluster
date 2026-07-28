@@ -2,11 +2,11 @@
 title: Selected Tail Admissibility Domain 2026-06-03
 type: source
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - benchmarks/diagnostics/calibration/selected_tail_admissibility_domain.py
-  - tests/validation/57_test_selected_tail_admissibility_domain.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_admissibility_domain.py
+  - tests/validation/calibration/selected/tail/57_test_selected_tail_admissibility_domain.py
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/manifest.json
@@ -74,12 +74,12 @@ non-admissible contexts remain undefined for production external calibration.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   generated the 500-replicate boundary selected-ratio tail-law table.
-- `benchmarks/diagnostics/calibration/selected_tail_admissibility_domain.py`
+- `benchmarks/diagnostics/calibration/selected/tail/selected_tail_admissibility_domain.py`
   combines selected-tail runs into context-level admissibility and boundary
   tables.
-- `tests/validation/57_test_selected_tail_admissibility_domain.py` verifies
+- `tests/validation/calibration/selected/tail/57_test_selected_tail_admissibility_domain.py` verifies
   the domain classification, recorded precision-contract margin, and output
   writer.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv`

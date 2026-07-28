@@ -2,10 +2,10 @@
 title: Overlap Structural Context Thresholds 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_structural_context_thresholds.py
-  - tests/validation/105_test_overlap_structural_context_thresholds.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_structural_context_thresholds.py
+  - tests/validation/calibration/overlap/105_test_overlap_structural_context_thresholds.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_thresholds/overlap_structural_context_threshold_sensitivity.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_thresholds/overlap_structural_context_threshold_summary.csv
 tags:
@@ -57,12 +57,12 @@ each context. It is diagnostic-only and does not change production traversal.
 
 ## Evidence
 
-- `tests/validation/105_test_overlap_structural_context_thresholds.py` verifies
+- `tests/validation/calibration/overlap/105_test_overlap_structural_context_thresholds.py` verifies
   context binning, context-specific threshold summaries, and output writing.
 - Verification passed:
-  `pytest tests/validation/105_test_overlap_structural_context_thresholds.py -q`
+  `pytest tests/validation/calibration/overlap/105_test_overlap_structural_context_thresholds.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_structural_context_thresholds.py tests/validation/105_test_overlap_structural_context_thresholds.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_structural_context_thresholds.py tests/validation/calibration/overlap/105_test_overlap_structural_context_thresholds.py`.
 
 ## Links
 

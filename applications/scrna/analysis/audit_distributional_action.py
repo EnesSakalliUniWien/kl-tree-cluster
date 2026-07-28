@@ -76,8 +76,7 @@ METHODS = (
         geometry="pca_linkage",
         variant="branch_time_raw_linkage",
         method_label=(
-            "TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 "
-            "edge=0.001"
+            "TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001"
         ),
         assignment_key="tbs_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001",
         edge_csv=(
@@ -302,9 +301,7 @@ def _edge_records_for_method(
             child_count,
         )
         child_parent_fraction = standardized_action.child_parent_mass_fraction
-        subtree_distributional_action = float(
-            standardized_action.action / len(std_delta)
-        )
+        subtree_distributional_action = float(standardized_action.action / len(std_delta))
         parent_fraction_distributional_action = float(
             child_parent_fraction * standardized_delta_sq_mean
         )
@@ -335,9 +332,7 @@ def _edge_records_for_method(
                 "standardized_delta_norm": float(np.sqrt(standardized_delta_sq_sum)),
                 "standardized_delta_sq_mean": standardized_delta_sq_mean,
                 "subtree_distributional_action": subtree_distributional_action,
-                "parent_fraction_distributional_action": (
-                    parent_fraction_distributional_action
-                ),
+                "parent_fraction_distributional_action": (parent_fraction_distributional_action),
                 "raw_subtree_distributional_action": raw_subtree_distributional_action,
                 "action_per_branch_length": float(
                     subtree_distributional_action / max(branch_length, 1e-12)
@@ -346,12 +341,8 @@ def _edge_records_for_method(
                 "edge_p_value": float(edge.get(EDGE_P_COLUMN, np.nan)),
                 "edge_significant": _safe_bool(edge.get(EDGE_SIGNIFICANT_COLUMN, False)),
                 "edge_tested": _safe_bool(edge.get(EDGE_TESTED_COLUMN, False)),
-                "edge_ancestor_blocked": _safe_bool(
-                    edge.get(EDGE_ANCESTOR_BLOCKED_COLUMN, False)
-                ),
-                "split_filter_policy": edge.get(
-                    "Distributional_Split_Action_Filter_Policy"
-                ),
+                "edge_ancestor_blocked": _safe_bool(edge.get(EDGE_ANCESTOR_BLOCKED_COLUMN, False)),
+                "split_filter_policy": edge.get("Distributional_Split_Action_Filter_Policy"),
                 "split_filter_quantile": float(
                     edge.get("Distributional_Split_Action_Filter_Quantile", np.nan)
                 ),
@@ -364,9 +355,7 @@ def _edge_records_for_method(
                 "split_filter_filtered": _safe_bool(
                     edge.get("Distributional_Split_Action_Filtered", False)
                 ),
-                "child_progenitor_interpretation": child_info.get(
-                    "progenitor_interpretation"
-                ),
+                "child_progenitor_interpretation": child_info.get("progenitor_interpretation"),
                 "child_progenitor_population_fraction": child_info.get(
                     "progenitor_population_fraction"
                 ),
@@ -376,9 +365,7 @@ def _edge_records_for_method(
                     child_info.get("is_monophyletic_meeting_node", False)
                 ),
                 "child_meeting_clusters": child_info.get("meeting_clusters"),
-                "parent_progenitor_interpretation": parent_info.get(
-                    "progenitor_interpretation"
-                ),
+                "parent_progenitor_interpretation": parent_info.get("progenitor_interpretation"),
                 "parent_progenitor_population_fraction": parent_info.get(
                     "progenitor_population_fraction"
                 ),
@@ -397,9 +384,7 @@ def _edge_records_for_method(
     result["branch_length_rank"] = _rank_within(result["branch_length"])
     result["edge_statistic_rank"] = _rank_within(result["edge_test_statistic"])
     result["action_minus_leaf_count_rank"] = result["leaf_count_rank"] - result["action_rank"]
-    result["action_minus_branch_length_rank"] = (
-        result["branch_length_rank"] - result["action_rank"]
-    )
+    result["action_minus_branch_length_rank"] = result["branch_length_rank"] - result["action_rank"]
     return result
 
 
@@ -427,9 +412,7 @@ def _summarize_method(group: pd.DataFrame) -> dict[str, object]:
         "median_subtree_distributional_action": float(
             group["subtree_distributional_action"].median()
         ),
-        "max_subtree_distributional_action": float(
-            group["subtree_distributional_action"].max()
-        ),
+        "max_subtree_distributional_action": float(group["subtree_distributional_action"].max()),
         "spearman_action_vs_leaf_count": _spearman(
             group["subtree_distributional_action"],
             group["child_leaf_count"],
@@ -450,19 +433,13 @@ def _summarize_method(group: pd.DataFrame) -> dict[str, object]:
             internal["subtree_distributional_action"],
             internal["branch_length"],
         ),
-        "top10_action_leaf_count_overlap": int(
-            len(top_action_children & set(top_leaf["child"]))
-        ),
+        "top10_action_leaf_count_overlap": int(len(top_action_children & set(top_leaf["child"]))),
         "top10_action_branch_length_overlap": int(
             len(top_action_children & set(top_branch["child"]))
         ),
-        "top_action_edge": str(
-            top_action.iloc[0]["parent"] + "->" + top_action.iloc[0]["child"]
-        ),
+        "top_action_edge": str(top_action.iloc[0]["parent"] + "->" + top_action.iloc[0]["child"]),
         "top_action_child_leaf_count": int(top_action.iloc[0]["child_leaf_count"]),
-        "top_action_standardized_delta_norm": float(
-            top_action.iloc[0]["standardized_delta_norm"]
-        ),
+        "top_action_standardized_delta_norm": float(top_action.iloc[0]["standardized_delta_norm"]),
         "top_action_value": float(top_action.iloc[0]["subtree_distributional_action"]),
         "top_action_branch_length": float(top_action.iloc[0]["branch_length"]),
     }
@@ -646,12 +623,10 @@ def _write_report(
 ) -> str:
     generated_at = generated_at or datetime.now().astimezone().isoformat(timespec="seconds")
     adaptive_summary = summary[
-        (summary["geometry"] == "adaptive_diffusion")
-        & (summary["variant"] == "topology_only")
+        (summary["geometry"] == "adaptive_diffusion") & (summary["variant"] == "topology_only")
     ].copy()
     pca_summary = summary[
-        (summary["geometry"] == "pca_linkage")
-        & (summary["variant"] == "topology_only")
+        (summary["geometry"] == "pca_linkage") & (summary["variant"] == "topology_only")
     ].copy()
 
     report = f"""# scRNA Distributional Action Audit

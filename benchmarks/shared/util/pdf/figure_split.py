@@ -44,9 +44,7 @@ def _classify_figure(fig) -> str:
     return "other"
 
 
-def split_collected_figs_to_pdfs(
-    figs_with_info: list, output_dir: Path, verbose: bool = False
-):
+def split_collected_figs_to_pdfs(figs_with_info: list, output_dir: Path, verbose: bool = False):
     """Split a mixed figure collection into per-category multi-page PDFs."""
     output_dir.mkdir(parents=True, exist_ok=True)
     categorized_figs = defaultdict(lambda: defaultdict(list))

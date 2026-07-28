@@ -2,11 +2,11 @@
 title: Full Adaptive NNLS Benchmark Run 2026-06-28
 type: source
 status: reviewed
-updated: 2026-06-28
+updated: 2026-07-28
 sources:
   - benchmarks/results/run_20260628_082116Z_full/full_benchmark_comparison.csv
   - benchmarks/results/run_20260628_082116Z_full/failure_report.md
-  - benchmarks/shared/config.py
+  - benchmarks/shared/util/method_sets.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/runners/dispatch.py
   - benchmarks/shared/runners/tbs_diffusion_runner.py
@@ -60,7 +60,7 @@ Plots and relationship analysis were disabled for this run.
   records all result rows.
 - `benchmarks/results/run_20260628_082116Z_full/failure_report.md` records the
   failure diagnosis.
-- `benchmarks/shared/config.py` adds `tbs_diffusion_adaptive_nnls` to
+- `benchmarks/shared/util/method_sets.py` includes `tbs_diffusion_adaptive_nnls` in
   `DEFAULT_METHODS`.
 - `benchmarks/shared/runners/method_registry.py` defines the adaptive NNLS method
   parameters.

@@ -2,10 +2,10 @@
 title: Overlap Weak Zone Separability 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_weak_zone_separability.py
-  - tests/validation/108_test_overlap_weak_zone_separability.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_weak_zone_separability.py
+  - tests/validation/calibration/overlap/108_test_overlap_weak_zone_separability.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_zone_separability/overlap_weak_zone_metric_separability.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_zone_separability/overlap_weak_zone_threshold_scan.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_zone_separability/manifest.json
@@ -56,13 +56,13 @@ triage the weak zone, but they do not solve it.
 
 ## Evidence
 
-- `tests/validation/108_test_overlap_weak_zone_separability.py` verifies
+- `tests/validation/calibration/overlap/108_test_overlap_weak_zone_separability.py` verifies
   pairwise rank-AUC with ties, partial zero-negative threshold retention, and
   output writing.
 - Verification passed:
-  `pytest tests/validation/108_test_overlap_weak_zone_separability.py -q`
+  `pytest tests/validation/calibration/overlap/108_test_overlap_weak_zone_separability.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_weak_zone_separability.py tests/validation/108_test_overlap_weak_zone_separability.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_weak_zone_separability.py tests/validation/calibration/overlap/108_test_overlap_weak_zone_separability.py`.
 
 ## Links
 

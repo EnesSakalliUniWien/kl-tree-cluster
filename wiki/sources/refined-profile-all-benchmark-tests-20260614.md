@@ -2,10 +2,10 @@
 title: Refined Profile All-Benchmark Tests 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
   - raw/inbox/refined-profile-all-benchmark-tests-20260614.md
-  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
+  - benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py
   - benchmarks/shared/runners/tbs_runner.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
 tags:
@@ -68,7 +68,7 @@ continuous feature families fail the current covariance contract.
   the selected-null all-supported run outputs.
 - `/tmp/klte_refined_full120_performance_20260614` contains the full-suite
   single-seed performance outputs.
-- `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`
+- `benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py`
   defines the selected-null profile validation runner.
 - `benchmarks/shared/runners/tbs_runner.py` exposes the profile-capable TBS
   runner used by the full-suite performance pass.

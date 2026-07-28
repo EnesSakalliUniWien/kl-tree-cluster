@@ -128,14 +128,10 @@ def _make_annotations(
             "Sibling_BH_Different": pd.Series(sibling_different, dtype=bool),
             "Sibling_Divergence_Skipped": pd.Series(sibling_skipped, dtype=bool),
             "Sibling_Divergence_P_Value": pd.Series(sibling_p_values, dtype=float),
-            "Sibling_Divergence_P_Value_Corrected": pd.Series(
-                sibling_p_values, dtype=float
-            ),
+            "Sibling_Divergence_P_Value_Corrected": pd.Series(sibling_p_values, dtype=float),
             "Sibling_Test_Statistic": pd.Series(
                 {
-                    node: 8.0
-                    if sibling_different[node] and not sibling_skipped[node]
-                    else 0.5
+                    node: 8.0 if sibling_different[node] and not sibling_skipped[node] else 0.5
                     for node in tree.nodes
                 },
                 dtype=float,
@@ -206,10 +202,7 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
         assert (
-            gate.passthrough_audit_status("root")[
-                "passthrough_split_prerequisites_open"
-            ]
-            is False
+            gate.passthrough_audit_status("root")["passthrough_split_prerequisites_open"] is False
         )
 
     def test_gate1_single_child_returns_false(self) -> None:
@@ -223,10 +216,7 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
         assert (
-            gate.passthrough_audit_status("root")[
-                "passthrough_split_prerequisites_open"
-            ]
-            is False
+            gate.passthrough_audit_status("root")["passthrough_split_prerequisites_open"] is False
         )
 
     def test_edge_gate_neither_child_diverges(self) -> None:
@@ -243,10 +233,7 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
         assert (
-            gate.passthrough_audit_status("root")[
-                "passthrough_split_prerequisites_open"
-            ]
-            is False
+            gate.passthrough_audit_status("root")["passthrough_split_prerequisites_open"] is False
         )
 
     def test_edge_gate_one_child_diverges(self) -> None:
@@ -763,9 +750,7 @@ class TestTreeDecompositionTraversal:
         assert root_trace["decision"] == "boundary"
         assert root_trace["passthrough_candidate"] is True
         assert root_trace["passthrough_supported"] is False
-        assert root_trace["passthrough_bottleneck"] == (
-            "selected_family_passthrough_guard_blocked"
-        )
+        assert root_trace["passthrough_bottleneck"] == ("selected_family_passthrough_guard_blocked")
         assert root_trace["passthrough_decision_reason"] == "passthrough_support_blocked"
         assert result["traversal_counters"]["live_passthrough_support_blocked_count"] == 1
 
@@ -835,9 +820,7 @@ def test_spectral_transport_annotation_supports_coherent_passthrough_path() -> N
         principal_component_projections_by_node={
             node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
         },
-        principal_component_eigenvalues_by_node={
-            node: np.asarray([4.0]) for node in tree.nodes
-        },
+        principal_component_eigenvalues_by_node={node: np.asarray([4.0]) for node in tree.nodes},
         raw_mp_signal_counts_by_node={node: 1 for node in tree.nodes},
     )
 
@@ -867,9 +850,7 @@ def test_spectral_transport_annotation_blocks_rotated_passthrough_path() -> None
             **{node: np.asarray([[1.0, 0.0]]) for node in tree.nodes},
             "B": np.asarray([[0.0, 1.0]]),
         },
-        principal_component_eigenvalues_by_node={
-            node: np.asarray([4.0]) for node in tree.nodes
-        },
+        principal_component_eigenvalues_by_node={node: np.asarray([4.0]) for node in tree.nodes},
         raw_mp_signal_counts_by_node={node: 1 for node in tree.nodes},
     )
 
@@ -898,9 +879,7 @@ def test_spectral_transport_annotation_blocks_floor_only_when_mp_blocks_required
         principal_component_projections_by_node={
             node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
         },
-        principal_component_eigenvalues_by_node={
-            node: np.asarray([4.0]) for node in tree.nodes
-        },
+        principal_component_eigenvalues_by_node={node: np.asarray([4.0]) for node in tree.nodes},
         raw_mp_signal_counts_by_node={node: 0 for node in tree.nodes},
     )
 
@@ -913,12 +892,12 @@ def test_spectral_transport_annotation_blocks_floor_only_when_mp_blocks_required
 
     assert not bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
     assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Blocked"])
-    assert out.loc["root", "Spectral_Transport_Bottleneck"] == (
-        "spectral_transport_bottleneck"
-    )
+    assert out.loc["root", "Spectral_Transport_Bottleneck"] == ("spectral_transport_bottleneck")
 
 
-def test_spectral_transport_annotation_does_not_veto_floor_only_when_mp_blocks_not_required() -> None:
+def test_spectral_transport_annotation_does_not_veto_floor_only_when_mp_blocks_not_required() -> (
+    None
+):
     tree = _make_deep_tree()
     edge_divergent = {node: True for node in tree.nodes}
     sibling_different = {node: False for node in tree.nodes}
@@ -932,9 +911,7 @@ def test_spectral_transport_annotation_does_not_veto_floor_only_when_mp_blocks_n
         principal_component_projections_by_node={
             node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
         },
-        principal_component_eigenvalues_by_node={
-            node: np.asarray([4.0]) for node in tree.nodes
-        },
+        principal_component_eigenvalues_by_node={node: np.asarray([4.0]) for node in tree.nodes},
         raw_mp_signal_counts_by_node={node: 0 for node in tree.nodes},
     )
 
@@ -948,6 +925,4 @@ def test_spectral_transport_annotation_does_not_veto_floor_only_when_mp_blocks_n
 
     assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
     assert not bool(out.loc["root", "Spectral_Transport_Pass_Through_Blocked"])
-    assert out.loc["root", "Spectral_Transport_Bottleneck"] == (
-        "unmeasured_no_matched_mp_path"
-    )
+    assert out.loc["root", "Spectral_Transport_Bottleneck"] == ("unmeasured_no_matched_mp_path")

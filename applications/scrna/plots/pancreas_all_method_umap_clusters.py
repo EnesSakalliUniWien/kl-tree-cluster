@@ -181,7 +181,9 @@ def main() -> None:
     output_dir = args.output_dir
     assignments = pd.read_csv(output_dir / "method_assignments.csv")
     metrics = pd.read_csv(output_dir / "method_metrics.csv")
-    metric_by_key = {assignment_key(str(row.method)): row for row in metrics.itertuples(index=False)}
+    metric_by_key = {
+        assignment_key(str(row.method)): row for row in metrics.itertuples(index=False)
+    }
 
     method_columns = [
         column

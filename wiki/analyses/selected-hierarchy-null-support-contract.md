@@ -2,10 +2,10 @@
 title: Selected Hierarchy Null Support Contract
 type: analysis
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
-  - benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_null_audit.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_external_calibration_contract.py
   - raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv
@@ -371,10 +371,10 @@ internal support is still not a fallback.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_null_audit.py`
   implements selected records, support states, precision fields, and context
   matching for the diagnostic.
-- `benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_external_calibration_contract.py`
   implements the external-calibration admissibility thresholds and scalar-vs-tail
   diagnostic.
 - `raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv`

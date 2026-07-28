@@ -2,10 +2,10 @@
 title: Spectral Transport Promoted Replicate Panel 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
-  - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_family_traversal_panel.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_promotion_gate.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate_promoted_replicates

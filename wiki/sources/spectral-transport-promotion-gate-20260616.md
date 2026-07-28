@@ -2,12 +2,12 @@
 title: Spectral Transport Promotion Gate 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
-  - tests/validation/148_test_spectral_transport_promotion_gate.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_promotion_gate.py
+  - tests/validation/calibration/spectral_transport/148_test_spectral_transport_promotion_gate.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
-  - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_threshold_calibration_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_overlap_dispatch_panel
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_overlap_three_case_current

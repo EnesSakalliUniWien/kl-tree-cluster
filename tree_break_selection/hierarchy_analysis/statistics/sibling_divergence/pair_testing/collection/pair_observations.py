@@ -62,6 +62,7 @@ def extract_sibling_pair_observations(
         right_branch,
     )
 
+
 __all__ = [
     "compute_sibling_branch_length_sum",
     "extract_sibling_pair_observations",

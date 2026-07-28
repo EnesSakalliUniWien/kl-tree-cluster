@@ -135,8 +135,7 @@ def _parse_alpha_pairs(raw: str | None) -> tuple[tuple[float, float], ...] | Non
             continue
         if ":" not in item:
             raise ValueError(
-                "Alpha pair specs must have form edge_alpha:sibling_alpha; "
-                f"got {item!r}."
+                f"Alpha pair specs must have form edge_alpha:sibling_alpha; got {item!r}."
             )
         edge_raw, sibling_raw = item.split(":", 1)
         edge_alpha = float(edge_raw)
@@ -295,7 +294,9 @@ def _structural_summary_rows(
             & (results["method"] == str(record.method))
         ]
         result_row = result_match.iloc[0].to_dict() if not result_match.empty else {}
-        annotations = record.annotations.copy() if record.annotations is not None else pd.DataFrame()
+        annotations = (
+            record.annotations.copy() if record.annotations is not None else pd.DataFrame()
+        )
         decomposition = record.decomposition if isinstance(record.decomposition, dict) else {}
         full_trace = pd.DataFrame(decomposition.get("full_edge_traversal_trace", []))
         traversal_trace = pd.DataFrame(decomposition.get("traversal_trace", []))
@@ -319,11 +320,17 @@ def _structural_summary_rows(
                 "alpha_pair_id": alpha_pair_id(edge_alpha, sibling_alpha),
                 "test_case": int(record.test_case_num),
                 "case_id": str(result_row.get("case_id", record.meta.get("name", ""))),
-                "case_category": str(result_row.get("case_category", record.meta.get("category", ""))),
+                "case_category": str(
+                    result_row.get("case_category", record.meta.get("category", ""))
+                ),
                 "method": str(record.method),
                 "method_name": str(record.method_name),
-                "true_clusters": int(result_row.get("true_clusters", record.meta.get("n_clusters", 0))),
-                "found_clusters": int(result_row.get("found_clusters", record.meta.get("found_clusters", 0))),
+                "true_clusters": int(
+                    result_row.get("true_clusters", record.meta.get("n_clusters", 0))
+                ),
+                "found_clusters": int(
+                    result_row.get("found_clusters", record.meta.get("found_clusters", 0))
+                ),
                 "ari": float(result_row.get("ari", record.ari)),
                 "nmi": float(result_row.get("nmi", record.nmi)),
                 "purity": float(result_row.get("purity", record.purity)),
@@ -456,7 +463,9 @@ def _write_pair_outputs(
             assignment.insert(0, key, value)
         assignment_frames.append(assignment)
     if node_frames:
-        pd.concat(node_frames, ignore_index=True).to_csv(pair_dir / "node_pvalue_margins.csv", index=False)
+        pd.concat(node_frames, ignore_index=True).to_csv(
+            pair_dir / "node_pvalue_margins.csv", index=False
+        )
     if trace_frames:
         pd.concat(trace_frames, ignore_index=True).to_csv(
             pair_dir / "traversal_pvalue_margins.csv",
@@ -551,9 +560,7 @@ def run_alpha_structure_sweep(config: AlphaStructureSweepConfig) -> dict[str, ob
             flush=True,
         )
 
-    combined_metrics = (
-        pd.concat(all_metrics, ignore_index=True) if all_metrics else pd.DataFrame()
-    )
+    combined_metrics = pd.concat(all_metrics, ignore_index=True) if all_metrics else pd.DataFrame()
     combined_summary = pd.DataFrame(summaries)
     combined_metrics.to_csv(config.output_dir / "alpha_structure_metrics.csv", index=False)
     combined_summary.to_csv(config.output_dir / "alpha_structure_summary.csv", index=False)
@@ -585,8 +592,7 @@ def run_alpha_structure_sweep(config: AlphaStructureSweepConfig) -> dict[str, ob
         "outputs": {
             "alpha_structure_metrics": config.output_dir / "alpha_structure_metrics.csv",
             "alpha_structure_summary": config.output_dir / "alpha_structure_summary.csv",
-            "alpha_partition_transitions": config.output_dir
-            / "alpha_partition_transitions.csv",
+            "alpha_partition_transitions": config.output_dir / "alpha_partition_transitions.csv",
             "per_pair_outputs": [
                 {
                     "alpha_pair_id": alpha_pair_id(edge_alpha, sibling_alpha),

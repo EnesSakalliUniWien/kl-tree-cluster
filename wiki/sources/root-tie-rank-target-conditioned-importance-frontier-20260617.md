@@ -2,10 +2,10 @@
 title: Root Tie Rank Target Conditioned Importance Frontier 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_target_conditioned_importance_frontier.py
-  - tests/validation/170_test_root_tie_rank_target_conditioned_importance_frontier.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_target_conditioned_importance_frontier.py
+  - tests/validation/calibration/root/tie_rank/170_test_root_tie_rank_target_conditioned_importance_frontier.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_target_conditioned_importance_frontier_narrow_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_target_conditioned_importance_frontier_coupled_narrow_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_target_conditioned_importance_frontier_unbalanced_mod_smoke

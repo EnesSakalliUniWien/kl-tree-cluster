@@ -161,7 +161,9 @@ def _metric_row(metrics: pd.DataFrame, method_label: str) -> pd.Series:
 def _tree_summary_row(tree_summary: pd.DataFrame, method_label: str) -> pd.Series:
     matches = tree_summary.loc[tree_summary["method"] == method_label]
     if len(matches) != 1:
-        raise ValueError(f"Expected one tree-summary row for {method_label!r}; found {len(matches)}")
+        raise ValueError(
+            f"Expected one tree-summary row for {method_label!r}; found {len(matches)}"
+        )
     return matches.iloc[0]
 
 
@@ -230,9 +232,7 @@ def _collect_dataset(spec: DatasetSpec) -> tuple[pd.DataFrame, pd.DataFrame, pd.
                 "edge_branch_length_variance_policy": tree_row[
                     "edge_branch_length_variance_policy"
                 ],
-                "branch_length_optimization_method": tree_row[
-                    "branch_length_optimization_method"
-                ],
+                "branch_length_optimization_method": tree_row["branch_length_optimization_method"],
                 "branch_length_mean": float(tree_row["branch_length_mean"]),
                 "branch_length_median": float(tree_row["branch_length_median"]),
                 "branch_length_max": float(tree_row["branch_length_max"]),
@@ -260,21 +260,18 @@ def _collect_dataset(spec: DatasetSpec) -> tuple[pd.DataFrame, pd.DataFrame, pd.
                 assignments[str(effects.loc[index, "assignment_key"])],
                 errors="coerce",
             ).to_numpy()
-            effects.loc[index, "delta_n_clusters_vs_topology"] = (
-                int(effects.loc[index, "n_clusters"]) - int(baseline["n_clusters"])
-            )
-            effects.loc[index, "delta_v_measure_vs_topology"] = (
-                float(effects.loc[index, "v_measure_vs_celltype"])
-                - float(baseline["v_measure_vs_celltype"])
-            )
-            effects.loc[index, "delta_purity_vs_topology"] = (
-                float(effects.loc[index, "weighted_cluster_purity"])
-                - float(baseline["weighted_cluster_purity"])
-            )
-            effects.loc[index, "delta_recall_vs_topology"] = (
-                float(effects.loc[index, "weighted_label_dominant_cluster_recall"])
-                - float(baseline["weighted_label_dominant_cluster_recall"])
-            )
+            effects.loc[index, "delta_n_clusters_vs_topology"] = int(
+                effects.loc[index, "n_clusters"]
+            ) - int(baseline["n_clusters"])
+            effects.loc[index, "delta_v_measure_vs_topology"] = float(
+                effects.loc[index, "v_measure_vs_celltype"]
+            ) - float(baseline["v_measure_vs_celltype"])
+            effects.loc[index, "delta_purity_vs_topology"] = float(
+                effects.loc[index, "weighted_cluster_purity"]
+            ) - float(baseline["weighted_cluster_purity"])
+            effects.loc[index, "delta_recall_vs_topology"] = float(
+                effects.loc[index, "weighted_label_dominant_cluster_recall"]
+            ) - float(baseline["weighted_label_dominant_cluster_recall"])
             effects.loc[index, "assignment_ari_vs_topology"] = adjusted_rand_score(
                 baseline_labels,
                 labels,
@@ -427,8 +424,7 @@ def _write_manifest(generated_at: str) -> None:
         "generated_at": generated_at,
         "source_script": "applications/scrna/analysis/audit_branch_length_effects.py",
         "source_inputs": [
-            str((spec.output_dir / "manifest.json").relative_to(PROJECT_ROOT))
-            for spec in DATASETS
+            str((spec.output_dir / "manifest.json").relative_to(PROJECT_ROOT)) for spec in DATASETS
         ],
         "artifacts": [_artifact_record(path) for path in artifact_paths],
     }

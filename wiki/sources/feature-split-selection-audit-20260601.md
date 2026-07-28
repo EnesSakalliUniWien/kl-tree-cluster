@@ -2,9 +2,9 @@
 title: Feature Split Selection Audit 2026-06-01
 type: source
 status: reviewed
-updated: 2026-06-01
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/sample_split_selection_audit.py
+  - benchmarks/diagnostics/calibration/traversal/sample_split_selection_audit.py
   - raw/assets/benchmark-results/sample_split_selection_audit_20260601/manifest.json
   - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
 tags:
@@ -44,7 +44,7 @@ distributions and gate tests on the same sample leaves.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/sample_split_selection_audit.py`
+- `benchmarks/diagnostics/calibration/traversal/sample_split_selection_audit.py`
   implements the diagnostic and explicitly rejects literal sample splitting
   until a held-out-sample assignment model is defined.
 - `raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv`

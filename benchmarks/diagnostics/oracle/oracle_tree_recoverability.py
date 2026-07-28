@@ -15,9 +15,7 @@ FAILURE_CLASS_SOLVED = "solved"
 FAILURE_CLASS_TREE_UNRECOVERABLE = "tree_unrecoverable"
 FAILURE_CLASS_GATE_UNDER_SPLIT = "gate_under_split"
 FAILURE_CLASS_GATE_OVER_SPLIT = "gate_over_split"
-FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE = (
-    "tree_recoverable_statistical_failure"
-)
+FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE = "tree_recoverable_statistical_failure"
 FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED = "oracle_matched_below_solved"
 
 
@@ -115,9 +113,10 @@ def _whole_node_state(
     truth_pair_fraction: float,
     denominator_slope: float,
 ) -> _CutState:
-    score = node_stats.same_truth_pairs - (
-        truth_pair_fraction + q * denominator_slope
-    ) * node_stats.predicted_pairs
+    score = (
+        node_stats.same_truth_pairs
+        - (truth_pair_fraction + q * denominator_slope) * node_stats.predicted_pairs
+    )
     return _CutState(
         score=float(score),
         same_truth_pairs=node_stats.same_truth_pairs,
@@ -169,9 +168,13 @@ def _optimize_additive_cut(
 
         split: _CutState | None = None
         for child in children:
-            split = best_by_node[child] if split is None else _combine_states(
-                split,
-                best_by_node[child],
+            split = (
+                best_by_node[child]
+                if split is None
+                else _combine_states(
+                    split,
+                    best_by_node[child],
+                )
             )
         best_by_node[node] = _better_state(whole, split)
 
@@ -299,9 +302,7 @@ def oracle_subtree_cut(
     if exact_k is not None and exact_k < 1:
         raise ValueError(f"exact_k must be positive when provided, got {exact_k}.")
     if exact_k is not None and exact_k > len(sample_index):
-        raise ValueError(
-            f"exact_k={exact_k} exceeds the number of samples ({len(sample_index)})."
-        )
+        raise ValueError(f"exact_k={exact_k} exceeds the number of samples ({len(sample_index)}).")
 
     if len(sample_index) < 2 or truth_by_sample.nunique(dropna=False) <= 1:
         if exact_k not in (None, 1):
@@ -394,8 +395,7 @@ def classify_tree_recoverability_failure(
         raise ValueError("recoverable_ari_threshold must lie in [0, 1].")
     if solved_ari_threshold < recoverable_ari_threshold:
         raise ValueError(
-            "solved_ari_threshold must be greater than or equal to "
-            "recoverable_ari_threshold."
+            "solved_ari_threshold must be greater than or equal to recoverable_ari_threshold."
         )
     if oracle_gap_tolerance < 0.0:
         raise ValueError("oracle_gap_tolerance must be non-negative.")

@@ -27,9 +27,30 @@ def test_static_mnist_report_records_generated_timestamp(monkeypatch, tmp_path):
 
     pd.DataFrame(
         [
-            {"linkage": "ward", "edge_alpha": 0.0001, "sibling_alpha": 0.0001, "ARI": 0.5, "NMI": 0.6, "n_clusters": 11},
-            {"linkage": "ward", "edge_alpha": 0.001, "sibling_alpha": 0.0001, "ARI": 0.4, "NMI": 0.55, "n_clusters": 9},
-            {"linkage": "complete", "edge_alpha": 0.0001, "sibling_alpha": 0.0001, "ARI": 0.3, "NMI": 0.45, "n_clusters": 7},
+            {
+                "linkage": "ward",
+                "edge_alpha": 0.0001,
+                "sibling_alpha": 0.0001,
+                "ARI": 0.5,
+                "NMI": 0.6,
+                "n_clusters": 11,
+            },
+            {
+                "linkage": "ward",
+                "edge_alpha": 0.001,
+                "sibling_alpha": 0.0001,
+                "ARI": 0.4,
+                "NMI": 0.55,
+                "n_clusters": 9,
+            },
+            {
+                "linkage": "complete",
+                "edge_alpha": 0.0001,
+                "sibling_alpha": 0.0001,
+                "ARI": 0.3,
+                "NMI": 0.45,
+                "n_clusters": 7,
+            },
         ]
     ).to_csv(sweep_dir / "alpha_sweep_summary.csv", index=False)
     pd.DataFrame([{"ARI": 0.2, "NMI": 0.3, "n_clusters": 4}]).to_csv(
@@ -43,7 +64,13 @@ def test_static_mnist_report_records_generated_timestamp(monkeypatch, tmp_path):
     pd.DataFrame(
         [
             {"cluster": 0, "size": 2, "dominant_digit": 0, "purity": 1.0, "digit_counts": "0:2"},
-            {"cluster": 1, "size": 3, "dominant_digit": 1, "purity": 0.67, "digit_counts": "1:2,2:1"},
+            {
+                "cluster": 1,
+                "size": 3,
+                "dominant_digit": 1,
+                "purity": 0.67,
+                "digit_counts": "1:2,2:1",
+            },
         ]
     ).to_csv(sweep_dir / "ward_e0.0001_s0.0001_top_cluster_digit_composition.csv", index=False)
 
@@ -57,9 +84,12 @@ def test_static_mnist_report_records_generated_timestamp(monkeypatch, tmp_path):
 
     summary = pd.read_csv(out_dir / "summary.csv")
     assert "generated_at" in summary.columns
-    assert summary["generated_at"].astype(str).str.match(
-        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}"
-    ).all()
+    assert (
+        summary["generated_at"]
+        .astype(str)
+        .str.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}")
+        .all()
+    )
     assert (out_dir / "summary.png").exists()
     pdf_bytes = (out_dir / "report.pdf").read_bytes()
     assert re.search(rb"Generated at", pdf_bytes)

@@ -136,8 +136,7 @@ def identity_mp_positive_grid(
     total = float(cdf[-1])
     if not np.isfinite(total) or total <= 0.0:
         raise ValueError(
-            "Identity MP positive CDF has non-positive integral; "
-            f"aspect_ratio={aspect_ratio!r}."
+            f"Identity MP positive CDF has non-positive integral; aspect_ratio={aspect_ratio!r}."
         )
     cdf = cdf / total
     cdf[-1] = 1.0
@@ -155,10 +154,7 @@ def identity_mp_positive_quantiles(
         if not np.isfinite(float(q)) or not 0.0 < float(q) < 1.0:
             raise ValueError(f"MP quantiles must lie in (0, 1); got {q!r}.")
     mp_grid = identity_mp_positive_grid(aspect_ratio, grid_size=grid_size)
-    return {
-        float(q): float(np.interp(float(q), mp_grid.cdf, mp_grid.grid))
-        for q in quantiles
-    }
+    return {float(q): float(np.interp(float(q), mp_grid.cdf, mp_grid.grid)) for q in quantiles}
 
 
 def centered_self_whitening_reference_eigenvalue(matrix_rows: int) -> float:
@@ -166,8 +162,7 @@ def centered_self_whitening_reference_eigenvalue(matrix_rows: int) -> float:
     row_count = int(matrix_rows)
     if row_count < 2:
         raise ValueError(
-            "Centered self-whitening reference requires at least two rows; "
-            f"got {matrix_rows!r}."
+            f"Centered self-whitening reference requires at least two rows; got {matrix_rows!r}."
         )
     return float(row_count - 1) / float(row_count)
 
@@ -187,8 +182,7 @@ def finite_identity_null_top_eigenvalue_quantile(
     q = float(quantile)
     if row_count < 2:
         raise ValueError(
-            "Finite identity-null top edge requires at least two rows; "
-            f"got {matrix_rows!r}."
+            f"Finite identity-null top edge requires at least two rows; got {matrix_rows!r}."
         )
     if feature_count < 1:
         raise ValueError(
@@ -225,14 +219,11 @@ def summarize_node_spectrum(
     """Summarize one production node matrix against the identity MP law."""
     if min_positive_eigenvalues < 1:
         raise ValueError(
-            "min_positive_eigenvalues must be positive; "
-            f"got {min_positive_eigenvalues!r}."
+            f"min_positive_eigenvalues must be positive; got {min_positive_eigenvalues!r}."
         )
     matrix = np.asarray(record.matrix, dtype=np.float64)
     if matrix.ndim != 2:
-        raise ValueError(
-            f"Node matrix for {record.node_id!r} must be 2-D; got {matrix.shape}."
-        )
+        raise ValueError(f"Node matrix for {record.node_id!r} must be 2-D; got {matrix.shape}.")
     if not np.isfinite(matrix).all():
         raise ValueError(f"Node matrix for {record.node_id!r} contains non-finite values.")
 
@@ -287,9 +278,7 @@ def summarize_node_spectrum(
     positive_eigenvalues = np.sort(eigenvalues[eigenvalues > tolerance])
     aspect_ratio = float(eig.active_feature_count) / float(matrix.shape[0])
     support = identity_mp_support(aspect_ratio)
-    self_whitening_reference = centered_self_whitening_reference_eigenvalue(
-        matrix.shape[0]
-    )
+    self_whitening_reference = centered_self_whitening_reference_eigenvalue(matrix.shape[0])
     finite_null_top_quantile = finite_identity_null_top_eigenvalue_quantile(
         matrix.shape[0],
         int(eig.active_feature_count),
@@ -675,8 +664,7 @@ def _positive_log_column(
     if np.any(invalid):
         invalid_values = values[invalid][:5].tolist()
         raise ValueError(
-            f"{source_column} must be positive wherever finite; "
-            f"examples={invalid_values!r}."
+            f"{source_column} must be positive wherever finite; examples={invalid_values!r}."
         )
     output = np.full(values.shape, np.nan, dtype=np.float64)
     output[finite] = np.log(values[finite])
@@ -831,9 +819,7 @@ def _summarize_case(
         "median_active_feature_count": _median(evaluated, "active_feature_count"),
         "raw_mp_signal_node_fraction": _mean_positive(evaluated, "raw_mp_signal_count"),
         "mean_raw_mp_signal_count": _mean(evaluated, "raw_mp_signal_count"),
-        "median_top_eigenvalue_over_mp_upper": _median(
-            evaluated, "top_eigenvalue_over_mp_upper"
-        ),
+        "median_top_eigenvalue_over_mp_upper": _median(evaluated, "top_eigenvalue_over_mp_upper"),
         "q95_top_eigenvalue_over_mp_upper": _quantile(
             evaluated, "top_eigenvalue_over_mp_upper", 0.95
         ),
@@ -843,12 +829,8 @@ def _summarize_case(
         "median_identity_mp_positive_ks_distance": _median(
             evaluated, "identity_mp_positive_ks_distance"
         ),
-        "finite_identity_null_quantile": _first_finite(
-            evaluated, "finite_identity_null_quantile"
-        ),
-        "finite_identity_null_reps": _first_finite(
-            evaluated, "finite_identity_null_reps"
-        ),
+        "finite_identity_null_quantile": _first_finite(evaluated, "finite_identity_null_quantile"),
+        "finite_identity_null_reps": _first_finite(evaluated, "finite_identity_null_reps"),
         "above_finite_identity_null_top_quantile_node_fraction": _mean_bool(
             evaluated, "above_finite_identity_null_top_quantile"
         ),

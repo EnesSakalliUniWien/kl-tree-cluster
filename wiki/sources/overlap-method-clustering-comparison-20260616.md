@@ -2,10 +2,10 @@
 title: Overlap Method Clustering Comparison 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_method_clustering_comparison.py
-  - tests/validation/142_test_overlap_method_clustering_comparison.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_method_clustering_comparison.py
+  - tests/validation/calibration/overlap/142_test_overlap_method_clustering_comparison.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite
 tags:
@@ -56,9 +56,9 @@ pairwise, summary, and manifest outputs.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/overlap_method_clustering_comparison.py`
+- `benchmarks/diagnostics/calibration/overlap/overlap_method_clustering_comparison.py`
   implements the paired comparison.
-- `tests/validation/142_test_overlap_method_clustering_comparison.py` validates
+- `tests/validation/calibration/overlap/142_test_overlap_method_clustering_comparison.py` validates
   null truth metrics, signal no-truth behavior, paired method deltas, and output
   file creation.
 - The two result manifests cite the exact checkpoint roots, method names,

@@ -49,9 +49,7 @@ class TestComputeProjectedPvalue:
         assert abs(reference.statistic - expected_stat) < 1e-10
         assert reference.reference_scale == 1.0
         assert abs(reference.degrees_of_freedom - expected_df) < 1e-10
-        assert abs(
-            reference.p_value - float(chi2.sf(expected_stat, df=expected_df))
-        ) < 1e-10
+        assert abs(reference.p_value - float(chi2.sf(expected_stat, df=expected_df))) < 1e-10
 
 
 # =============================================================================
@@ -434,10 +432,7 @@ class TestNonBinarySkippedFlag:
         tree = self._build_simple_tree()
         df = self._make_base_df(tree)
         sibling_parent_ids = ["N4", "N2", "N3"]
-        parent_pca = {
-            parent: np.eye(20, dtype=float)[:1]
-            for parent in sibling_parent_ids
-        }
+        parent_pca = {parent: np.eye(20, dtype=float)[:1] for parent in sibling_parent_ids}
         result = annotate_sibling_divergence(
             tree,
             df,
@@ -446,12 +441,11 @@ class TestNonBinarySkippedFlag:
             },
             parent_principal_component_projections=parent_pca,
             parent_principal_component_eigenvalues={
-                parent: np.ones(1, dtype=float)
-                for parent in sibling_parent_ids
+                parent: np.ones(1, dtype=float) for parent in sibling_parent_ids
             },
         )
 
         for leaf in ["L0", "L1", "L2", "L3"]:
-            assert bool(
-                result.loc[leaf, "Sibling_Divergence_Skipped"]
-            ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
+            assert bool(result.loc[leaf, "Sibling_Divergence_Skipped"]), (
+                f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
+            )

@@ -128,11 +128,7 @@ def minimum_ancestor_deviation_root(
         else:
             distance_from_u = 0.0
         distance_from_u = min(max(distance_from_u, 0.0), length)
-        objective = (
-            quad_a * distance_from_u * distance_from_u
-            + quad_b * distance_from_u
-            + quad_c
-        )
+        objective = quad_a * distance_from_u * distance_from_u + quad_b * distance_from_u + quad_c
         fraction = 0.0 if length == 0 else distance_from_u / length
         candidates.append(
             MadRootResult(
@@ -313,9 +309,7 @@ def neighbor_joining_tree_from_distance(
         from skbio import DistanceMatrix
         from skbio.tree import nj
     except ImportError as exc:  # pragma: no cover - environment dependent
-        raise RuntimeError(
-            "Neighbor-joining tree construction requires scikit-bio."
-        ) from exc
+        raise RuntimeError("Neighbor-joining tree construction requires scikit-bio.") from exc
 
     matrix = squareform(np.asarray(distance_condensed, dtype=float))
     if matrix.shape[0] != len(leaf_names):
@@ -353,8 +347,7 @@ def _feature_matrix_to_fasta(data_df: pd.DataFrame, path: Path) -> dict[str, str
                 f"encoding supports at most {len(_IQTREE_SYMBOLS)} states per feature."
             )
         mapping = {
-            value: _IQTREE_SYMBOLS[state_index]
-            for state_index, value in enumerate(unique_values)
+            value: _IQTREE_SYMBOLS[state_index] for state_index, value in enumerate(unique_values)
         }
         encoded_columns.append([mapping[value] for value in values])
 

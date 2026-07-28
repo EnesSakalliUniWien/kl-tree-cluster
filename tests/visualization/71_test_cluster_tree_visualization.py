@@ -56,8 +56,7 @@ def test_plot_tree_summarizes_many_cluster_legend_entries():
     nx.set_node_attributes(G, {node: node for node in G.nodes()}, "label")
 
     cluster_assignments = {
-        i: {"leaves": [leaf], "root_node": leaf, "size": 1}
-        for i, leaf in enumerate(leaves)
+        i: {"leaves": [leaf], "root_node": leaf, "size": 1} for i, leaf in enumerate(leaves)
     }
     decomposition = {
         "cluster_assignments": cluster_assignments,

@@ -2,10 +2,10 @@
 title: Sibling Null Calibration Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/sibling_null_calibration_panel.py
-  - tests/validation/89_test_sibling_null_calibration_panel.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_calibration_panel.py
+  - tests/validation/calibration/sibling/nulls/89_test_sibling_null_calibration_panel.py
   - wiki/analyses/null-edge-sibling-calibration-enhancement-plan.md
 tags:
   - source
@@ -37,9 +37,9 @@ rows separately for `strict_null`, `stopped_edge_null`,
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/sibling_null_calibration_panel.py`
+- `benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_calibration_panel.py`
   defines the dataframe API, CLI, row output, summary output, and manifest.
-- `tests/validation/89_test_sibling_null_calibration_panel.py` verifies
+- `tests/validation/calibration/sibling/nulls/89_test_sibling_null_calibration_panel.py` verifies
   nominal strict-null behavior, selected stopped-edge inflation, selected
   nonnull descriptive status, external fail-closed status, and output writing.
 - [[null-edge-sibling-calibration-enhancement-plan]] names sibling-null support

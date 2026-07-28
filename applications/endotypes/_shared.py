@@ -30,7 +30,6 @@ def load_feature_matrix(path: Path) -> pd.DataFrame:
     zero_rows = data.index[(data.sum(axis=1) == 0).to_numpy()]
     if len(zero_rows):
         raise ValueError(
-            "Rows with zero feature mass cannot enter cosine analysis: "
-            f"{list(zero_rows[:10])!r}"
+            f"Rows with zero feature mass cannot enter cosine analysis: {list(zero_rows[:10])!r}"
         )
     return data.astype(float)

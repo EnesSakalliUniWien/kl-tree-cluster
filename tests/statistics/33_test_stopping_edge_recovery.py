@@ -138,9 +138,7 @@ def test_recover_stopping_edge_info_rejects_multi_parent_graph() -> None:
     child_node_ids = ["A", "B", "C"]
     tree_bh_result = ChildParentEdgeTreeBHResult(
         child_parent_edge_null_rejected_by_tree_bh=np.array([True, True, False], dtype=bool),
-        child_parent_edge_corrected_p_values_by_tree_bh=np.array(
-            [0.01, 0.02, 1.0], dtype=float
-        ),
+        child_parent_edge_corrected_p_values_by_tree_bh=np.array([0.01, 0.02, 1.0], dtype=float),
         child_parent_edge_tested_by_tree_bh=np.array([True, True, False], dtype=bool),
         tree_bh_base_alpha_by_depth={1: 0.05},
         sibling_group_outcomes={

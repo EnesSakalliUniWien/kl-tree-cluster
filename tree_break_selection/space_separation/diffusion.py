@@ -47,9 +47,7 @@ def resolve_adaptive_epsilon_from_scaled_sq(
 
     epsilon_text = str(epsilon).strip().lower()
     finite_positive = np.asarray(scaled_sq, dtype=float)
-    finite_positive = finite_positive[
-        np.isfinite(finite_positive) & (finite_positive > 0)
-    ]
+    finite_positive = finite_positive[np.isfinite(finite_positive) & (finite_positive > 0)]
     if finite_positive.size == 0:
         raise ValueError("Adaptive diffusion epsilon requires positive finite scaled distances.")
 

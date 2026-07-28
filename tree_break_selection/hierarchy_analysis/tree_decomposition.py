@@ -6,7 +6,7 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from ..tree.feature_space import FeatureSpace
@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 import pandas as pd
 
-from .. import config as runtime_config
 from ..core_utils.data_utils import extract_bool_column_dict
 from ..tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
@@ -23,13 +22,6 @@ from ..tree.distributions import (
     validate_continuous_covariance_policy,
 )
 from .cluster_assignments import ClusterBoundary, build_cluster_assignments
-from .decomposition.config import (
-    TRACE_LEVEL_COMPACT,
-    TRACE_LEVEL_FULL,
-    DecompositionConfig,
-    TraceLevel,
-    validate_trace_level,
-)
 from .decomposition.gates.annotation_bundle import GateAnnotationBundle
 from .decomposition.gates.column_contracts import (
     validate_edge_gate_columns,
@@ -66,6 +58,17 @@ from .statistics.sibling_divergence.inflation_correction.empirical_null_inflatio
 from .statistics.sibling_divergence.inflation_correction.types.inflation_model import (
     CalibrationSupportThresholds,
 )
+
+TraceLevel = Literal["compact", "full"]
+
+
+def validate_trace_level(trace_level: str) -> TraceLevel:
+    """Validate and narrow a decomposition trace level."""
+    if trace_level == "compact":
+        return "compact"
+    if trace_level == "full":
+        return "full"
+    raise ValueError(f"trace_level must be one of {('compact', 'full')!r}; got {trace_level!r}.")
 
 
 class TreeDecomposition:
@@ -137,8 +140,8 @@ class TreeDecomposition:
         spectral_transport_unmatched_mode_penalty: float = (
             DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
         ),
-        passthrough: bool = runtime_config.PASSTHROUGH,
-        trace_level: TraceLevel = TRACE_LEVEL_COMPACT,
+        passthrough: bool = True,
+        trace_level: TraceLevel = "compact",
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -188,82 +191,30 @@ class TreeDecomposition:
             self.annotations_df = annotations_df
         else:
             self.annotations_df = pd.DataFrame()
-        self.decomposition_config = DecompositionConfig(
-            edge_alpha=edge_alpha,
-            sibling_alpha=sibling_alpha,
-            spectral_minimum_dimension=spectral_minimum_dimension,
-            adaptive_projection_dimension_energy_fraction=(
-                adaptive_projection_dimension_energy_fraction
-            ),
-            spectral_include_internal_barycenters=spectral_include_internal_barycenters,
-            spectral_internal_distribution_mode=spectral_internal_distribution_mode,
-            spectral_mp_row_count_mode=spectral_mp_row_count_mode,
-            continuous_covariance_policy=continuous_covariance_policy,
-            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
-            edge_branch_length_variance_policy=edge_branch_length_variance_policy,
-            sibling_gate_profile=sibling_gate_profile,
-            sibling_gate_method=sibling_gate_method,
-            sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
-            root_stability_guard_threshold=root_stability_guard_threshold,
-            root_stability_subsample_replicates=root_stability_subsample_replicates,
-            root_stability_feature_fraction=root_stability_feature_fraction,
-            root_stability_seed=root_stability_seed,
-            root_stability_tree_distance_metric=root_stability_tree_distance_metric,
-            root_stability_tree_linkage_method=root_stability_tree_linkage_method,
-            root_selective_permutation_guard_replicates=(
-                root_selective_permutation_guard_replicates
-            ),
-            root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
-            root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
-            root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-            root_selective_permutation_guard_tree_distance_metric=(
-                root_selective_permutation_guard_tree_distance_metric
-            ),
-            root_selective_permutation_guard_tree_linkage_method=(
-                root_selective_permutation_guard_tree_linkage_method
-            ),
-            enforce_internal_support_thresholds=enforce_internal_support_thresholds,
-            internal_support_thresholds=internal_support_thresholds,
-            spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
-            spectral_transport_max_cost=spectral_transport_max_cost,
-            spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-            spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
-            spectral_transport_unmatched_mode_penalty=spectral_transport_unmatched_mode_penalty,
-            passthrough=passthrough,
-            trace_level=trace_level,
-        )
-        self.edge_alpha = float(self.decomposition_config.edge_alpha)
-        self.sibling_alpha = float(self.decomposition_config.sibling_alpha)
+        self.edge_alpha = float(edge_alpha)
+        self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
         self._feature_space = feature_space
-        self._trace_level = validate_trace_level(str(self.decomposition_config.trace_level))
-        self._spectral_minimum_dimension = int(
-            self.decomposition_config.spectral_minimum_dimension
-        )
+        self._trace_level = validate_trace_level(str(trace_level))
+        self._spectral_minimum_dimension = int(spectral_minimum_dimension)
         self._adaptive_projection_dimension_energy_fraction = (
             None
-            if self.decomposition_config.adaptive_projection_dimension_energy_fraction is None
-            else float(self.decomposition_config.adaptive_projection_dimension_energy_fraction)
+            if adaptive_projection_dimension_energy_fraction is None
+            else float(adaptive_projection_dimension_energy_fraction)
         )
-        self._spectral_include_internal_barycenters = bool(
-            self.decomposition_config.spectral_include_internal_barycenters
-        )
-        self._spectral_internal_distribution_mode = str(
-            self.decomposition_config.spectral_internal_distribution_mode
-        )
-        self._spectral_mp_row_count_mode = str(
-            self.decomposition_config.spectral_mp_row_count_mode
-        )
+        self._spectral_include_internal_barycenters = bool(spectral_include_internal_barycenters)
+        self._spectral_internal_distribution_mode = str(spectral_internal_distribution_mode)
+        self._spectral_mp_row_count_mode = str(spectral_mp_row_count_mode)
         self._continuous_covariance_policy = validate_continuous_covariance_policy(
-            self.decomposition_config.continuous_covariance_policy
+            continuous_covariance_policy
         )
         self._continuous_covariance_min_child_leaf_count = (
             validate_continuous_covariance_min_child_leaf_count(
-                self.decomposition_config.continuous_covariance_min_child_leaf_count
+                continuous_covariance_min_child_leaf_count
             )
         )
         self._edge_branch_length_variance_policy = validate_edge_branch_length_variance_policy(
-            self.decomposition_config.edge_branch_length_variance_policy
+            edge_branch_length_variance_policy
         )
         (
             self._sibling_gate_profile_id,
@@ -283,54 +234,28 @@ class TreeDecomposition:
             resolved_spectral_transport_block_log_tolerance,
             resolved_spectral_transport_unmatched_mode_penalty,
         ) = resolve_sibling_gate_profile_config(
-            sibling_gate_profile=self.decomposition_config.sibling_gate_profile,
-            sibling_gate_method=self.decomposition_config.sibling_gate_method,
-            sibling_gate_alpha_penalty=self.decomposition_config.sibling_gate_alpha_penalty,
-            root_stability_guard_threshold=(
-                self.decomposition_config.root_stability_guard_threshold
-            ),
-            root_stability_subsample_replicates=(
-                self.decomposition_config.root_stability_subsample_replicates
-            ),
-            root_stability_feature_fraction=(
-                self.decomposition_config.root_stability_feature_fraction
-            ),
-            root_stability_seed=self.decomposition_config.root_stability_seed,
+            sibling_gate_profile=sibling_gate_profile,
+            sibling_gate_method=sibling_gate_method,
+            sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
+            root_stability_guard_threshold=root_stability_guard_threshold,
+            root_stability_subsample_replicates=root_stability_subsample_replicates,
+            root_stability_feature_fraction=root_stability_feature_fraction,
+            root_stability_seed=root_stability_seed,
             root_selective_permutation_guard_replicates=(
-                self.decomposition_config.root_selective_permutation_guard_replicates
+                root_selective_permutation_guard_replicates
             ),
-            root_selective_permutation_guard_seed=(
-                self.decomposition_config.root_selective_permutation_guard_seed
-            ),
-            root_selective_permutation_guard_alpha=(
-                self.decomposition_config.root_selective_permutation_guard_alpha
-            ),
-            root_selective_permutation_guard_scope=(
-                self.decomposition_config.root_selective_permutation_guard_scope
-            ),
-            spectral_transport_passthrough_guard=(
-                self.decomposition_config.spectral_transport_passthrough_guard
-            ),
-            spectral_transport_max_cost=self.decomposition_config.spectral_transport_max_cost,
-            spectral_transport_require_mp_blocks=(
-                self.decomposition_config.spectral_transport_require_mp_blocks
-            ),
-            spectral_transport_block_log_tolerance=(
-                self.decomposition_config.spectral_transport_block_log_tolerance
-            ),
-            spectral_transport_unmatched_mode_penalty=(
-                self.decomposition_config.spectral_transport_unmatched_mode_penalty
-            ),
+            root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
+            root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
+            root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
+            spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
+            spectral_transport_max_cost=spectral_transport_max_cost,
+            spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
+            spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
+            spectral_transport_unmatched_mode_penalty=spectral_transport_unmatched_mode_penalty,
         )
-        self._enforce_internal_support_thresholds = bool(
-            self.decomposition_config.enforce_internal_support_thresholds
-        )
-        self._root_stability_tree_distance_metric = str(
-            self.decomposition_config.root_stability_tree_distance_metric
-        )
-        self._root_stability_tree_linkage_method = str(
-            self.decomposition_config.root_stability_tree_linkage_method
-        )
+        self._enforce_internal_support_thresholds = bool(enforce_internal_support_thresholds)
+        self._root_stability_tree_distance_metric = str(root_stability_tree_distance_metric)
+        self._root_stability_tree_linkage_method = str(root_stability_tree_linkage_method)
         self._root_selective_permutation_guard_replicates = int(
             resolved_root_selective_permutation_guard_replicates
         )
@@ -346,12 +271,12 @@ class TreeDecomposition:
             resolved_root_selective_permutation_guard_scope
         )
         self._root_selective_permutation_guard_tree_distance_metric = str(
-            self.decomposition_config.root_selective_permutation_guard_tree_distance_metric
+            root_selective_permutation_guard_tree_distance_metric
         )
         self._root_selective_permutation_guard_tree_linkage_method = str(
-            self.decomposition_config.root_selective_permutation_guard_tree_linkage_method
+            root_selective_permutation_guard_tree_linkage_method
         )
-        self._internal_support_thresholds = self.decomposition_config.internal_support_thresholds
+        self._internal_support_thresholds = internal_support_thresholds
         self._spectral_transport_passthrough_guard = bool(
             resolved_spectral_transport_passthrough_guard
         )
@@ -403,7 +328,7 @@ class TreeDecomposition:
             sibling_different=self._sibling_different,
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
-            passthrough=bool(self.decomposition_config.passthrough),
+            passthrough=bool(passthrough),
             passthrough_supported=self._passthrough_supported,
             passthrough_bottleneck=self._passthrough_bottleneck,
         )
@@ -897,8 +822,7 @@ class TreeDecomposition:
             bool(passthrough_audit["passthrough_candidate"])
         )
         counters["live_passthrough_support_blocked_count"] += int(
-            passthrough_audit["passthrough_decision_reason"]
-            == "passthrough_support_blocked"
+            passthrough_audit["passthrough_decision_reason"] == "passthrough_support_blocked"
         )
 
     @staticmethod
@@ -965,7 +889,7 @@ class TreeDecomposition:
         """
         nodes_to_visit: list[object] = [self._root]
         final_boundaries: list[ClusterBoundary] = []
-        collect_full_trace = self._trace_level == TRACE_LEVEL_FULL
+        collect_full_trace = self._trace_level == "full"
         traversal_trace: list[dict[str, object]] = []
         traversal_counters = self._empty_live_traversal_counters()
         processed: set[object] = set()

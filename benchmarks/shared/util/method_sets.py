@@ -1,5 +1,18 @@
 """Canonical benchmark method sets used across input and execution layers."""
 
+DEFAULT_METHODS: tuple[str, ...] = (
+    "tbs",
+    "tbs_diffusion",
+    "tbs_diffusion_adaptive_nnls",
+    "leiden",
+    "louvain",
+    "kmeans",
+    "spectral",
+    "dbscan",
+    "optics",
+    "hdbscan",
+)
+
 DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
 
 TBS_DISTANCE_TREE_METHODS = {
@@ -26,6 +39,7 @@ TBS_DISTANCE_TREE_METHODS = {
 TBS_RUNNER_METHODS = TBS_DISTANCE_TREE_METHODS | {"tbs_iqtree3"}
 
 __all__ = [
+    "DEFAULT_METHODS",
     "DISTANCE_MATRIX_METHODS",
     "TBS_DISTANCE_TREE_METHODS",
     "TBS_RUNNER_METHODS",

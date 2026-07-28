@@ -2,14 +2,14 @@
 title: Root Selected Deformed MP Edge 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_mixed_region_law.py
-  - benchmarks/diagnostics/calibration/root_selected_deformed_mp_edge_panel.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_null_proposal_frontier.py
-  - tests/validation/155_test_root_selected_mixed_region_law.py
-  - tests/validation/158_test_root_tie_rank_null_proposal_frontier.py
-  - tests/validation/176_test_root_selected_deformed_mp_edge_panel.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_mixed_region_law.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_deformed_mp_edge_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_null_proposal_frontier.py
+  - tests/validation/calibration/root/selected/155_test_root_selected_mixed_region_law.py
+  - tests/validation/calibration/root/tie_rank/158_test_root_tie_rank_null_proposal_frontier.py
+  - tests/validation/calibration/root/selected/176_test_root_selected_deformed_mp_edge_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_deformed_mp_edge_mild_accumulated
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_mild_accumulated
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_frontier_mild_hu_replay_v3_smoke

@@ -2,12 +2,12 @@
 title: Regularized Wald Statistic Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py
-  - tests/validation/97_test_regularized_wald_statistic_panel.py
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - benchmarks/diagnostics/calibration/production_admissibility_contract.py
+  - benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py
+  - tests/validation/calibration/statistics/97_test_regularized_wald_statistic_panel.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py
 tags:
   - source
   - diagnostics
@@ -45,7 +45,7 @@ boundary instability detected by the differential statistic-validity panel.
 
 ## Evidence
 
-- `tests/validation/97_test_regularized_wald_statistic_panel.py` verifies
+- `tests/validation/calibration/statistics/97_test_regularized_wald_statistic_panel.py` verifies
   Bernoulli smoothing, categorical smoothing, boundary-stable variant
   statistics, summary status decisions, and output writing.
 - The fixed-tree smoke output records that smoothing repairs the boundary

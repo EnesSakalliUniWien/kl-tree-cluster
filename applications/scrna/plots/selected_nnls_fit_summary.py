@@ -286,7 +286,11 @@ def main() -> None:
     diagnostics = [_fit_diagnostic(cfg) for cfg in DATASETS]
     summary = pd.DataFrame(
         [
-            {key: value for key, value in diagnostic.items() if key not in {"target", "fitted", "residual"}}
+            {
+                key: value
+                for key, value in diagnostic.items()
+                if key not in {"target", "fitted", "residual"}
+            }
             for diagnostic in diagnostics
         ]
     )

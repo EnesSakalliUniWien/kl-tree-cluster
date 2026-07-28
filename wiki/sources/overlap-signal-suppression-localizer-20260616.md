@@ -2,10 +2,10 @@
 title: Overlap Signal Suppression Localizer 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_signal_suppression_localizer.py
-  - tests/validation/143_test_overlap_signal_suppression_localizer.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_signal_suppression_localizer.py
+  - tests/validation/calibration/overlap/143_test_overlap_signal_suppression_localizer.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite
 tags:
@@ -61,9 +61,9 @@ neutral, or not a suppressed signal candidate.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/overlap_signal_suppression_localizer.py`
+- `benchmarks/diagnostics/calibration/overlap/overlap_signal_suppression_localizer.py`
   implements the join and classification logic.
-- `tests/validation/143_test_overlap_signal_suppression_localizer.py` validates
+- `tests/validation/calibration/overlap/143_test_overlap_signal_suppression_localizer.py` validates
   useful, harmful, and no-suppression status classification and verifies output
   creation.
 - The manifests record the paired clustering CSVs, candidate contrast CSVs,

@@ -2,10 +2,10 @@
 title: Spectral Transport Threshold Calibration Panel 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
-  - tests/validation/149_test_spectral_transport_threshold_calibration_panel.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_threshold_calibration_panel.py
+  - tests/validation/calibration/spectral_transport/149_test_spectral_transport_threshold_calibration_panel.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - tests/localization/35_test_gates_traversal.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel

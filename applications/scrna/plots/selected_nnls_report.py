@@ -24,7 +24,9 @@ Image.MAX_IMAGE_PIXELS = None
 
 ROOT = Path(__file__).resolve().parents[3]
 BASE = ROOT / "raw/assets/benchmark-results"
-SELECTED = "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001"
+SELECTED = (
+    "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001"
+)
 METHOD_TITLE = "TBS adaptive diffusion recomputed-NNLS branch-time (k90, alpha=0.01, edge=0.001)"
 
 DATASETS = [
@@ -46,9 +48,15 @@ OUT_PDF = BASE / "scrna_selected_adaptive_diffusion_nnls_full_report.pdf"
 OUT_ADULT = BASE / "scrna_selected_adaptive_diffusion_nnls_adult_colored_tree_page.png"
 OUT_GONCALVES = BASE / "scrna_selected_adaptive_diffusion_nnls_goncalves_colored_tree_page.png"
 OUT_ADULT_RADIAL = BASE / "scrna_selected_adaptive_diffusion_nnls_adult_radial_tree_page.png"
-OUT_GONCALVES_RADIAL = BASE / "scrna_selected_adaptive_diffusion_nnls_goncalves_radial_tree_page.png"
-OUT_ADULT_FULL_RADIAL = BASE / "scrna_selected_adaptive_diffusion_nnls_adult_full_radial_tree_page.png"
-OUT_GONCALVES_FULL_RADIAL = BASE / "scrna_selected_adaptive_diffusion_nnls_goncalves_full_radial_tree_page.png"
+OUT_GONCALVES_RADIAL = (
+    BASE / "scrna_selected_adaptive_diffusion_nnls_goncalves_radial_tree_page.png"
+)
+OUT_ADULT_FULL_RADIAL = (
+    BASE / "scrna_selected_adaptive_diffusion_nnls_adult_full_radial_tree_page.png"
+)
+OUT_GONCALVES_FULL_RADIAL = (
+    BASE / "scrna_selected_adaptive_diffusion_nnls_goncalves_full_radial_tree_page.png"
+)
 OUT_SUMMARY = BASE / "scrna_selected_adaptive_diffusion_nnls_cluster_boundary_summary.csv"
 
 PALETTE = [
@@ -201,7 +209,9 @@ def build_boundary_tree_info(cfg, assign_df, cluster_palette):
     cell_to_cluster = assign_df.set_index("cell_id")[selected]
     cell_to_type = assign_df.set_index("cell_id")["celltype"]
 
-    boundaries = trace.loc[trace["final_boundary"].astype(str).str.lower().isin(["true", "1"])].copy()
+    boundaries = trace.loc[
+        trace["final_boundary"].astype(str).str.lower().isin(["true", "1"])
+    ].copy()
     boundary_records = []
     for _, row in boundaries.iterrows():
         cells = json.loads(row["descendant_leaf_signature"])
@@ -212,7 +222,9 @@ def build_boundary_tree_info(cfg, assign_df, cluster_palette):
         purity = float(counts.iloc[0]) / float(len(clusters))
         type_counts = types.value_counts()
         top_celltype = str(type_counts.index[0]) if len(type_counts) else "unknown"
-        top_celltype_fraction = float(type_counts.iloc[0]) / float(len(types)) if len(type_counts) else np.nan
+        top_celltype_fraction = (
+            float(type_counts.iloc[0]) / float(len(types)) if len(type_counts) else np.nan
+        )
         boundary_records.append(
             {
                 "node_id": row["node_id"],
@@ -343,8 +355,12 @@ def plot_compact_tree(ax, info, cluster_palette, title):
                 color = "#9ca3af"
                 linewidth = 0.75
                 alpha = 0.72
-            ax.plot([x[node], x[node]], [-y[node], -y[child]], color=color, lw=linewidth, alpha=alpha)
-            ax.plot([x[node], x[child]], [-y[child], -y[child]], color=color, lw=linewidth, alpha=alpha)
+            ax.plot(
+                [x[node], x[node]], [-y[node], -y[child]], color=color, lw=linewidth, alpha=alpha
+            )
+            ax.plot(
+                [x[node], x[child]], [-y[child], -y[child]], color=color, lw=linewidth, alpha=alpha
+            )
             draw_edges(child)
 
     draw_edges(info["root"])
@@ -383,7 +399,12 @@ def plot_compact_tree(ax, info, cluster_palette, title):
             va="center",
             color="black",
             zorder=5,
-            bbox={"boxstyle": "round,pad=0.08", "facecolor": "white", "edgecolor": "none", "alpha": 0.65},
+            bbox={
+                "boxstyle": "round,pad=0.08",
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.65,
+            },
         )
 
     ax.set_title(title, fontsize=11, weight="bold", pad=8)
@@ -634,7 +655,9 @@ def plot_full_radial_tree(ax, info, cluster_palette, title):
     max_y = max(y.values()) if y else 1.0
     max_y = max(max_y, 1e-12)
 
-    angles = {node: (2 * np.pi * (xpos / max(max_x + 1, 1))) - (np.pi / 2) for node, xpos in x.items()}
+    angles = {
+        node: (2 * np.pi * (xpos / max(max_x + 1, 1))) - (np.pi / 2) for node, xpos in x.items()
+    }
     radii = {node: y[node] / max_y for node in x}
 
     def edge_style(child):
@@ -757,9 +780,15 @@ def selected_dataset_page(cfg, save_path=None, generated_at=None):
     ax_sizes = fig.add_subplot(gs[1, :2])
 
     plot_umap(ax_celltype, assign, "celltype", celltype_palette, "Reference labels on UMAP")
-    plot_umap(ax_cluster, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True)
-    plot_compact_tree(ax_tree, tree_info, cluster_palette, "Compact selected-boundary tree, same colors")
-    plot_size_bars(ax_sizes, summary, cluster_palette, "Selected clusters: size and dominant reference label")
+    plot_umap(
+        ax_cluster, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True
+    )
+    plot_compact_tree(
+        ax_tree, tree_info, cluster_palette, "Compact selected-boundary tree, same colors"
+    )
+    plot_size_bars(
+        ax_sizes, summary, cluster_palette, "Selected clusters: size and dominant reference label"
+    )
 
     n_clusters = assign[selected].nunique()
     min_purity = tree_info["boundary_df"]["cluster_purity_in_boundary"].min()
@@ -798,8 +827,12 @@ def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
     ax_umap = fig.add_subplot(gs[0, 0])
     ax_radial = fig.add_subplot(gs[0, 1])
 
-    plot_umap(ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5)
-    plot_radial_tree(ax_radial, tree_info, cluster_palette, "Selected-boundary radial tree, same colors")
+    plot_umap(
+        ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5
+    )
+    plot_radial_tree(
+        ax_radial, tree_info, cluster_palette, "Selected-boundary radial tree, same colors"
+    )
     fig.suptitle(
         f"{cfg['title']} radial tree\n{METHOD_TITLE}",
         fontsize=14,
@@ -824,8 +857,12 @@ def selected_full_radial_dataset_page(cfg, save_path=None, generated_at=None):
     ax_umap = fig.add_subplot(gs[0, 0])
     ax_radial = fig.add_subplot(gs[0, 1])
 
-    plot_umap(ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5)
-    plot_full_radial_tree(ax_radial, full_info, cluster_palette, "Real full radial tree, same leaf colors")
+    plot_umap(
+        ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5
+    )
+    plot_full_radial_tree(
+        ax_radial, full_info, cluster_palette, "Real full radial tree, same leaf colors"
+    )
     fig.suptitle(
         f"{cfg['title']} full selected tree\n{METHOD_TITLE}",
         fontsize=14,
@@ -882,7 +919,9 @@ def main():
             pdf.savefig(fig, bbox_inches="tight")
             plt.close(fig)
             summaries.append(summary)
-            radial_fig = selected_radial_dataset_page(cfg, save_path=radial_path, generated_at=generated_at)
+            radial_fig = selected_radial_dataset_page(
+                cfg, save_path=radial_path, generated_at=generated_at
+            )
             pdf.savefig(radial_fig, bbox_inches="tight")
             plt.close(radial_fig)
             full_radial_fig = selected_full_radial_dataset_page(
@@ -902,7 +941,10 @@ def main():
             pdf,
             "Adult pancreas: selected NNLS-TBS tree diagnostics",
             [
-                (adult_dir / f"{SELECTED}_clusters_radial_tree_ggtree.png", "Selected cluster radial tree"),
+                (
+                    adult_dir / f"{SELECTED}_clusters_radial_tree_ggtree.png",
+                    "Selected cluster radial tree",
+                ),
                 (adult_dir / f"{SELECTED}_radial_tree_ggtree.png", "Selected full radial tree"),
                 (adult_dir / f"{SELECTED}_branch_lengths.png", "Selected NNLS branch lengths"),
                 (adult_dir / f"{SELECTED}_tree_dendrogram.png", "Selected dendrogram"),
@@ -916,8 +958,14 @@ def main():
                 (adult_dir / "method_split_merge_diagnostic.png", "Method split/merge diagnostic"),
                 (adult_dir / "method_ari_barplot.png", "ARI benchmark summary"),
                 (adult_dir / "pancreas_progenitor_signature_umap.png", "Progenitor signature UMAP"),
-                (adult_dir / "tbs_adaptive_inner_node_progenitor_comparison.png", "Internal-node progenitor comparison"),
-                (adult_dir / "tbs_adaptive_two_three_cluster_junction_mixed_umap.png", "Mixed two/three cluster junction UMAP"),
+                (
+                    adult_dir / "tbs_adaptive_inner_node_progenitor_comparison.png",
+                    "Internal-node progenitor comparison",
+                ),
+                (
+                    adult_dir / "tbs_adaptive_two_three_cluster_junction_mixed_umap.png",
+                    "Mixed two/three cluster junction UMAP",
+                ),
                 (adult_dir / "tbs_branch_time_sensitivity.png", "Branch-time sensitivity"),
             ],
             generated_at=generated_at,
@@ -929,7 +977,10 @@ def main():
                 (gon_dir / f"{SELECTED}_radial_tree_ggtree.png", "Selected radial tree"),
                 (gon_dir / f"{SELECTED}_branch_lengths.png", "Selected NNLS branch lengths"),
                 (gon_dir / f"{SELECTED}_tree_dendrogram.png", "Selected dendrogram"),
-                (gon_dir / "goncalves_tbs_cluster_umap_tree_page_ggtree.png", "Cluster UMAP + tree page"),
+                (
+                    gon_dir / "goncalves_tbs_cluster_umap_tree_page_ggtree.png",
+                    "Cluster UMAP + tree page",
+                ),
             ],
             generated_at=generated_at,
         )
@@ -938,9 +989,18 @@ def main():
             "Goncalves progenitor UMAP and tree panels",
             [
                 (gon_dir / "goncalves_progenitor_signature_umap.png", "Progenitor signature UMAP"),
-                (gon_dir / "goncalves_tbs_progenitor_umap_tree_panel_wide_ggtree.png", "Progenitor UMAP + tree panel"),
-                (gon_dir / "goncalves_tbs_progenitor_state_umap_tree_page_ggtree.png", "Progenitor state UMAP + tree"),
-                (gon_dir / "goncalves_tbs_progenitor_fraction_umap_tree_page_ggtree.png", "Progenitor fraction UMAP + tree"),
+                (
+                    gon_dir / "goncalves_tbs_progenitor_umap_tree_panel_wide_ggtree.png",
+                    "Progenitor UMAP + tree panel",
+                ),
+                (
+                    gon_dir / "goncalves_tbs_progenitor_state_umap_tree_page_ggtree.png",
+                    "Progenitor state UMAP + tree",
+                ),
+                (
+                    gon_dir / "goncalves_tbs_progenitor_fraction_umap_tree_page_ggtree.png",
+                    "Progenitor fraction UMAP + tree",
+                ),
             ],
             generated_at=generated_at,
         )
@@ -950,8 +1010,14 @@ def main():
             [
                 (gon_dir / "goncalves_tbs_relation_umap_grid_ggtree.png", "Relation UMAP grid"),
                 (gon_dir / "goncalves_tbs_relation_tree_grid_ggtree.png", "Relation tree grid"),
-                (gon_dir / "goncalves_tbs_population_umap_tree_page_ggtree.png", "Population UMAP + tree"),
-                (gon_dir / "goncalves_population_tbs_cluster_signature_heatmap.png", "Population cluster signature heatmap"),
+                (
+                    gon_dir / "goncalves_tbs_population_umap_tree_page_ggtree.png",
+                    "Population UMAP + tree",
+                ),
+                (
+                    gon_dir / "goncalves_population_tbs_cluster_signature_heatmap.png",
+                    "Population cluster signature heatmap",
+                ),
             ],
             generated_at=generated_at,
         )
@@ -959,12 +1025,27 @@ def main():
             pdf,
             "Branch-length and distributional-action audits",
             [
-                (audit_dir / "distributional_action_vs_branch_length.png", "Distributional action vs branch length"),
-                (audit_dir / "top_internal_distributional_action_edges.png", "Top internal distributional-action edges"),
-                (audit_dir / "distributional_action_vs_edge_statistic.png", "Distributional action vs edge statistic"),
-                (effect_dir / "branch_time_sensitivity_effects.png", "Branch-time sensitivity effects"),
+                (
+                    audit_dir / "distributional_action_vs_branch_length.png",
+                    "Distributional action vs branch length",
+                ),
+                (
+                    audit_dir / "top_internal_distributional_action_edges.png",
+                    "Top internal distributional-action edges",
+                ),
+                (
+                    audit_dir / "distributional_action_vs_edge_statistic.png",
+                    "Distributional action vs edge statistic",
+                ),
+                (
+                    effect_dir / "branch_time_sensitivity_effects.png",
+                    "Branch-time sensitivity effects",
+                ),
                 (effect_dir / "branch_length_cluster_effects.png", "Branch-length cluster effects"),
-                (effect_dir / "branch_length_assignment_similarity_heatmap.png", "Assignment similarity heatmap"),
+                (
+                    effect_dir / "branch_length_assignment_similarity_heatmap.png",
+                    "Assignment similarity heatmap",
+                ),
             ],
             generated_at=generated_at,
         )

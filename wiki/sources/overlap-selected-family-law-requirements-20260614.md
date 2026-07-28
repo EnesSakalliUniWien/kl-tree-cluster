@@ -2,10 +2,10 @@
 title: Overlap Selected-Family Law Requirements 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_selected_family_law_requirements.py
-  - tests/validation/119_test_overlap_selected_family_law_requirements.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_selected_family_law_requirements.py
+  - tests/validation/calibration/overlap/119_test_overlap_selected_family_law_requirements.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/selected_family_law_requirements/overlap_selected_family_conditioning_envelope.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/selected_family_law_requirements/overlap_selected_family_law_requirements.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/selected_family_law_requirements/manifest.json
@@ -61,13 +61,13 @@ promote any production threshold.
 
 ## Evidence
 
-- `tests/validation/119_test_overlap_selected_family_law_requirements.py`
+- `tests/validation/calibration/overlap/119_test_overlap_selected_family_law_requirements.py`
   verifies conditioning-envelope summaries, the four core requirement rows, and
   output writing.
 - Verification passed:
-  `pytest tests/validation/119_test_overlap_selected_family_law_requirements.py -q`
+  `pytest tests/validation/calibration/overlap/119_test_overlap_selected_family_law_requirements.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_selected_family_law_requirements.py tests/validation/119_test_overlap_selected_family_law_requirements.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_selected_family_law_requirements.py tests/validation/calibration/overlap/119_test_overlap_selected_family_law_requirements.py`.
 
 ## Links
 

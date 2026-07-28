@@ -2,10 +2,10 @@
 title: Overlap Bayesian Incidence Mode Law 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_bayesian_incidence_mode_law.py
-  - tests/validation/128_test_overlap_bayesian_incidence_mode_law.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_bayesian_incidence_mode_law.py
+  - tests/validation/calibration/overlap/128_test_overlap_bayesian_incidence_mode_law.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_incidence_mode_law/overlap_bayesian_incidence_mode_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_incidence_mode_law/overlap_bayesian_incidence_mode_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_incidence_mode_law/manifest.json
@@ -79,14 +79,14 @@ row from the `25` negative context-negative emergent rows.
 
 ## Evidence
 
-- `tests/validation/128_test_overlap_bayesian_incidence_mode_law.py` verifies
+- `tests/validation/calibration/overlap/128_test_overlap_bayesian_incidence_mode_law.py` verifies
   that positive-context local-outcome rows are candidates, context-negative
   emergent rows remain ambiguous when truth and negatives share that evidence
   pattern, and outputs are written.
 - Verification passed:
-  `pytest tests/validation/128_test_overlap_bayesian_incidence_mode_law.py -q`
+  `pytest tests/validation/calibration/overlap/128_test_overlap_bayesian_incidence_mode_law.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_bayesian_incidence_mode_law.py tests/validation/128_test_overlap_bayesian_incidence_mode_law.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_bayesian_incidence_mode_law.py tests/validation/calibration/overlap/128_test_overlap_bayesian_incidence_mode_law.py`.
 
 ## Links
 

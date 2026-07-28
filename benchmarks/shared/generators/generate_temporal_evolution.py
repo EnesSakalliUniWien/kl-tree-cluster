@@ -166,9 +166,7 @@ def generate_temporal_evolution_data(
         divergence_from_ancestor.append(js)
 
         # Sample sequences at this time point
-        samples = _sample_from_distribution(
-            current_dist, samples_per_time, random_state
-        )
+        samples = _sample_from_distribution(current_dist, samples_per_time, random_state)
 
         for i in range(samples_per_time):
             sample_name = f"S{sample_idx}"

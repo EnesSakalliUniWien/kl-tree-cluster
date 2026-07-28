@@ -2,7 +2,7 @@
 title: Selected Neighborhood Measurability Law
 type: analysis
 status: draft
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
   - wiki/analyses/traversal-neighborhood-method-comparison.md
   - wiki/analyses/selected-neighborhood-bottleneck-law.md
@@ -37,10 +37,10 @@ sources:
   - wiki/sources/spectral-transport-promoted-replicate-panel-20260616.md
   - wiki/sources/spectral-vs-bandwidth-tradeoff-panel-20260616.md
   - wiki/sources/legacy-internal-spectral-comparison-panel-20260616.md
-  - benchmarks/diagnostics/calibration/sibling_null_prior_interpolation_audit.py
-  - benchmarks/diagnostics/calibration/overlap_signal_suppression_localizer.py
-  - benchmarks/diagnostics/calibration/selected_neighborhood_spectral_flow.py
-  - benchmarks/diagnostics/calibration/spectral_vs_bandwidth_tradeoff_panel.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_prior_interpolation_audit.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_signal_suppression_localizer.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_spectral_flow.py
+  - benchmarks/diagnostics/calibration/statistics/spectral_vs_bandwidth_tradeoff_panel.py
 tags:
   - analysis
   - traversal

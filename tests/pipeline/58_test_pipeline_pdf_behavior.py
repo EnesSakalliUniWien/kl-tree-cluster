@@ -49,9 +49,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         called["pdf"] = pdf
         return None, {"validation": [], "trees": [], "umap": [], "manifold": []}
 
-    monkeypatch.setattr(
-        pipeline, "generate_benchmark_plots", fake_generate_benchmark_plots
-    )
+    monkeypatch.setattr(pipeline, "generate_benchmark_plots", fake_generate_benchmark_plots)
 
     # With concat_plots_pdf=True, pipeline streams to PdfPages and never emits PNGs.
     _df, _fig = pipeline.benchmark_cluster_algorithm(

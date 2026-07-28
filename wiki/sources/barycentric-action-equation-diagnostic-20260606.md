@@ -2,9 +2,9 @@
 title: Barycentric Action Equation Diagnostic 2026-06-06
 type: source
 status: reviewed
-updated: 2026-06-06
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py
   - raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv
   - benchmarks/results/diagnostics/barycentric_action_equation_diagnostic_20260606/barycentric_action_equation_summary.csv
   - benchmarks/results/diagnostics/barycentric_action_equation_diagnostic_20260606/barycentric_action_equation_validation.csv
@@ -57,7 +57,7 @@ calibration from traversal-fragmentation explanation.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py`
+- `benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py`
   supplies the selected-tail validation helpers reused by this diagnostic.
 - `benchmarks/results/diagnostics/barycentric_action_equation_diagnostic_20260606/barycentric_action_equation_summary.csv`
   compares the baseline edge/spectral, compact barycentric edge/spectral, and

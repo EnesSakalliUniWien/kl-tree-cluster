@@ -37,6 +37,4 @@ def log_validation_completion(
 ) -> None:
     """Log the completion of the validation process."""
     logger = logger or _default_pipeline_logger()
-    logger.info(
-        "Completed %d validation runs across %d test cases.", total_runs, n_cases
-    )
+    logger.info("Completed %d validation runs across %d test cases.", total_runs, n_cases)

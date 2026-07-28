@@ -62,7 +62,9 @@ def _binary_matrix_from_cluster_probabilities(
     rows = np.empty((labels.size, probabilities.shape[1]), dtype=int)
     for cluster in np.unique(labels):
         mask = labels == cluster
-        rows[mask] = rng.binomial(1, probabilities[int(cluster)], size=(int(mask.sum()), probabilities.shape[1]))
+        rows[mask] = rng.binomial(
+            1, probabilities[int(cluster)], size=(int(mask.sum()), probabilities.shape[1])
+        )
     return rows
 
 
@@ -90,7 +92,9 @@ def generate_binary_barycentric_template(test_case: dict, seed: int | None) -> C
         start = cluster * block_width
         stop = n_features if cluster == n_clusters - 1 else min(n_features, start + block_width)
         probabilities[cluster, start:stop] = np.clip(0.5 + signal, 0.02, 0.98)
-        probabilities[cluster, :start] = np.clip(probabilities[cluster, :start] - signal / 3.0, 0.02, 0.98)
+        probabilities[cluster, :start] = np.clip(
+            probabilities[cluster, :start] - signal / 3.0, 0.02, 0.98
+        )
 
     matrix = _binary_matrix_from_cluster_probabilities(
         rng=rng,
@@ -171,7 +175,9 @@ def generate_planted_hierarchy_deep_signal(test_case: dict, seed: int | None) ->
         root_sign = 1.0 if cluster < n_clusters / 2 else -1.0
         probabilities[cluster, :root_width] = 0.5 + root_delta * root_sign
         start = root_width + cluster * descendant_width
-        stop = n_features if cluster == n_clusters - 1 else min(n_features, start + descendant_width)
+        stop = (
+            n_features if cluster == n_clusters - 1 else min(n_features, start + descendant_width)
+        )
         if sparse_descendants:
             probabilities[cluster, start:stop] = 0.88
         else:

@@ -2,10 +2,10 @@
 title: Retained Pass-Through Topology Likelihood Panel 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/retained_pass_through_topology_likelihood_panel.py
-  - tests/validation/138_test_retained_pass_through_topology_likelihood_panel.py
+  - benchmarks/diagnostics/calibration/traversal/retained_pass_through_topology_likelihood_panel.py
+  - tests/validation/calibration/traversal/138_test_retained_pass_through_topology_likelihood_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_distribution
 tags:
@@ -100,7 +100,7 @@ distance.
 
 ## Evidence
 
-- `tests/validation/138_test_retained_pass_through_topology_likelihood_panel.py`
+- `tests/validation/calibration/traversal/138_test_retained_pass_through_topology_likelihood_panel.py`
   verifies the retained-pass-through signal/control fixture, matching, and
   fail-closed identifiability status when signal topology features are absent.
 - The compact run used

@@ -621,17 +621,13 @@ def _profile_case(
                 "speedup_vs_full_eigh_projection": speedup_vs_full,
                 "tree_build_and_populate_seconds": tree_seconds,
                 "matrix_materialization_seconds": materialize_seconds,
-                "vectorized_bernoulli_materialization_seconds": (
-                    vectorized_materialize_seconds
-                ),
+                "vectorized_bernoulli_materialization_seconds": (vectorized_materialize_seconds),
                 "vectorized_bernoulli_materialization_speedup": (
                     float(materialize_seconds / vectorized_materialize_seconds)
                     if vectorized_materialize_seconds > 0
                     else np.nan
                 ),
-                "vectorized_bernoulli_materialization_max_abs_diff": (
-                    vectorized_max_abs_diff
-                ),
+                "vectorized_bernoulli_materialization_max_abs_diff": (vectorized_max_abs_diff),
                 "nodes": result.nodes,
                 "projected_nodes": result.projected_nodes,
                 "total_test_dimension": result.total_test_dimension,

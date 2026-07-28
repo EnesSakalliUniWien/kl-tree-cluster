@@ -24,8 +24,7 @@ def _validate_calibration_record(record: SiblingPairRecord) -> None:
     """Validate one candidate record for empirical-null inflation estimation."""
     if not np.isfinite(record.stat):
         raise ValueError(
-            "Sibling inflation calibration requires finite statistics; "
-            f"parent={record.parent!r}."
+            f"Sibling inflation calibration requires finite statistics; parent={record.parent!r}."
         )
     if record.degrees_of_freedom < 0:
         raise ValueError(
@@ -76,9 +75,7 @@ def _weighted_mean_columns(values: np.ndarray, weights: np.ndarray) -> np.ndarra
 
 def _weighted_std_columns(values: np.ndarray, weights: np.ndarray) -> np.ndarray:
     center = _weighted_mean_columns(values, weights)
-    variances = np.sum(((values - center) ** 2) * weights[:, None], axis=0) / np.sum(
-        weights
-    )
+    variances = np.sum(((values - center) ** 2) * weights[:, None], axis=0) / np.sum(weights)
     return np.sqrt(np.maximum(variances, 0.0))
 
 
@@ -142,9 +139,7 @@ def fit_empirical_null_inflation_model(
 ) -> EmpiricalNullInflationModel:
     """Fit the context-weighted empirical-null inflation model."""
     if not records:
-        raise ValueError(
-            "Cannot fit sibling inflation model: no sibling calibration records."
-        )
+        raise ValueError("Cannot fit sibling inflation model: no sibling calibration records.")
     for record in records:
         _validate_calibration_record(record)
 
@@ -163,14 +158,11 @@ def fit_empirical_null_inflation_model(
         )
 
     supported_records = [
-        record
-        for record in positive_weight_records
-        if _has_internal_empirical_null_support(record)
+        record for record in positive_weight_records if _has_internal_empirical_null_support(record)
     ]
     if not supported_records:
         selected_nonnull_count = sum(
-            not _has_internal_empirical_null_support(record)
-            for record in positive_weight_records
+            not _has_internal_empirical_null_support(record) for record in positive_weight_records
         )
         raise ValueError(
             "Cannot fit sibling inflation model: no strict-null or stopped-edge "
@@ -208,9 +200,7 @@ def fit_empirical_null_inflation_model(
         [record.n_parent for record in supported_records],
         dtype=float,
     )
-    calibration_feature_families = tuple(
-        record.feature_family for record in supported_records
-    )
+    calibration_feature_families = tuple(record.feature_family for record in supported_records)
     calibration_parent_ids = tuple(record.parent for record in supported_records)
     reference_expectations = reference_scales * degrees_of_freedom
 
@@ -240,13 +230,10 @@ def fit_empirical_null_inflation_model(
         n_calibration=int(len(statistics)),
         n_positive_weight_records=int(len(positive_weight_records)),
         n_selected_nonnull_positive_weight_records=sum(
-            not _has_internal_empirical_null_support(record)
-            for record in positive_weight_records
+            not _has_internal_empirical_null_support(record) for record in positive_weight_records
         ),
         n_strict_null_calibration=sum(record.is_null_like for record in supported_records),
-        n_edge_blocked_calibration=sum(
-            record.is_edge_blocked for record in supported_records
-        ),
+        n_edge_blocked_calibration=sum(record.is_edge_blocked for record in supported_records),
         n_stopped_or_null_calibration=len(supported_records),
         baseline_empirical_inflation_factor=baseline_empirical_inflation_factor,
         effective_sample_size=effective_sample_size,
@@ -294,37 +281,31 @@ def _decision_support(
             support["n_family_edge_blocked_records"] = int(
                 np.sum(model.sample_is_edge_blocked[family_mask])
             )
-            support["family_effective_sample_size"] = _effective_sample_size(
-                family_weights
-            )
+            support["family_effective_sample_size"] = _effective_sample_size(family_weights)
             support["family_max_weight_share"] = _max_weight_share(family_weights)
-            support["leave_one_record_max_delta_log_c"] = (
-                _leave_one_record_max_delta_log_c(
-                    model.sample_statistics[family_mask],
-                    (
-                        model.sample_reference_scales[family_mask]
-                        * model.sample_degrees_of_freedom[family_mask]
-                    ),
-                    family_weights,
-                    max(
-                        _inflation_mle(
-                            model.sample_statistics[family_mask],
-                            (
-                                model.sample_reference_scales[family_mask]
-                                * model.sample_degrees_of_freedom[family_mask]
-                            ),
-                            family_weights,
+            support["leave_one_record_max_delta_log_c"] = _leave_one_record_max_delta_log_c(
+                model.sample_statistics[family_mask],
+                (
+                    model.sample_reference_scales[family_mask]
+                    * model.sample_degrees_of_freedom[family_mask]
+                ),
+                family_weights,
+                max(
+                    _inflation_mle(
+                        model.sample_statistics[family_mask],
+                        (
+                            model.sample_reference_scales[family_mask]
+                            * model.sample_degrees_of_freedom[family_mask]
                         ),
-                        1.0,
+                        family_weights,
                     ),
-                )
+                    1.0,
+                ),
             )
     if local_weights is not None:
         support["local_weight_sum"] = float(np.sum(local_weights))
         support["local_effective_sample_size"] = (
-            _effective_sample_size(local_weights)
-            if float(np.sum(local_weights)) > 0.0
-            else 0.0
+            _effective_sample_size(local_weights) if float(np.sum(local_weights)) > 0.0 else 0.0
         )
         support["local_max_weight_share"] = _max_weight_share(local_weights)
     return support
@@ -342,9 +323,7 @@ def _support_contract_failures(
         thresholds.min_family_supported_records
     ):
         failures.append("family_supported_records_below_threshold")
-    if int(support.get("n_stopped_or_null_records", 0)) < (
-        thresholds.min_stopped_or_null_records
-    ):
+    if int(support.get("n_stopped_or_null_records", 0)) < (thresholds.min_stopped_or_null_records):
         failures.append("stopped_or_null_records_below_threshold")
     if float(support.get("family_effective_sample_size", 0.0)) < (
         thresholds.min_family_effective_sample_size
@@ -371,7 +350,9 @@ def _with_support_contract(
     failures = _support_contract_failures(support, thresholds=thresholds)
     annotated_support = dict(support)
     annotated_support["support_contract_status"] = (
-        "passes_internal_support_thresholds" if not failures else "below_internal_support_thresholds"
+        "passes_internal_support_thresholds"
+        if not failures
+        else "below_internal_support_thresholds"
     )
     annotated_support["support_contract_failure_reasons"] = ";".join(failures)
     annotated_support["support_threshold_min_supported_records"] = int(
@@ -389,9 +370,7 @@ def _with_support_contract(
     annotated_support["support_threshold_min_local_effective_sample_size"] = float(
         thresholds.min_local_effective_sample_size
     )
-    annotated_support["support_threshold_max_weight_share"] = float(
-        thresholds.max_weight_share
-    )
+    annotated_support["support_threshold_max_weight_share"] = float(thresholds.max_weight_share)
     annotated_support["support_threshold_max_leave_one_record_delta_log_c"] = float(
         thresholds.max_leave_one_record_delta_log_c
     )

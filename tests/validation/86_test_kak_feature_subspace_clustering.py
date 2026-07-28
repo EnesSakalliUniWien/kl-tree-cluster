@@ -51,9 +51,7 @@ def test_feature_subspace_coordinates_reconstruct_restricted_feature_gram() -> N
     start = block.block_start - 1
     end = block.block_end
     expected = (
-        feature_axes[:, start:end]
-        @ np.diag(eigvals[start:end])
-        @ feature_axes[:, start:end].T
+        feature_axes[:, start:end] @ np.diag(eigvals[start:end]) @ feature_axes[:, start:end].T
     )
     assert np.allclose(coords.to_numpy() @ coords.to_numpy().T, expected)
     assert list(coords.index) == list(data.columns)

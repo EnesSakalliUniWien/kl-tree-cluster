@@ -33,10 +33,13 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
+)
+from tree_break_selection.tree.construction import (
+    DEFAULT_BINARY_TREE_DISTANCE_METRIC,
+    DEFAULT_TREE_LINKAGE_METHOD,
 )
 
 
@@ -63,9 +66,10 @@ def bootstrap_consensus(
         Significance levels forwarded to ``PosetTree.decompose()``.
         Defaults to ``DEFAULT_EDGE_ALPHA`` / ``DEFAULT_SIBLING_ALPHA``.
     metric
-        Distance metric for ``pdist``.  Defaults to ``config.TREE_DISTANCE_METRIC``.
+        Distance metric for ``pdist``. Defaults to the canonical binary-tree
+        distance metric.
     linkage_method
-        Linkage method.  Defaults to ``config.TREE_LINKAGE_METHOD``.
+        Linkage method. Defaults to the canonical tree linkage method.
     random_seed
         Seed for the bootstrap RNG.
     decompose_kwargs
@@ -94,9 +98,9 @@ def bootstrap_consensus(
     if sibling_alpha is None:
         sibling_alpha = DEFAULT_SIBLING_ALPHA
     if metric is None:
-        metric = config.TREE_DISTANCE_METRIC
+        metric = DEFAULT_BINARY_TREE_DISTANCE_METRIC
     if linkage_method is None:
-        linkage_method = config.TREE_LINKAGE_METHOD
+        linkage_method = DEFAULT_TREE_LINKAGE_METHOD
     if decompose_kwargs is None:
         decompose_kwargs = {}
 

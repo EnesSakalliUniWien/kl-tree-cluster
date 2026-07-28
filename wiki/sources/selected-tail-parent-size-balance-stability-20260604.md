@@ -2,10 +2,10 @@
 title: Selected Tail Parent Size Balance Stability 2026-06-04
 type: source
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_tail_parent_size_balance_stability.py
-  - tests/validation/73_test_selected_tail_parent_size_balance_stability.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_parent_size_balance_stability.py
+  - tests/validation/calibration/selected/tail/73_test_selected_tail_parent_size_balance_stability.py
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_contexts.csv
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_parent_folds.csv
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_summary.csv
@@ -57,7 +57,7 @@ parent-size holdout.
 - `parent_size_balance_parent_folds.csv` records the leave-one-parent-size-bin
   folds.
 - `parent_size_balance_summary.csv` records decision counts.
-- `tests/validation/73_test_selected_tail_parent_size_balance_stability.py`
+- `tests/validation/calibration/selected/tail/73_test_selected_tail_parent_size_balance_stability.py`
   verifies predeclared balance bins, child-size validation, candidate
   promotion when all gates pass, support failure behavior, and artifact
   writing.

@@ -73,9 +73,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
         tree, stats = _make_binary_tree()
         # Bypass annotation pipeline — this test controls gate columns directly.
         with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            results = tree.decompose(
-                annotations_df=stats
-            )
+            results = tree.decompose(annotations_df=stats)
 
         self.assertEqual(results["num_clusters"], 2)
         leaves = sorted(

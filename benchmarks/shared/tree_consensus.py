@@ -128,9 +128,7 @@ def _target_results(results: pd.DataFrame) -> pd.DataFrame:
         & results["benchmark_grid"].astype(str).eq(TARGET_TREE_CONSENSUS_GRID)
     ].copy()
     if target.empty:
-        raise ValueError(
-            "Tree consensus requires graphtools adaptive-K NNLS tree-strategy rows."
-        )
+        raise ValueError("Tree consensus requires graphtools adaptive-K NNLS tree-strategy rows.")
 
     duplicates = target.duplicated(["case_id", "run_id"], keep=False)
     if duplicates.any():
@@ -141,8 +139,7 @@ def _target_results(results: pd.DataFrame) -> pd.DataFrame:
             .to_dict(orient="records")
         )
         raise ValueError(
-            "Tree consensus requires unique case_id/run_id rows; "
-            f"duplicates include {examples}."
+            f"Tree consensus requires unique case_id/run_id rows; duplicates include {examples}."
         )
 
     target["tree_inference"] = target["run_id"].map(tree_inference_from_run_id)
@@ -187,8 +184,7 @@ def _relevant_labels(target: pd.DataFrame, labels: pd.DataFrame) -> pd.DataFrame
     case_ids = set(target["case_id"].astype(str))
     run_ids = set(target["run_id"].astype(str))
     relevant = labels[
-        labels["case_id"].astype(str).isin(case_ids)
-        & labels["run_id"].astype(str).isin(run_ids)
+        labels["case_id"].astype(str).isin(case_ids) & labels["run_id"].astype(str).isin(run_ids)
     ].copy()
     return relevant[LABEL_COLUMNS].reset_index(drop=True)
 
@@ -216,8 +212,7 @@ def _validate_label_integrity(target: pd.DataFrame, labels: pd.DataFrame) -> boo
             )
     if missing:
         raise ValueError(
-            "Missing label assignments for successful tree consensus rows; "
-            f"examples={missing[:5]}."
+            f"Missing label assignments for successful tree consensus rows; examples={missing[:5]}."
         )
     if len(labels) != expected_label_count:
         raise ValueError(
@@ -312,7 +307,9 @@ def _add_case_rank(
         frame.loc[ranks.index, rank_column] = ranks
 
 
-def _rank_and_select(target: pd.DataFrame, stability: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _rank_and_select(
+    target: pd.DataFrame, stability: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     rankings = target.merge(
         stability[
             [

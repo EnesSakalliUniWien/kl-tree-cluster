@@ -1,11 +1,11 @@
 import pytest
 from benchmarks.shared.benchmark_grid import benchmark_grid, strip_benchmark_metadata
-from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.method_selection import (
     resolve_methods_from_env,
     resolve_selected_methods_and_param_sets,
 )
+from benchmarks.shared.util.method_sets import DEFAULT_METHODS
 
 
 def test_full_runner_default_method_selection_matches_shared_defaults(monkeypatch):

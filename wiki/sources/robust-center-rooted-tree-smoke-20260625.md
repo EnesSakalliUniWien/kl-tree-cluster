@@ -2,9 +2,9 @@
 title: Robust Center Rooted Tree Smoke 2026-06-25
 type: source
 status: draft
-updated: 2026-06-25
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/robust_center_rooted_tree_smoke.py
+  - benchmarks/diagnostics/calibration/root/center/robust_center_rooted_tree_smoke.py
   - raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625/manifest.json
   - raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625/robust_center_rooted_tree_rows.csv
   - raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625/robust_center_rooted_tree_summary.csv
@@ -67,7 +67,7 @@ block for every center method.
 - The `15%` side-size sensitivity writes rows and summary under
   `raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625_min15/`.
 - `py_compile` and Ruff passed for
-  `benchmarks/diagnostics/calibration/robust_center_rooted_tree_smoke.py`.
+  `benchmarks/diagnostics/calibration/root/center/robust_center_rooted_tree_smoke.py`.
 - `make wiki-lint` passed after adding this page and index coverage.
 
 ## Links

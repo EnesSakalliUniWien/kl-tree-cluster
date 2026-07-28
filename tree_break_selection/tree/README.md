@@ -43,6 +43,7 @@ The durable, cross-application audit is in
 
 | Module | Responsibility |
 | --- | --- |
+| `construction.py` | Immutable canonical binary-distance and linkage defaults; callers pass alternatives explicitly |
 | `io.py` | Promote SciPy/sklearn merge output or an existing edge list into `PosetTree`; provide topology-only linkage fallback before NNLS |
 | `phylogenetic.py` | Neighbor joining, IQ-TREE execution/Newick import, MAD rooting, and promotion of unrooted metric trees |
 | `poset_tree.py` | Stable rooted-tree representation and facade constructors |

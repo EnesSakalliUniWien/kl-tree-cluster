@@ -114,9 +114,7 @@ def compute_summary_stats(combined: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
-def plot_averaged_results(
-    summary: pd.DataFrame, n_replicates: int, n_leaves: int
-) -> plt.Figure:
+def plot_averaged_results(summary: pd.DataFrame, n_replicates: int, n_leaves: int) -> plt.Figure:
     """Create plot with error bars from replicated results."""
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
@@ -287,19 +285,13 @@ def main():
 
     # Create averaged plot
     fig1 = plot_averaged_results(summary, n_replicates, n_leaves)
-    fig1.savefig(
-        output_dir / "branch_length_averaged.png", dpi=150, bbox_inches="tight"
-    )
+    fig1.savefig(output_dir / "branch_length_averaged.png", dpi=150, bbox_inches="tight")
     print(f"Saved: {output_dir / 'branch_length_averaged.png'}")
 
     # Create single-run detailed plot
     single_run = combined[combined["replicate"] == 0].copy()
-    fig2 = plot_branch_length_results(
-        single_run, title="Branch Length Benchmark (Single Run)"
-    )
-    fig2.savefig(
-        output_dir / "branch_length_single_run.png", dpi=150, bbox_inches="tight"
-    )
+    fig2 = plot_branch_length_results(single_run, title="Branch Length Benchmark (Single Run)")
+    fig2.savefig(output_dir / "branch_length_single_run.png", dpi=150, bbox_inches="tight")
     print(f"Saved: {output_dir / 'branch_length_single_run.png'}")
 
     # Create embedding plots with TBS clustering
@@ -310,9 +302,7 @@ def main():
         random_seed=base_seed,
         show_tbs_clustering=True,
     )
-    fig3.savefig(
-        output_dir / "branch_length_embeddings.png", dpi=150, bbox_inches="tight"
-    )
+    fig3.savefig(output_dir / "branch_length_embeddings.png", dpi=150, bbox_inches="tight")
     print(f"Saved: {output_dir / 'branch_length_embeddings.png'}")
 
     plt.close("all")
@@ -333,15 +323,11 @@ def main():
     if len(high_ari) > 0:
         min_bl = high_ari["branch_length"].min()
         min_js = high_ari["js_div_mean"].min()
-        print(
-            f"- First branch length with mean ARI > 0.9: {min_bl} (JS div ≈ {min_js:.3f})"
-        )
+        print(f"- First branch length with mean ARI > 0.9: {min_bl} (JS div ≈ {min_js:.3f})")
 
     perfect = summary[summary["ari_mean"] > 0.95]
     if len(perfect) > 0:
-        print(
-            f"- Branch lengths with mean ARI > 0.95: {list(perfect['branch_length'])}"
-        )
+        print(f"- Branch lengths with mean ARI > 0.95: {list(perfect['branch_length'])}")
 
     print()
     print("Done!")

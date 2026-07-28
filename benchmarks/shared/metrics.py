@@ -258,9 +258,7 @@ def _calculate_outlier_isolation_metrics(
     predicted_outlier = pred_cluster.isin(predicted_outlier_clusters).to_numpy(dtype=bool)
     true_outlier_arr = true_outlier.to_numpy(dtype=bool)
 
-    outlier_precision = float(
-        precision_score(true_outlier_arr, predicted_outlier, zero_division=0)
-    )
+    outlier_precision = float(precision_score(true_outlier_arr, predicted_outlier, zero_division=0))
     outlier_recall = float(recall_score(true_outlier_arr, predicted_outlier, zero_division=0))
     outlier_f1 = float(f1_score(true_outlier_arr, predicted_outlier, zero_division=0))
 
@@ -279,7 +277,8 @@ def _calculate_outlier_isolation_metrics(
             grouped_cluster_id = outlier_cluster_ids.iloc[0]
             grouped_cluster_mask = pred_cluster == grouped_cluster_id
             grouped_outlier_cluster_recovered = float(
-                true_outlier[grouped_cluster_mask].all() and int(grouped_cluster_mask.sum()) == len(outlier_positions)
+                true_outlier[grouped_cluster_mask].all()
+                and int(grouped_cluster_mask.sum()) == len(outlier_positions)
             )
         else:
             grouped_outlier_cluster_recovered = 0.0
@@ -409,7 +408,10 @@ def _calculate_ari_nmi_purity_metrics(
             )
             worst_cluster_recall = float(np.min(per_class_recall))
         outlier_indices_raw = None if metadata is None else metadata.get("outlier_indices")
-        if isinstance(outlier_indices_raw, (list, tuple, np.ndarray)) and len(outlier_indices_raw) > 0:
+        if (
+            isinstance(outlier_indices_raw, (list, tuple, np.ndarray))
+            and len(outlier_indices_raw) > 0
+        ):
             (
                 outlier_precision,
                 outlier_recall,

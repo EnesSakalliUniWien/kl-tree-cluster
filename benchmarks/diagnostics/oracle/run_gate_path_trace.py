@@ -14,7 +14,6 @@ import pandas as pd
 
 repo_root = Path(__file__).resolve().parents[3]
 
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -146,9 +145,7 @@ def _load_classification(path: Path | None) -> tuple[pd.DataFrame, Path]:
     }
     missing = required - set(df.columns)
     if missing:
-        raise ValueError(
-            f"Classification CSV {resolved} is missing columns: {sorted(missing)}."
-        )
+        raise ValueError(f"Classification CSV {resolved} is missing columns: {sorted(missing)}.")
     return df, resolved
 
 
@@ -170,15 +167,14 @@ def _select_cases(
         raise ValueError("No cases matched the requested failure class/name filters.")
 
     missing = [
-        case_id
-        for case_id in selected["case_id"].astype(str)
-        if case_id not in case_by_name
+        case_id for case_id in selected["case_id"].astype(str) if case_id not in case_by_name
     ]
     if missing:
-        raise ValueError(f"Selected cases are not present in the {len(cases)}-case suite: {missing}.")
+        raise ValueError(
+            f"Selected cases are not present in the {len(cases)}-case suite: {missing}."
+        )
     return [
-        (case_by_name[str(row.case_id)].copy(), row)
-        for row in selected.itertuples(index=False)
+        (case_by_name[str(row.case_id)].copy(), row) for row in selected.itertuples(index=False)
     ]
 
 
@@ -209,7 +205,7 @@ def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
         sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
-        passthrough=config.PASSTHROUGH,
+        passthrough=True,
         trace_level="full",
     )
     decomposition = decomposer.decompose_tree()
@@ -244,7 +240,7 @@ def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
         tbs_ari=float(classification_row.tbs_ari),
         oracle_true_k_ari=float(oracle_true_k.ari),
         oracle_any_k_ari=float(oracle_any.ari),
-        passthrough=config.PASSTHROUGH,
+        passthrough=True,
     )
     trace_df.insert(2, "tree_distance_metric", context.tree_distance_metric)
     trace_df.insert(3, "tree_distance_source", context.tree_distance_source)
@@ -273,8 +269,7 @@ def main() -> None:
     traces: list[pd.DataFrame] = []
     for index, (case, classification_row) in enumerate(selected, 1):
         print(
-            f"[{index}/{len(selected)}] {case['name']} "
-            f"({classification_row.failure_class})",
+            f"[{index}/{len(selected)}] {case['name']} ({classification_row.failure_class})",
             flush=True,
         )
         traces.append(_trace_case(case, classification_row))

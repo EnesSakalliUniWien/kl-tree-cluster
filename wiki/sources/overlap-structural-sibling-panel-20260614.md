@@ -2,10 +2,10 @@
 title: Overlap Structural Sibling Panel 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_structural_sibling_panel.py
-  - tests/validation/103_test_overlap_structural_sibling_panel.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_structural_sibling_panel.py
+  - tests/validation/calibration/overlap/103_test_overlap_structural_sibling_panel.py
   - raw/assets/benchmark-results/overlap_structural_sibling_20260614/overlap_structural_sibling_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_20260614/overlap_structural_sibling_summary.csv
 tags:
@@ -68,7 +68,7 @@ production traversal or calibration.
 
 ## Evidence
 
-- `tests/validation/103_test_overlap_structural_sibling_panel.py` verifies the
+- `tests/validation/calibration/overlap/103_test_overlap_structural_sibling_panel.py` verifies the
   top-coordinate, Jaccard, cosine, pairwise homogeneity, status-classification,
   and tiny output contracts.
 - The focused run wrote `68` analytical rows and summary rows under
@@ -83,9 +83,9 @@ production traversal or calibration.
   `homogeneous_same_subspace`. This means the tested overlap failures are not
   strong same-subspace heterogeneity events either.
 - Verification passed:
-  `pytest tests/validation/103_test_overlap_structural_sibling_panel.py -q`
+  `pytest tests/validation/calibration/overlap/103_test_overlap_structural_sibling_panel.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_structural_sibling_panel.py tests/validation/103_test_overlap_structural_sibling_panel.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_structural_sibling_panel.py tests/validation/calibration/overlap/103_test_overlap_structural_sibling_panel.py`.
 
 ## Links
 

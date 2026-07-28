@@ -2,10 +2,10 @@
 title: Selected Hierarchy Geometry Covariates 2026-06-02
 type: source
 status: reviewed
-updated: 2026-06-02
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+  - tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/geometry_summary_by_case.csv
@@ -143,10 +143,10 @@ adds leave-one-source-family-out scoring.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   implements the diagnostic-only row builder, relationship summaries, and
   block-model summaries.
-- `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
   validates relationship summaries, block-model status reporting, case
   summaries, output writing, and missing-predictor errors.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/manifest.json`

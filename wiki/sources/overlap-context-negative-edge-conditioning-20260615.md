@@ -2,11 +2,11 @@
 title: Overlap Context-Negative Edge Conditioning 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_context_negative_edge_conditioning.py
-  - tests/validation/129_test_overlap_context_negative_edge_conditioning.py
-  - benchmarks/diagnostics/calibration/overlap_branch_incidence_junction_panel.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_context_negative_edge_conditioning.py
+  - tests/validation/calibration/overlap/129_test_overlap_context_negative_edge_conditioning.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_branch_incidence_junction_panel.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_edge_conditioning/overlap_context_negative_edge_conditioning_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_edge_conditioning/overlap_context_negative_edge_conditioning_metric_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_edge_conditioning/overlap_context_negative_edge_conditioning_summary.csv
@@ -55,13 +55,13 @@ The diagnostic is fail-closed and post-run only.
 
 ## Evidence
 
-- `tests/validation/129_test_overlap_context_negative_edge_conditioning.py`
+- `tests/validation/calibration/overlap/129_test_overlap_context_negative_edge_conditioning.py`
   verifies zero-negative separator detection, overlapping truth/negative
   failure, and output writing.
 - Verification passed:
-  `pytest tests/validation/129_test_overlap_context_negative_edge_conditioning.py -q`
+  `pytest tests/validation/calibration/overlap/129_test_overlap_context_negative_edge_conditioning.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_context_negative_edge_conditioning.py tests/validation/129_test_overlap_context_negative_edge_conditioning.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_edge_conditioning.py tests/validation/calibration/overlap/129_test_overlap_context_negative_edge_conditioning.py`.
 
 ## Links
 

@@ -2,10 +2,10 @@
 title: Root Selected Validity Replay Panel 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_validity_replay_panel.py
-  - tests/validation/185_test_root_selected_validity_replay_panel.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_validity_replay_panel.py
+  - tests/validation/calibration/root/selected/185_test_root_selected_validity_replay_panel.py
   - raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/fixed_sibling_gate_profile_validation_rows.csv
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_profile_fixture_join/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_profile_fixture_join/root_selected_validity_replay_rows.csv

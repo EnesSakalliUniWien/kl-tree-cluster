@@ -2,10 +2,10 @@
 title: Overlap Structural Continuous Rule 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_structural_continuous_rule.py
-  - tests/validation/106_test_overlap_structural_continuous_rule.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_structural_continuous_rule.py
+  - tests/validation/calibration/overlap/106_test_overlap_structural_continuous_rule.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/continuous_rules/overlap_structural_continuous_rule_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/continuous_rules/manifest.json
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/continuous_rules_fine/overlap_structural_continuous_rule_summary.csv
@@ -69,15 +69,15 @@ continuous structural sibling rule.
 
 ## Evidence
 
-- `tests/validation/106_test_overlap_structural_continuous_rule.py` verifies
+- `tests/validation/calibration/overlap/106_test_overlap_structural_continuous_rule.py` verifies
   that the threshold surface is stricter for root/large contexts than for
   deep/smaller contexts, that a synthetic deep signal can be separated from a
   synthetic root null under fixed parameters, and that the runner writes its
   outputs.
 - Verification passed:
-  `pytest tests/validation/106_test_overlap_structural_continuous_rule.py -q`
+  `pytest tests/validation/calibration/overlap/106_test_overlap_structural_continuous_rule.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_structural_continuous_rule.py tests/validation/106_test_overlap_structural_continuous_rule.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_structural_continuous_rule.py tests/validation/calibration/overlap/106_test_overlap_structural_continuous_rule.py`.
 
 ## Links
 

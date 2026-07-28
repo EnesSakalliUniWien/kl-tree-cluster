@@ -12,9 +12,9 @@ def case_recipe_geometry(case: Mapping[str, object]) -> tuple[int, int]:
         n_nodes = sum(int(size) for size in case["sizes"])
         return n_nodes, n_nodes
     if generator == "phylogenetic":
-        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
-            case["n_features"]
-        ) * int(case["n_categories"])
+        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(case["n_features"]) * int(
+            case["n_categories"]
+        )
     if generator == "temporal_evolution":
         return int(case["n_time_points"]) * int(case["samples_per_time"]), int(
             case["n_features"]
@@ -32,9 +32,7 @@ def case_recipe_geometry(case: Mapping[str, object]) -> tuple[int, int]:
     }:
         return int(case["n_samples"]), int(case["n_features"])
     if generator == "phylogenetic_brownian_continuous":
-        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
-            case["n_features"]
-        )
+        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(case["n_features"])
     if generator in {
         "blobs",
         "blobs_continuous",

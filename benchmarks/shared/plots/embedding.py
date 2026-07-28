@@ -275,9 +275,7 @@ def _compact_param_token(token: str) -> str:
 def _compact_param_string(param_part: str, max_chars: int) -> str:
     """Compact params with tree identity first, then stop before titles spill."""
     tokens = [
-        _compact_param_token(token.strip())
-        for token in param_part.split(",")
-        if token.strip()
+        _compact_param_token(token.strip()) for token in param_part.split(",") if token.strip()
     ]
     tokens = sorted(
         tokens,

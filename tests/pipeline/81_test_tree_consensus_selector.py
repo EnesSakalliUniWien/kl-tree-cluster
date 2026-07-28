@@ -16,7 +16,9 @@ def _run_id(tree: str) -> str:
         if tree == "neighbor_joining"
         else f"tree_linkage_method_{tree}"
     )
-    return f"tbs_diffusion_graphtools_adaptive_nnls::graphtools_adaptive_k_tree_strategy__{suffix}__r0"
+    return (
+        f"tbs_diffusion_graphtools_adaptive_nnls::graphtools_adaptive_k_tree_strategy__{suffix}__r0"
+    )
 
 
 def _row(

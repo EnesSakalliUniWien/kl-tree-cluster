@@ -44,7 +44,11 @@ class AdaptiveCosineSpace:
 def weight_feature_matrix(data: pd.DataFrame | np.ndarray, weighting: str) -> np.ndarray:
     """Return raw or TF-IDF-weighted feature values for spectral separation."""
 
-    values = data.to_numpy(dtype=float) if isinstance(data, pd.DataFrame) else np.asarray(data, dtype=float)
+    values = (
+        data.to_numpy(dtype=float)
+        if isinstance(data, pd.DataFrame)
+        else np.asarray(data, dtype=float)
+    )
     if values.ndim != 2:
         raise ValueError("Expected a 2D matrix.")
     if weighting == "binary":
@@ -54,9 +58,11 @@ def weight_feature_matrix(data: pd.DataFrame | np.ndarray, weighting: str) -> np
             raise ValueError("tfidf weighting requires nonnegative feature values.")
         from sklearn.feature_extraction.text import TfidfTransformer
 
-        return TfidfTransformer(norm=None, use_idf=True, smooth_idf=True).fit_transform(
-            values
-        ).toarray()
+        return (
+            TfidfTransformer(norm=None, use_idf=True, smooth_idf=True)
+            .fit_transform(values)
+            .toarray()
+        )
     raise ValueError(f"Unknown weighting: {weighting!r}")
 
 
@@ -122,9 +128,11 @@ def adaptive_spectral_blocks(
     if rank == 0:
         return [], {"selected_segments": 0, "bic": math.nan, "segmentation_sse": math.nan}
     if rank <= min_segment_length:
-        return [
-            SpectralBlock(0, f"adaptive_modes_01_{rank:02d}", 1, rank, "all_available")
-        ], {"selected_segments": 1, "bic": math.nan, "segmentation_sse": 0.0}
+        return [SpectralBlock(0, f"adaptive_modes_01_{rank:02d}", 1, rank, "all_available")], {
+            "selected_segments": 1,
+            "bic": math.nan,
+            "segmentation_sse": 0.0,
+        }
 
     log_eigenvalues = np.log(np.maximum(eigenvalues, 1e-300))
     offset = 0
@@ -231,9 +239,7 @@ def coordinates_for_block(
     end = block.block_end
     if start < 0 or end < block.block_start or end > len(eigenvalues):
         raise ValueError(f"Spectral block is outside the eigensystem: {block!r}")
-    coordinates = eigenvectors[:, start:end] * np.sqrt(
-        np.maximum(eigenvalues[start:end], 0.0)
-    )
+    coordinates = eigenvectors[:, start:end] * np.sqrt(np.maximum(eigenvalues[start:end], 0.0))
     if coordinates.ndim == 1:
         coordinates = coordinates.reshape(-1, 1)
     return np.nan_to_num(coordinates)

@@ -2,9 +2,9 @@
 title: Selected Hierarchy Null Audit 2026-06-01
 type: source
 status: reviewed
-updated: 2026-06-02
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_null_audit.py
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601_richer_root/manifest.json
@@ -93,7 +93,7 @@ targets the selected-hierarchy inference problem.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_null_audit.py`
   implements the selected same-data hierarchy simulation and context matching.
 - `raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv`
   records observed target statistics, selected-hierarchy null counts,

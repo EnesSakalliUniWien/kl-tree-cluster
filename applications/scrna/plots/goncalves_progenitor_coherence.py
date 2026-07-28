@@ -14,7 +14,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT_DIR = ROOT / "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624"
+OUT_DIR = (
+    ROOT / "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624"
+)
 OUT_PNG = OUT_DIR / "goncalves_progenitor_coherence_score.png"
 OUT_PDF = OUT_DIR / "goncalves_progenitor_coherence_score.pdf"
 OUT_CSV = OUT_DIR / "goncalves_progenitor_coherence_score.csv"

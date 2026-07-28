@@ -154,9 +154,7 @@ def generate_categorical_feature_matrix(
     elif entropy_param > 0.0:
         # Mix templates with uniform based on entropy
         noise_prob = entropy_param
-        templates = [
-            _apply_categorical_noise(t, noise_prob, n_categories) for t in templates
-        ]
+        templates = [_apply_categorical_noise(t, noise_prob, n_categories) for t in templates]
 
     # Generate samples
     sample_idx = 0
@@ -165,10 +163,9 @@ def generate_categorical_feature_matrix(
 
         for _ in range(size):
             # Sample categories from the distribution
-            sample = np.array([
-                _sample_from_categorical(template[feat_idx], rng)
-                for feat_idx in range(n_cols)
-            ])
+            sample = np.array(
+                [_sample_from_categorical(template[feat_idx], rng) for feat_idx in range(n_cols)]
+            )
 
             sample_name = f"L{sample_idx + 1}"
             sample_dict[sample_name] = sample

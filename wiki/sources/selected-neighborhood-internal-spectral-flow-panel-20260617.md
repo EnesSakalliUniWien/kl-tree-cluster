@@ -2,10 +2,10 @@
 title: Selected Neighborhood Internal Spectral Flow Panel 2026-06-17
 type: source
 status: reviewed
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_internal_spectral_flow_panel.py
-  - tests/validation/188_test_selected_neighborhood_internal_spectral_flow_panel.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_internal_spectral_flow_panel.py
+  - tests/validation/calibration/selected/neighborhood/188_test_selected_neighborhood_internal_spectral_flow_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_internal_spectral_flow_overlap_three_case
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_internal_spectral_flow_branch_length_overlap_four_case
 tags:
@@ -85,7 +85,7 @@ unconditional split or p-value rescue.
   leaf-only/internal-barycenter variant run, node angular/radial transport,
   edge and mode pairwise joins, support-gain classification, summaries,
   manifest writing, and CLI.
-- `tests/validation/188_test_selected_neighborhood_internal_spectral_flow_panel.py`
+- `tests/validation/calibration/selected/neighborhood/188_test_selected_neighborhood_internal_spectral_flow_panel.py`
   covers edge support creation, barrier improvement, mode-block support
   creation, node angular/radial classification, summary warning status, and
   output writing.

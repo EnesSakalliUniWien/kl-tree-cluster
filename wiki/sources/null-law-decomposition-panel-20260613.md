@@ -2,11 +2,11 @@
 title: Null Law Decomposition Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/null_law_decomposition_panel.py
-  - tests/validation/98_test_null_law_decomposition_panel.py
-  - benchmarks/diagnostics/calibration/production_admissibility_contract.py
+  - benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py
+  - tests/validation/calibration/statistics/98_test_null_law_decomposition_panel.py
+  - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py
 tags:
   - source
   - diagnostics
@@ -46,7 +46,7 @@ operator itself or by data-dependent projection selection.
 
 ## Evidence
 
-- `tests/validation/98_test_null_law_decomposition_panel.py` verifies
+- `tests/validation/calibration/statistics/98_test_null_law_decomposition_panel.py` verifies
   projection-operator weights, adaptive-tail fail-closed status, fixed
   projection diagnostic status, and output writing.
 - The `20`-replicate smoke output records that the null-law failure is caused

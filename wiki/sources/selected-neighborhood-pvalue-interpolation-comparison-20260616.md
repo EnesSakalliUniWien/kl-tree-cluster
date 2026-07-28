@@ -2,10 +2,10 @@
 title: Selected Neighborhood Pvalue Interpolation Comparison 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_pvalue_interpolation_comparison.py
-  - tests/validation/145_test_selected_neighborhood_pvalue_interpolation_comparison.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_pvalue_interpolation_comparison.py
+  - tests/validation/calibration/selected/neighborhood/145_test_selected_neighborhood_pvalue_interpolation_comparison.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_pvalue_interpolation_comparison_overlap_expanded_candidates
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_selected_pass_through_expanded_distribution_with_topology_bandwidths
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_pvalue_interpolation_comparison_overlap_expanded_joined_topology_bandwidths
@@ -114,10 +114,10 @@ not a calibrated production p-value.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_neighborhood_pvalue_interpolation_comparison.py`
+- `benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_pvalue_interpolation_comparison.py`
   implements hold-out interpolation, row summaries, case summaries, and
   tau-sensitivity summaries.
-- `tests/validation/145_test_selected_neighborhood_pvalue_interpolation_comparison.py`
+- `tests/validation/calibration/selected/neighborhood/145_test_selected_neighborhood_pvalue_interpolation_comparison.py`
   validates signal lowering, target hold-out, selected-null conservatism,
   selected-nonnull exclusion, bandwidth sensitivity, and output writing.
 - The expanded overlap output directory records the manifest, row-level

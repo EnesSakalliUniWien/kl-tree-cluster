@@ -2,10 +2,10 @@
 title: Overlap Internal-Node Transfer Gap Audit 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_internal_node_transfer_gap_audit.py
-  - tests/validation/125_test_overlap_internal_node_transfer_gap_audit.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_internal_node_transfer_gap_audit.py
+  - tests/validation/calibration/overlap/125_test_overlap_internal_node_transfer_gap_audit.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/manifest.json
@@ -55,13 +55,13 @@ than relaxing the local context margin globally.
 
 ## Evidence
 
-- `tests/validation/125_test_overlap_internal_node_transfer_gap_audit.py`
+- `tests/validation/calibration/overlap/125_test_overlap_internal_node_transfer_gap_audit.py`
   verifies context-negative soft-supported truth classification, leakage-aware
   summary status, and output writing.
 - Verification passed:
-  `pytest tests/validation/125_test_overlap_internal_node_transfer_gap_audit.py -q`
+  `pytest tests/validation/calibration/overlap/125_test_overlap_internal_node_transfer_gap_audit.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_internal_node_transfer_gap_audit.py tests/validation/125_test_overlap_internal_node_transfer_gap_audit.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_internal_node_transfer_gap_audit.py tests/validation/calibration/overlap/125_test_overlap_internal_node_transfer_gap_audit.py`.
 
 ## Links
 

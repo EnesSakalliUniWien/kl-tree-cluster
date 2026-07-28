@@ -94,10 +94,9 @@ def reader_family(family: str) -> str:
 
 
 def reader_run_id(run_id: str) -> str:
-    return (
-        run_id.replace("adaptive_diffusion_kak__", "adaptive_diffusion_cosine_subspace__")
-        .replace("raw_kak__", "raw_cosine_subspace__")
-    )
+    return run_id.replace(
+        "adaptive_diffusion_kak__", "adaptive_diffusion_cosine_subspace__"
+    ).replace("raw_kak__", "raw_cosine_subspace__")
 
 
 def display_label(run_id: str) -> str:
@@ -108,7 +107,9 @@ def display_label(run_id: str) -> str:
         return replacements[run_id]
     label = run_id
     label = label.replace("adaptive_diffusion_kak__", "adaptive diffusion cosine subspace, ")
-    label = label.replace("adaptive_diffusion_cosine_subspace__", "adaptive diffusion cosine subspace, ")
+    label = label.replace(
+        "adaptive_diffusion_cosine_subspace__", "adaptive diffusion cosine subspace, "
+    )
     label = label.replace("raw_kak__", "raw cosine subspace, ")
     label = label.replace("raw_cosine_subspace__", "raw cosine subspace, ")
     label = label.replace("current__", "current, ")
@@ -182,7 +183,9 @@ def load_global_embedding(path: Path | None, data: pd.DataFrame) -> tuple[pd.Dat
         embedding = PCA(n_components=2, random_state=1729).fit_transform(reduced)
         x_col, y_col = "PCA-1", "PCA-2"
     return (
-        pd.DataFrame({"gene": data.index.astype(str), x_col: embedding[:, 0], y_col: embedding[:, 1]}),
+        pd.DataFrame(
+            {"gene": data.index.astype(str), x_col: embedding[:, 0], y_col: embedding[:, 1]}
+        ),
         x_col,
         y_col,
     )
@@ -324,7 +327,9 @@ def add_candidates_from_method_matrix(summary_path: Path | None) -> list[Candida
     return rows
 
 
-def eigensystems_for_data(data: pd.DataFrame, max_rank: int) -> dict[str, tuple[np.ndarray, np.ndarray]]:
+def eigensystems_for_data(
+    data: pd.DataFrame, max_rank: int
+) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     systems: dict[str, tuple[np.ndarray, np.ndarray]] = {}
     for weighting in ("binary", "tfidf"):
         values = weight_feature_matrix(data, weighting)
@@ -493,7 +498,13 @@ def tfidf_within_cosine_quality(data: pd.DataFrame, labels: np.ndarray) -> dict[
         else:
             gram = (tfidf[idx] @ tfidf[idx].T).toarray()
             mean_sim = float((gram.sum() - np.trace(gram)) / (len(idx) * (len(idx) - 1)))
-        rows.append({"cluster_id": int(cluster_id), "cluster_size": int(len(idx)), "mean_within_tfidf_cosine": mean_sim})
+        rows.append(
+            {
+                "cluster_id": int(cluster_id),
+                "cluster_size": int(len(idx)),
+                "mean_within_tfidf_cosine": mean_sim,
+            }
+        )
     frame = pd.DataFrame.from_records(rows)
     valid = frame["mean_within_tfidf_cosine"].dropna()
     weighted = frame.dropna(subset=["mean_within_tfidf_cosine"])
@@ -532,12 +543,7 @@ def quality_tier(row: pd.Series) -> tuple[int, str]:
     largest = float(row["largest_cluster_fraction"])
     singleton_gene = float(row["singleton_gene_fraction"])
     coherent = float(row["coherent_cluster_fraction"])
-    if (
-        5 <= n_clusters <= 150
-        and largest <= 0.75
-        and singleton_gene <= 0.05
-        and coherent >= 0.25
-    ):
+    if 5 <= n_clusters <= 150 and largest <= 0.75 and singleton_gene <= 0.05 and coherent >= 0.25:
         return 0, "quality_plausible"
     if 2 <= n_clusters < 5 and largest <= 0.75 and coherent >= 0.25:
         return 1, "broad_coherent"
@@ -583,7 +589,9 @@ def embedding_2d(values: np.ndarray | None, random_state: int) -> np.ndarray | N
         return PCA(n_components=2, random_state=random_state).fit_transform(values)
 
 
-def draw_tree_strip(ax_tree: plt.Axes, ax_strip: plt.Axes, linkage_matrix: np.ndarray | None, colors: np.ndarray) -> None:
+def draw_tree_strip(
+    ax_tree: plt.Axes, ax_strip: plt.Axes, linkage_matrix: np.ndarray | None, colors: np.ndarray
+) -> None:
     if linkage_matrix is None:
         ax_tree.axis("off")
         ax_strip.axis("off")
@@ -627,7 +635,9 @@ def draw_candidate_page(
     cmap = cluster_cmap(n_colors)
     norm = BoundaryNorm(np.arange(-0.5, n_colors + 0.5, 1), cmap.N)
     merged = global_embedding.merge(color_frame, on="gene", how="inner")
-    sub = embedding_2d(artifact.subspace_embedding, random_state=abs(hash(artifact.candidate.run_id)) % 100000)
+    sub = embedding_2d(
+        artifact.subspace_embedding, random_state=abs(hash(artifact.candidate.run_id)) % 100000
+    )
     fig = plt.figure(figsize=(20.0, 11.2), layout="constrained")
     grid = fig.add_gridspec(
         2,
@@ -665,7 +675,9 @@ def draw_candidate_page(
         ax_sub.axis("off")
         ax_sub.text(0.5, 0.5, "No subspace embedding", ha="center", va="center")
     else:
-        ax_sub.scatter(sub[:, 0], sub[:, 1], c=colors, cmap=cmap, norm=norm, s=16, alpha=0.86, linewidths=0)
+        ax_sub.scatter(
+            sub[:, 0], sub[:, 1], c=colors, cmap=cmap, norm=norm, s=16, alpha=0.86, linewidths=0
+        )
         ax_sub.set_title("Tree subspace embedding")
         ax_sub.set_xlabel("axis 1")
         ax_sub.set_ylabel("axis 2")
@@ -695,7 +707,9 @@ def draw_candidate_page(
     y_positions = np.arange(len(quality_items))
     bars = ax_quality.barh(y_positions, quality_values[::-1], color=quality_colors[::-1])
     ax_quality.set_yticks([])
-    ax_quality.set_xlim(0.0, max(1.0, max([v for v in quality_values if math.isfinite(v)] or [1.0]) * 1.05))
+    ax_quality.set_xlim(
+        0.0, max(1.0, max([v for v in quality_values if math.isfinite(v)] or [1.0]) * 1.05)
+    )
     ax_quality.set_title("Cluster quality")
     ax_quality.tick_params(labelsize=8)
     ax_quality.grid(axis="x", alpha=0.18)
@@ -709,7 +723,12 @@ def draw_candidate_page(
             ha="left",
             fontsize=8,
             color="#111111",
-            bbox={"boxstyle": "round,pad=0.18", "facecolor": "white", "edgecolor": "none", "alpha": 0.75},
+            bbox={
+                "boxstyle": "round,pad=0.18",
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.75,
+            },
         )
         if math.isfinite(value):
             ax_quality.text(
@@ -754,7 +773,16 @@ def draw_candidate_page(
         if value is not None and pd.notna(value):
             text_lines.append(f"{key}: {float(value):.4f}")
     ax_text.axis("off")
-    ax_text.text(0.0, 1.0, "\n".join(text_lines), va="top", ha="left", family="monospace", fontsize=8, linespacing=1.18)
+    ax_text.text(
+        0.0,
+        1.0,
+        "\n".join(text_lines),
+        va="top",
+        ha="left",
+        family="monospace",
+        fontsize=8,
+        linespacing=1.18,
+    )
     fig.suptitle(
         f"Rank {int(rank.get('display_rank', -1))}: {display_label(artifact.candidate.run_id)}",
         fontsize=14,
@@ -881,7 +909,11 @@ def main() -> None:
         labels = assignments["cluster_id"].to_numpy(dtype=int)
         subspace, distances = candidate_subspace_and_tree(candidate, data, eigensystems)
         linkage_matrix = None
-        if distances is not None and np.isfinite(distances).all() and not np.allclose(distances, 0.0):
+        if (
+            distances is not None
+            and np.isfinite(distances).all()
+            and not np.allclose(distances, 0.0)
+        ):
             linkage_matrix = linkage(distances, method="average")
         info = go_information_criterion(data, labels)
         coherence = cluster_coherence(data, labels)
@@ -988,7 +1020,10 @@ def main() -> None:
     pdf_path = args.output_dir / "all_tree_pages_ordered_by_go_ic.pdf"
     with PdfPages(pdf_path) as pdf:
         for artifact in ordered_artifacts:
-            path = pages_dir / f"{int(artifact.ranking['display_rank']):02d}_{safe_name(reader_run_id(artifact.candidate.run_id))}.png"
+            path = (
+                pages_dir
+                / f"{int(artifact.ranking['display_rank']):02d}_{safe_name(reader_run_id(artifact.candidate.run_id))}.png"
+            )
             fig = draw_candidate_page(artifact, global_embedding, global_x, global_y, path)
             pdf.savefig(fig)
             plt.close(fig)
@@ -1022,7 +1057,9 @@ def main() -> None:
                 "singleton_fraction",
                 "largest_cluster_fraction",
             ]
-        ].head(args.top_summary_count).to_string(index=False),
+        ]
+        .head(args.top_summary_count)
+        .to_string(index=False),
         "",
         "## Outputs",
         "",

@@ -15,7 +15,6 @@ from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failur
 from benchmarks.shared.benchmark_grid import benchmark_run_id
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.cases.geometry import case_recipe_geometry
-from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.env import get_env_bool, get_env_int
 from benchmarks.shared.performance_grid import write_benchmark_performance_grid
 from benchmarks.shared.plots.cover_page import (
@@ -33,6 +32,7 @@ from benchmarks.shared.util.method_selection import (
     resolve_methods_from_env,
     resolve_selected_methods_and_param_sets,
 )
+from benchmarks.shared.util.method_sets import DEFAULT_METHODS
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
 
@@ -63,7 +63,9 @@ def _compute_resume_coverage(
 
     progress["case_key"] = progress["case_key"].astype(int)
 
-    run_ids_by_case = progress.groupby("case_key")["run_id"].agg(lambda s: set(s.tolist())).to_dict()
+    run_ids_by_case = (
+        progress.groupby("case_key")["run_id"].agg(lambda s: set(s.tolist())).to_dict()
+    )
 
     completed_cases: set[int] = set()
     missing_run_ids_by_case: dict[int, list[str]] = {}
@@ -224,11 +226,9 @@ def run_benchmarks():
     # Load existing results if any to resume
     if output_path.exists():
         all_results = pd.read_csv(output_path)
-        completed_case_keys, missing_run_ids_by_case, tracked_case_count = (
-            _compute_resume_coverage(
-                all_results,
-                expected_run_ids,
-            )
+        completed_case_keys, missing_run_ids_by_case, tracked_case_count = _compute_resume_coverage(
+            all_results,
+            expected_run_ids,
         )
         partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
         print(
@@ -296,9 +296,7 @@ def run_benchmarks():
             timeout_sec=case_timeout_sec,
             include_validation_page=False,
             tree_consensus_label_dir=(
-                None
-                if tree_consensus_label_dir is None
-                else str(tree_consensus_label_dir)
+                None if tree_consensus_label_dir is None else str(tree_consensus_label_dir)
             ),
         )
         df_res = _stamp_full_run_case_identity(
@@ -409,10 +407,7 @@ def run_benchmarks():
         print(f"Generated case manifest: {manifest_pdf}")
 
         # --- Build section page PDFs for groups that actually occur in this run ---
-        present_groups = {
-            category_group(case["category"])
-            for case in test_cases
-        }
+        present_groups = {category_group(case["category"]) for case in test_cases}
         section_pdfs: dict[str, Path] = {}
         for group in GROUP_ORDER:
             if group not in present_groups:

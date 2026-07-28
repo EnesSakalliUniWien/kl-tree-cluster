@@ -68,10 +68,7 @@ def _region_palette(values: pd.Series, top_regions: int) -> dict[str, object]:
     counts = values.value_counts()
     retained = list(counts.head(int(top_regions)).index)
     cmap = plt.get_cmap("tab20")
-    palette = {
-        region: cmap(index % cmap.N)
-        for index, region in enumerate(retained)
-    }
+    palette = {region: cmap(index % cmap.N) for index, region in enumerate(retained)}
     palette["__other__"] = (0.75, 0.75, 0.75, 0.55)
     return palette
 
@@ -118,8 +115,7 @@ def render_multiscale_umap_overlay(
             dominant_fraction = float(zone_counts.iloc[0] / len(overlay_data))
             if dominant_fraction >= 0.8:
                 dominant_zone_label = (
-                    f"dominant guard zone: {dominant_zone} "
-                    f"(n={int(zone_counts.iloc[0])})"
+                    f"dominant guard zone: {dominant_zone} (n={int(zone_counts.iloc[0])})"
                 )
                 zones = zones[~zones["zone_region_id"].astype(str).eq(dominant_zone)]
         ax.scatter(

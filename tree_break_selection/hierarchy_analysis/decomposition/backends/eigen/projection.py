@@ -20,9 +20,7 @@ def build_pca_projection(
     )
 
     if effective_dimension <= 0:
-        raise ValueError(
-            "PCA projection requires at least one positive active eigen-direction."
-        )
+        raise ValueError("PCA projection requires at least one positive active eigen-direction.")
 
     active_eigenvectors = eig.eigenvectors_active
 
@@ -62,11 +60,7 @@ def _resolve_effective_dimension(
     )
 
     if eig.use_dual:
-        n_samples = (
-            eig.centered_data_active.shape[0]
-            if eig.centered_data_active is not None
-            else 0
-        )
+        n_samples = eig.centered_data_active.shape[0] if eig.centered_data_active is not None else 0
         available_dimensions = min(available_dimensions, max(n_samples - 1, 0))
 
     return min(int(projection_dimension), available_dimensions)

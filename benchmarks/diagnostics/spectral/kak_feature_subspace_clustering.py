@@ -104,7 +104,9 @@ def parse_args() -> argparse.Namespace:
         default=2000,
         help="Top feature rows by block energy to cluster. Use 0 to include all nonzero rows.",
     )
-    parser.add_argument("--tree-linkage-method", default="average", choices=["average", "complete", "ward"])
+    parser.add_argument(
+        "--tree-linkage-method", default="average", choices=["average", "complete", "ward"]
+    )
     parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
     parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
     return parser.parse_args()
@@ -133,7 +135,9 @@ def feature_coordinates_for_block(
     if np.any(block_eigvals <= 0.0):
         raise ValueError(f"Block {block.block_name!r} contains non-positive eigenvalues.")
     coords = feature_axes[:, start:end] * np.sqrt(block_eigvals)[np.newaxis, :]
-    columns = [f"mode_{component:02d}" for component in range(block.block_start, block.block_end + 1)]
+    columns = [
+        f"mode_{component:02d}" for component in range(block.block_start, block.block_end + 1)
+    ]
     return pd.DataFrame(coords, index=features.astype(str), columns=columns)
 
 
@@ -155,7 +159,9 @@ def select_active_feature_coordinates(
     if nonzero.empty:
         raise ValueError("No features have positive energy in this subspace.")
     selected = nonzero if max_active_features == 0 else nonzero.head(max_active_features)
-    active_fraction = float(selected.sum() / energy.sum()) if float(energy.sum()) > 0.0 else math.nan
+    active_fraction = (
+        float(selected.sum() / energy.sum()) if float(energy.sum()) > 0.0 else math.nan
+    )
     return coordinates.loc[selected.index], selected, active_fraction
 
 
@@ -200,7 +206,9 @@ def write_feature_cluster_summary(
                 "cluster_size": int(group.shape[0]),
                 "cluster_energy": float(group["block_feature_energy"].sum()),
                 "top_features": ";".join(
-                    group.sort_values("block_feature_energy", ascending=False).head(12).index.astype(str)
+                    group.sort_values("block_feature_energy", ascending=False)
+                    .head(12)
+                    .index.astype(str)
                 ),
             }
         )
@@ -290,8 +298,12 @@ def run_feature_block(
             sibling_alpha=float(sibling_alpha),
             status="ok",
             n_feature_clusters=int(cluster_sizes.shape[0]),
-            singleton_feature_fraction=float((cluster_sizes == 1).sum() / max(cluster_sizes.shape[0], 1)),
-            largest_feature_cluster_fraction=float(cluster_sizes.max() / active_coordinates.shape[0]),
+            singleton_feature_fraction=float(
+                (cluster_sizes == 1).sum() / max(cluster_sizes.shape[0], 1)
+            ),
+            largest_feature_cluster_fraction=float(
+                cluster_sizes.max() / active_coordinates.shape[0]
+            ),
             runtime_sec=float(time.perf_counter() - start_sec),
             sibling_test_method_counts=sibling_method_counts(tree.annotations_df),
             feature_coordinates_path=str(coordinates_path),
@@ -383,7 +395,9 @@ def run_feature_subspace_clustering(args: argparse.Namespace) -> pd.DataFrame:
                 "",
                 "## Status Counts",
                 "",
-                summary["status"].value_counts(dropna=False).to_string() if not summary.empty else "No rows.",
+                summary["status"].value_counts(dropna=False).to_string()
+                if not summary.empty
+                else "No rows.",
                 "",
             ]
         ),

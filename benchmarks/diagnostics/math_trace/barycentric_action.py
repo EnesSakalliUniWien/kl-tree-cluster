@@ -99,8 +99,8 @@ def action_budget(
     n_right = int(right_ids.size)
     n_parent = n_left + n_right
     beta = n_left / n_parent
-    split_action = n_parent * beta * (1.0 - beta) * float(
-        np.sum((left_centroid - right_centroid) ** 2)
+    split_action = (
+        n_parent * beta * (1.0 - beta) * float(np.sum((left_centroid - right_centroid) ** 2))
     )
     parent_inertia = float(np.sum(parent_centered**2))
     return {

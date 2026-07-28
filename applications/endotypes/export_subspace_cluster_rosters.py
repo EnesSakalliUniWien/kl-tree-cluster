@@ -142,7 +142,9 @@ def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(path)
     frame = pd.read_csv(path)
-    rank_col = "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
+    rank_col = (
+        "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
+    )
     frame["_rank"] = pd.to_numeric(frame.get(rank_col), errors="coerce")
     if "run_id" not in frame.columns:
         if "method_run_id" in frame.columns:
@@ -154,7 +156,9 @@ def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
                 + "__"
                 + frame["block_name"].astype(str)
             )
-    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(drop=True)
+    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(
+        drop=True
+    )
 
 
 def load_optional_table(path: Path | None) -> pd.DataFrame:
@@ -369,7 +373,9 @@ def plot_radial_tree(
 ) -> None:
     n_leaves = linkage_matrix.shape[0] + 1
     if len(assignments) != n_leaves:
-        raise ValueError(f"linkage has {n_leaves} leaves but assignments has {len(assignments)} rows")
+        raise ValueError(
+            f"linkage has {n_leaves} leaves but assignments has {len(assignments)} rows"
+        )
 
     assignments = assignments.reset_index(drop=True).copy()
     assignments["cluster_id"] = assignments["cluster_id"].map(safe_int)
@@ -411,7 +417,9 @@ def plot_radial_tree(
     ax.set_theta_direction(-1)
     ax.set_theta_offset(math.pi / 2)
 
-    def draw_arc(theta_a: float, theta_b: float, radius: float, color: tuple[float, float, float, float]) -> None:
+    def draw_arc(
+        theta_a: float, theta_b: float, radius: float, color: tuple[float, float, float, float]
+    ) -> None:
         if theta_b < theta_a:
             theta_a, theta_b = theta_b, theta_a
         theta = np.linspace(theta_a, theta_b, max(3, int(abs(theta_b - theta_a) * 80)))
@@ -449,9 +457,17 @@ def plot_radial_tree(
         for cluster_id, size in cluster_sizes.head(18).items()
     ]
     if len(cluster_sizes) > 18:
-        legend_items.append(Line2D([0], [0], color=mixed_color, lw=2, label=f"+{len(cluster_sizes) - 18} clusters"))
+        legend_items.append(
+            Line2D([0], [0], color=mixed_color, lw=2, label=f"+{len(cluster_sizes) - 18} clusters")
+        )
     if include_legend:
-        ax.legend(handles=legend_items, loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize=8)
+        ax.legend(
+            handles=legend_items,
+            loc="center left",
+            bbox_to_anchor=(1.02, 0.5),
+            frameon=False,
+            fontsize=8,
+        )
         fig.suptitle(title, fontsize=13, y=0.98)
     if include_caption:
         fig.text(
@@ -537,7 +553,11 @@ def build_rosters(
         linkage_matrix = load_linkage_matrix(linkage_path)
         source_subspace_dir = resolve_path(row.get("subspace_dir"), experiment_dir)
         subspace_coordinates_path = None
-        if source_subspace_dir is not None and source_subspace_dir.exists() and source_subspace_dir.is_dir():
+        if (
+            source_subspace_dir is not None
+            and source_subspace_dir.exists()
+            and source_subspace_dir.is_dir()
+        ):
             coordinate_candidates = sorted(source_subspace_dir.glob("*__subspace_coordinates.csv"))
             subspace_coordinates_path = coordinate_candidates[0] if coordinate_candidates else None
 
@@ -572,7 +592,14 @@ def build_rosters(
                 target = source_artifact_dir / target_name
                 shutil.copy2(source, target)
                 copied = str(target)
-            copied_rows.append({"artifact": key, "source_path": path_text(source), "copied_path": copied, "exists": exists})
+            copied_rows.append(
+                {
+                    "artifact": key,
+                    "source_path": path_text(source),
+                    "copied_path": copied,
+                    "exists": exists,
+                }
+            )
         if subspace_coordinates_path is not None and subspace_coordinates_path.exists():
             target = source_artifact_dir / "subspace_coordinates.csv"
             shutil.copy2(subspace_coordinates_path, target)
@@ -593,17 +620,29 @@ def build_rosters(
                     "exists": False,
                 }
             )
-        pd.DataFrame(copied_rows).to_csv(organized_subspace_dir / "source_artifacts_manifest.csv", index=False)
+        pd.DataFrame(copied_rows).to_csv(
+            organized_subspace_dir / "source_artifacts_manifest.csv", index=False
+        )
 
         radial_path = organized_subspace_dir / "radial_tree_clusters.png"
         radial_compact_path = organized_subspace_dir / "radial_tree_clusters_compact.png"
         full_space_path = organized_subspace_dir / "full_space_embedding_clusters.png"
-        full_space_coordinates_path = organized_subspace_dir / "full_space_embedding_cluster_coordinates.csv"
+        full_space_coordinates_path = (
+            organized_subspace_dir / "full_space_embedding_cluster_coordinates.csv"
+        )
         subspace_embedding_path = organized_subspace_dir / "subspace_embedding_clusters.png"
-        subspace_embedding_coordinates_path = organized_subspace_dir / "subspace_embedding_cluster_coordinates.csv"
-        tree_distance_embedding_path = organized_subspace_dir / "tree_distance_embedding_clusters.png"
-        tree_distance_embedding_coordinates_path = organized_subspace_dir / "tree_distance_embedding_cluster_coordinates.csv"
-        diagnostic_assignment_path = organized_subspace_dir / "diagnostic_linkage_cluster_assignments.csv"
+        subspace_embedding_coordinates_path = (
+            organized_subspace_dir / "subspace_embedding_cluster_coordinates.csv"
+        )
+        tree_distance_embedding_path = (
+            organized_subspace_dir / "tree_distance_embedding_clusters.png"
+        )
+        tree_distance_embedding_coordinates_path = (
+            organized_subspace_dir / "tree_distance_embedding_cluster_coordinates.csv"
+        )
+        diagnostic_assignment_path = (
+            organized_subspace_dir / "diagnostic_linkage_cluster_assignments.csv"
+        )
         accepted_assignment_path = organized_subspace_dir / "accepted_tbs_cluster_assignments.csv"
         radial_rendered = False
         full_space_rendered = False
@@ -670,36 +709,52 @@ def build_rosters(
             "n_genes": len(assignments) if has_assignments else 0,
             "n_unique_genes": assignments["gene"].nunique() if has_assignments else 0,
             "linkage_leaves": int(linkage_matrix.shape[0] + 1) if linkage_matrix is not None else 0,
-            "n_clusters": assignments["cluster_id"].nunique() if has_assignments else safe_int(row.get("n_clusters")),
+            "n_clusters": assignments["cluster_id"].nunique()
+            if has_assignments
+            else safe_int(row.get("n_clusters")),
             "coherent_cluster_count": safe_int(row.get("coherent_cluster_count")),
             "organized_subspace_dir": str(organized_subspace_dir),
             "radial_tree_clusters_png": str(radial_path) if radial_rendered else "",
             "radial_tree_clusters_compact_png": str(radial_compact_path) if radial_rendered else "",
-            "full_space_embedding_clusters_png": str(full_space_path) if full_space_rendered else "",
-            "full_space_embedding_cluster_coordinates": str(full_space_coordinates_path) if full_space_rendered else "",
-            "subspace_embedding_clusters_png": str(subspace_embedding_path) if subspace_embedding_rendered else "",
+            "full_space_embedding_clusters_png": str(full_space_path)
+            if full_space_rendered
+            else "",
+            "full_space_embedding_cluster_coordinates": str(full_space_coordinates_path)
+            if full_space_rendered
+            else "",
+            "subspace_embedding_clusters_png": str(subspace_embedding_path)
+            if subspace_embedding_rendered
+            else "",
             "subspace_embedding_cluster_coordinates": str(subspace_embedding_coordinates_path)
             if subspace_embedding_rendered
             else "",
             "tree_distance_embedding_clusters_png": str(tree_distance_embedding_path)
             if tree_distance_embedding_rendered
             else "",
-            "tree_distance_embedding_cluster_coordinates": str(tree_distance_embedding_coordinates_path)
+            "tree_distance_embedding_cluster_coordinates": str(
+                tree_distance_embedding_coordinates_path
+            )
             if tree_distance_embedding_rendered
             else "",
             "diagnostic_linkage_cluster_assignments": str(diagnostic_assignment_path)
             if assignment_source == "diagnostic_linkage_cut"
             else "",
-            "accepted_tbs_cluster_assignments": str(accepted_assignment_path) if assignment_source == "accepted_tbs" else "",
+            "accepted_tbs_cluster_assignments": str(accepted_assignment_path)
+            if assignment_source == "accepted_tbs"
+            else "",
             "failure_status": row.get("failure_status", ""),
             **{f"{key}_path": path_text(value) for key, value in resolved_paths.items()},
             "subspace_coordinates_path": path_text(subspace_coordinates_path),
         }
         status_rows.append(status_record)
-        pd.DataFrame([status_record]).to_csv(organized_subspace_dir / "subspace_status.csv", index=False)
+        pd.DataFrame([status_record]).to_csv(
+            organized_subspace_dir / "subspace_status.csv", index=False
+        )
 
         if not has_assignments:
-            write_subspace_readme(organized_subspace_dir, status_record, cluster_count=0, gene_memberships=0)
+            write_subspace_readme(
+                organized_subspace_dir, status_record, cluster_count=0, gene_memberships=0
+            )
             continue
 
         grouped = assignments.groupby("cluster_id", sort=True)
@@ -711,7 +766,9 @@ def build_rosters(
             tfidf_row = tfidf_quality.get(safe_int(cluster_id), {})
             top_term, top_go_id = parse_go_term(coherence_row.get("top_term", ""))
             cluster_size = len(genes)
-            recorded_size = safe_int(coherence_row.get("cluster_size"), safe_int(cluster_frame["cluster_size"].iloc[0]))
+            recorded_size = safe_int(
+                coherence_row.get("cluster_size"), safe_int(cluster_frame["cluster_size"].iloc[0])
+            )
             annotation = annotate_cluster(
                 data,
                 genes,
@@ -734,17 +791,27 @@ def build_rosters(
                 "assignment_source": assignment_source,
                 "organized_subspace_dir": str(organized_subspace_dir),
                 "radial_tree_clusters_png": str(radial_path) if radial_rendered else "",
-                "radial_tree_clusters_compact_png": str(radial_compact_path) if radial_rendered else "",
-                "full_space_embedding_clusters_png": str(full_space_path) if full_space_rendered else "",
-                "full_space_embedding_cluster_coordinates": str(full_space_coordinates_path) if full_space_rendered else "",
-                "subspace_embedding_clusters_png": str(subspace_embedding_path) if subspace_embedding_rendered else "",
+                "radial_tree_clusters_compact_png": str(radial_compact_path)
+                if radial_rendered
+                else "",
+                "full_space_embedding_clusters_png": str(full_space_path)
+                if full_space_rendered
+                else "",
+                "full_space_embedding_cluster_coordinates": str(full_space_coordinates_path)
+                if full_space_rendered
+                else "",
+                "subspace_embedding_clusters_png": str(subspace_embedding_path)
+                if subspace_embedding_rendered
+                else "",
                 "subspace_embedding_cluster_coordinates": str(subspace_embedding_coordinates_path)
                 if subspace_embedding_rendered
                 else "",
                 "tree_distance_embedding_clusters_png": str(tree_distance_embedding_path)
                 if tree_distance_embedding_rendered
                 else "",
-                "tree_distance_embedding_cluster_coordinates": str(tree_distance_embedding_coordinates_path)
+                "tree_distance_embedding_cluster_coordinates": str(
+                    tree_distance_embedding_coordinates_path
+                )
                 if tree_distance_embedding_rendered
                 else "",
                 "cluster_id": safe_int(cluster_id),
@@ -755,7 +822,9 @@ def build_rosters(
                 "min_q_value": safe_float(coherence_row.get("min_q_value")),
                 "top_term": top_term,
                 "top_go_id": top_go_id,
-                "top_term_prevalence_delta": safe_float(coherence_row.get("top_term_prevalence_delta")),
+                "top_term_prevalence_delta": safe_float(
+                    coherence_row.get("top_term_prevalence_delta")
+                ),
                 "mean_within_tfidf_cosine": safe_float(tfidf_row.get("mean_within_tfidf_cosine")),
                 **annotation,
             }
@@ -770,7 +839,9 @@ def build_rosters(
         subspace_clusters = pd.DataFrame(subspace_cluster_rows)
         subspace_genes = pd.DataFrame(subspace_gene_rows)
         subspace_clusters.to_csv(organized_subspace_dir / "cluster_roster.csv", index=False)
-        subspace_clusters.drop(columns=["member_genes"]).to_csv(organized_subspace_dir / "cluster_annotations.csv", index=False)
+        subspace_clusters.drop(columns=["member_genes"]).to_csv(
+            organized_subspace_dir / "cluster_annotations.csv", index=False
+        )
         subspace_genes.to_csv(organized_subspace_dir / "gene_membership.csv", index=False)
         write_subspace_readme(
             organized_subspace_dir,
@@ -859,10 +930,10 @@ def write_root_markdown(
             "",
         ]
     )
-    for subspace in assigned.sort_values(["weighting", "block_name"]).sort_values(
-        "specificity_aware_rank", na_position="last"
-    ).to_dict(
-        orient="records"
+    for subspace in (
+        assigned.sort_values(["weighting", "block_name"])
+        .sort_values("specificity_aware_rank", na_position="last")
+        .to_dict(orient="records")
     ):
         mask = clusters["run_id"].eq(subspace["run_id"])
         sub_clusters = clusters.loc[mask].sort_values(["cluster_id"])
@@ -884,13 +955,23 @@ def write_root_markdown(
             ]
         )
         for cluster in sub_clusters.to_dict(orient="records"):
-            genes = str(cluster.get("member_genes", "")).split(";") if cluster.get("member_genes") else []
+            genes = (
+                str(cluster.get("member_genes", "")).split(";")
+                if cluster.get("member_genes")
+                else []
+            )
             top_term = str(cluster.get("top_term", ""))
             top_go_id = str(cluster.get("top_go_id", ""))
             if top_go_id:
                 top_term = f"{top_term} ({top_go_id})"
             coherent = cluster.get("coherent_by_rule")
-            coherent_text = "yes" if str(coherent).lower() == "true" else "no" if str(coherent).lower() == "false" else ""
+            coherent_text = (
+                "yes"
+                if str(coherent).lower() == "true"
+                else "no"
+                if str(coherent).lower() == "false"
+                else ""
+            )
             lines.append(
                 "| "
                 + " | ".join(
@@ -909,11 +990,18 @@ def write_root_markdown(
         lines.append("")
 
     if not unassigned.empty:
-        lines.extend(["## Subspaces Without Cluster Rosters", "", "| rank | weighting | block | status | failure |", "|---:|---|---|---|---|"])
-        for subspace in unassigned.sort_values(["weighting", "block_name"]).sort_values(
-            "specificity_aware_rank", na_position="last"
-        ).to_dict(
-            orient="records"
+        lines.extend(
+            [
+                "## Subspaces Without Cluster Rosters",
+                "",
+                "| rank | weighting | block | status | failure |",
+                "|---:|---|---|---|---|",
+            ]
+        )
+        for subspace in (
+            unassigned.sort_values(["weighting", "block_name"])
+            .sort_values("specificity_aware_rank", na_position="last")
+            .to_dict(orient="records")
         ):
             lines.append(
                 "| "
@@ -994,7 +1082,9 @@ def main() -> None:
         clusters=clusters,
         gene_preview=args.markdown_gene_preview,
     )
-    write_radial_pdf(output_dir / f"{safe_name(dataset_label).lower()}_radial_tree_clusters.pdf", status)
+    write_radial_pdf(
+        output_dir / f"{safe_name(dataset_label).lower()}_radial_tree_clusters.pdf", status
+    )
     structure = {
         "dataset_label": dataset_label,
         "experiment_dir": str(experiment_dir),
@@ -1016,7 +1106,9 @@ def main() -> None:
             "diagnostic_linkage_cut": "diagnostic linkage-tree cuts for failed gates",
         },
     }
-    (output_dir / "directory_structure.json").write_text(json.dumps(structure, indent=2), encoding="utf-8")
+    (output_dir / "directory_structure.json").write_text(
+        json.dumps(structure, indent=2), encoding="utf-8"
+    )
     print(f"Wrote {len(clusters)} clusters and {len(genes)} gene memberships to {output_dir}")
 
 

@@ -2,10 +2,10 @@
 title: Overlap Internal-Node Bayesian Likelihood Probe 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_internal_node_bayesian_likelihood_probe.py
-  - tests/validation/122_test_overlap_internal_node_bayesian_likelihood_probe.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_internal_node_bayesian_likelihood_probe.py
+  - tests/validation/calibration/overlap/122_test_overlap_internal_node_bayesian_likelihood_probe.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_bayesian_likelihood_probe/overlap_internal_node_likelihood_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_bayesian_likelihood_probe/overlap_internal_node_likelihood_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_bayesian_likelihood_probe/overlap_internal_node_likelihood_families.csv
@@ -56,13 +56,13 @@ aggregates. It is diagnostic-only and does not promote production thresholds.
 
 ## Evidence
 
-- `tests/validation/122_test_overlap_internal_node_bayesian_likelihood_probe.py`
+- `tests/validation/calibration/overlap/122_test_overlap_internal_node_bayesian_likelihood_probe.py`
   verifies row-level acceptance versus family status, context blocking, and
   output writing.
 - Verification passed:
-  `pytest tests/validation/122_test_overlap_internal_node_bayesian_likelihood_probe.py -q`
+  `pytest tests/validation/calibration/overlap/122_test_overlap_internal_node_bayesian_likelihood_probe.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_internal_node_bayesian_likelihood_probe.py tests/validation/122_test_overlap_internal_node_bayesian_likelihood_probe.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_internal_node_bayesian_likelihood_probe.py tests/validation/calibration/overlap/122_test_overlap_internal_node_bayesian_likelihood_probe.py`.
 
 ## Links
 

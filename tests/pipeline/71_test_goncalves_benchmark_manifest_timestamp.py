@@ -26,7 +26,9 @@ class _FakeAdata:
 
 def _load_benchmark_module():
     script_path = Path(__file__).resolve().parents[2] / "applications/scrna/goncalves_benchmark.py"
-    spec = importlib.util.spec_from_file_location("goncalves_pancreas_progenitor_benchmark", script_path)
+    spec = importlib.util.spec_from_file_location(
+        "goncalves_pancreas_progenitor_benchmark", script_path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -88,9 +90,14 @@ def test_goncalves_benchmark_manifest_and_summary_record_generated_timestamp(mon
     monkeypatch.setattr(
         module,
         "_build_adata",
-        lambda _expr, _meta, out: (out.mkdir(parents=True, exist_ok=True) or fake_adata, "test_orientation"),
+        lambda _expr, _meta, out: (
+            out.mkdir(parents=True, exist_ok=True) or fake_adata,
+            "test_orientation",
+        ),
     )
-    monkeypatch.setattr(module, "_prepare_classical_workflow", lambda adata, *_args, **_kwargs: (adata, 2))
+    monkeypatch.setattr(
+        module, "_prepare_classical_workflow", lambda adata, *_args, **_kwargs: (adata, 2)
+    )
     monkeypatch.setattr(module, "_write_qc_outputs", lambda *_args, **_kwargs: qc_summary)
     monkeypatch.setattr(
         module,

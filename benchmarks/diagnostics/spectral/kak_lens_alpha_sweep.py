@@ -91,9 +91,7 @@ def parse_linkage_methods(value: str) -> list[str]:
     allowed = {"average", "complete", "ward"}
     invalid = sorted(set(methods) - allowed)
     if invalid:
-        raise argparse.ArgumentTypeError(
-            f"unsupported linkage method(s): {', '.join(invalid)}"
-        )
+        raise argparse.ArgumentTypeError(f"unsupported linkage method(s): {', '.join(invalid)}")
     return methods
 
 
@@ -202,7 +200,9 @@ def parse_args() -> argparse.Namespace:
 
 def default_output_dir(input_path: Path) -> Path:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
-    return Path("benchmarks/results/diagnostics") / f"kak_lens_alpha_sweep_{input_path.stem}_{stamp}"
+    return (
+        Path("benchmarks/results/diagnostics") / f"kak_lens_alpha_sweep_{input_path.stem}_{stamp}"
+    )
 
 
 def load_main_labels(path: Path, index: pd.Index) -> np.ndarray:
@@ -451,7 +451,9 @@ def split_counts(labels: np.ndarray, reference: np.ndarray) -> dict[str, int]:
     }
 
 
-def score_assignments(assignments: pd.DataFrame, main_labels: np.ndarray, index: pd.Index) -> dict[str, object]:
+def score_assignments(
+    assignments: pd.DataFrame, main_labels: np.ndarray, index: pd.Index
+) -> dict[str, object]:
     labels = labels_from_assignments(assignments, index)
     sizes = pd.Series(labels).value_counts()
     split = split_counts(labels, main_labels)
@@ -628,9 +630,7 @@ def write_report(summary: pd.DataFrame, output_dir: Path) -> None:
                 "",
             ]
         )
-    (output_dir / "kak_lens_alpha_sweep_report.md").write_text(
-        "\n".join(lines), encoding="utf-8"
-    )
+    (output_dir / "kak_lens_alpha_sweep_report.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 def main() -> None:
@@ -647,7 +647,9 @@ def main() -> None:
         else build_alpha_pairs(args.edge_alphas, args.sibling_alphas)
     )
 
-    eigensystems: dict[str, tuple[np.ndarray, np.ndarray, list[SpectralBlock], dict[str, object]]] = {}
+    eigensystems: dict[
+        str, tuple[np.ndarray, np.ndarray, list[SpectralBlock], dict[str, object]]
+    ] = {}
     rows: list[dict[str, object]] = []
     for spec in lens_specs:
         print(f"[lens] {spec.lens_id}", flush=True)
@@ -732,9 +734,9 @@ def main() -> None:
     summary = pd.DataFrame(rows)
     summary.to_csv(output_dir / "kak_lens_alpha_sweep_summary.csv", index=False)
     if not summary.empty and "alpha_lens_score" in summary.columns:
-        summary[summary["status"].eq("ok")].sort_values(
-            "alpha_lens_score", ascending=False
-        ).head(30).to_csv(output_dir / "kak_lens_alpha_sweep_top_rows.csv", index=False)
+        summary[summary["status"].eq("ok")].sort_values("alpha_lens_score", ascending=False).head(
+            30
+        ).to_csv(output_dir / "kak_lens_alpha_sweep_top_rows.csv", index=False)
     write_plots(summary, output_dir)
     write_report(summary, output_dir)
     print(f"Wrote KAK/cosine lens alpha sweep: {output_dir}", flush=True)

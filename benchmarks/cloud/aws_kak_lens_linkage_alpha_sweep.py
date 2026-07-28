@@ -139,9 +139,7 @@ def make_shard_spec(
         n_groups=len(groups),
     )
     selected = tuple(
-        group
-        for group in groups
-        if group.group_index % configured.shard_count == shard_index
+        group for group in groups if group.group_index % configured.shard_count == shard_index
     )
     if not selected:
         raise ValueError(f"Shard {shard_index} has no lens/linkage groups.")
@@ -189,7 +187,9 @@ def _group_output_dir(shard_dir: Path, group: LensLinkageGroup) -> Path:
     return shard_dir / "groups" / f"{group.group_index:04d}_{safe}"
 
 
-def _run_group(configured: AwsKakLensSweepConfig, group: LensLinkageGroup, output_dir: Path) -> None:
+def _run_group(
+    configured: AwsKakLensSweepConfig, group: LensLinkageGroup, output_dir: Path
+) -> None:
     command = [
         sys.executable,
         "-m",

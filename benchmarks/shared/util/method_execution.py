@@ -266,9 +266,7 @@ def run_single_method_once(
                 meta=meta,
                 case_name=str(meta["name"]),
             )
-            recorded_run_params[TBS_TREE_DISTANCE_SOURCE_KEY] = (
-                TBS_TREE_DISTANCE_SOURCE_PRECOMPUTED
-            )
+            recorded_run_params[TBS_TREE_DISTANCE_SOURCE_KEY] = TBS_TREE_DISTANCE_SOURCE_PRECOMPUTED
         else:
             if metric == CONTINUOUS_TREE_DISTANCE_METRIC:
                 if feature_space is None:
@@ -499,7 +497,9 @@ def run_single_method_once(
             ari=float(ari) if np.isfinite(ari) else np.nan,
             nmi=float(nmi) if np.isfinite(nmi) else np.nan,
             purity=float(purity) if np.isfinite(purity) else np.nan,
-            outlier_precision=float(outlier_precision) if np.isfinite(outlier_precision) else np.nan,
+            outlier_precision=float(outlier_precision)
+            if np.isfinite(outlier_precision)
+            else np.nan,
             outlier_recall=float(outlier_recall) if np.isfinite(outlier_recall) else np.nan,
             outlier_f1=float(outlier_f1) if np.isfinite(outlier_f1) else np.nan,
             singleton_outlier_isolated=(

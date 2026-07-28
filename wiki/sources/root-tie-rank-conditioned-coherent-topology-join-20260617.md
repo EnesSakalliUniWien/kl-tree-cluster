@@ -2,13 +2,13 @@
 title: Root Tie Rank Conditioned Coherent Topology Join 2026-06-17
 type: source
 status: reviewed
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_conditioned_coherent_topology_join.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_generated_neighborhood_replay.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_selected_spectral_generator_target_panel.py
-  - tests/validation/168_test_root_tie_rank_conditioned_coherent_topology_join.py
-  - tests/validation/166_test_root_tie_rank_selected_spectral_generator_target_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_conditioned_coherent_topology_join.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_generated_neighborhood_replay.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_selected_spectral_generator_target_panel.py
+  - tests/validation/calibration/root/tie_rank/168_test_root_tie_rank_conditioned_coherent_topology_join.py
+  - tests/validation/calibration/root/tie_rank/166_test_root_tie_rank_selected_spectral_generator_target_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_generated_neighborhood_replay_conditioned_coherent_capped_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_conditioned_coherent_topology_join_after_replay
 tags:

@@ -109,8 +109,6 @@ def default_output_dir(input_path: Path) -> Path:
     )
 
 
-
-
 def run_block_diffusion_tree(
     *,
     data: pd.DataFrame,
@@ -184,7 +182,9 @@ def load_reference_labels(path: Path | None, index: pd.Index) -> pd.DataFrame | 
     return labels
 
 
-def score_reference(assignments: pd.DataFrame, reference_labels: pd.DataFrame | None) -> dict[str, object]:
+def score_reference(
+    assignments: pd.DataFrame, reference_labels: pd.DataFrame | None
+) -> dict[str, object]:
     if reference_labels is None:
         return {
             "reference_matched_genes": pd.NA,
@@ -282,9 +282,7 @@ def main() -> None:
         "n_features": int(data.shape[1]),
         "edge_alpha": float(args.edge_alpha),
         "sibling_alpha": float(args.sibling_alpha),
-        "enforce_internal_support_thresholds": bool(
-            args.enforce_internal_support_thresholds
-        ),
+        "enforce_internal_support_thresholds": bool(args.enforce_internal_support_thresholds),
         "diffusion_k_neighbors": int(args.diffusion_k_neighbors),
         "diffusion_time": int(args.diffusion_time),
         "diffusion_components": int(args.diffusion_components),
@@ -311,7 +309,9 @@ def main() -> None:
                 max_segments=args.max_segments,
             )
         except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
-            rows.append({**base, "weighting": weighting, "status": "failed_spectrum", "error": repr(exc)})
+            rows.append(
+                {**base, "weighting": weighting, "status": "failed_spectrum", "error": repr(exc)}
+            )
             continue
 
         for component_index, eigenvalue in enumerate(eigvals, start=1):
@@ -399,9 +399,7 @@ def main() -> None:
                         "decomposition_num_clusters": int(
                             decomposition.get("num_clusters", len(cluster_sizes))
                         ),
-                        "sibling_test_method_counts": sibling_method_counts(
-                            annotations_df
-                        ),
+                        "sibling_test_method_counts": sibling_method_counts(annotations_df),
                         "diffusion_metadata": repr(diffusion_metadata),
                         "assignments_path": str(assignment_path),
                         "error": "",

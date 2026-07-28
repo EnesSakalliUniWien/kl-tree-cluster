@@ -2,7 +2,7 @@
 title: Selected Root Selected Family Traversal Literature 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
   - raw/inbox/selected-root-selected-family-traversal-literature-20260614.md
 tags:
@@ -58,7 +58,7 @@ family, not the one descendant node after it has already been selected.
 
 - `raw/inbox/selected-root-selected-family-traversal-literature-20260614.md`
   records the checked sources and project mapping.
-- `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`
+- `benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py`
   implements the current selected-root and selected-family permutation
   diagnostics.
 - `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`

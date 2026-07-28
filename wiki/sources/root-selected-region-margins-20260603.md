@@ -2,10 +2,10 @@
 title: Root Selected Region Margins 20260603
 type: source
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_region_margins.py
-  - tests/validation/55_test_root_selected_region_margins.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_region_margins.py
+  - tests/validation/calibration/root/selected/55_test_root_selected_region_margins.py
   - raw/assets/benchmark-results/root_selected_region_margins_20260603/manifest.json
   - raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_summary.csv
   - raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_merge_margins.csv
@@ -24,7 +24,7 @@ tags:
 
 ## Summary
 
-`benchmarks/diagnostics/calibration/root_selected_region_margins.py` replays
+`benchmarks/diagnostics/calibration/root/selected/root_selected_region_margins.py` replays
 the average-linkage hierarchy used by Tree-Break Selection and records the merge-selection
 inequality margins that construct the two root child clusters. It joins those
 margins to observed root edge, sibling, and spectral quantities. The diagnostic
@@ -125,7 +125,7 @@ boundary from the empirical-inflation layer.
 
 ## Evidence
 
-- `tests/validation/55_test_root_selected_region_margins.py` verifies average
+- `tests/validation/calibration/root/selected/55_test_root_selected_region_margins.py` verifies average
   linkage replay, rejects a nonminimal linkage matrix, and marks the
   two-leaf root case as having root children that are leaves.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603/manifest.json`

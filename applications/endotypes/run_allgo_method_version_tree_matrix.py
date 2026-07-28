@@ -245,7 +245,9 @@ def main() -> None:
                     )
                 )
                 for cluster_id, size in cluster_sizes.items():
-                    cluster_size_rows.append({**base, "cluster_id": int(cluster_id), "cluster_size": int(size)})
+                    cluster_size_rows.append(
+                        {**base, "cluster_id": int(cluster_id), "cluster_size": int(size)}
+                    )
             except Exception as exc:  # noqa: BLE001 - diagnostic matrix records failures.
                 append_failure(rows, base=base, start_sec=start_sec, exc=exc)
 
@@ -366,7 +368,9 @@ def main() -> None:
         index=False,
     )
     ok = summary[summary["status"].eq("ok")] if "status" in summary else pd.DataFrame()
-    status_counts = summary["status"].value_counts(dropna=False).to_dict() if not summary.empty else {}
+    status_counts = (
+        summary["status"].value_counts(dropna=False).to_dict() if not summary.empty else {}
+    )
     readme = [
         "# allGO Method-Version x Tree-Geometry Matrix",
         "",

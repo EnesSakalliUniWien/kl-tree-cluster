@@ -4,7 +4,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
-from tree_break_selection import config
+from tree_break_selection.tree.construction import (
+    DEFAULT_BINARY_TREE_DISTANCE_METRIC,
+    DEFAULT_TREE_LINKAGE_METHOD,
+)
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -33,13 +36,14 @@ def main():
     print(f"Ground truth contains {len(np.unique(y_true))} clusters.")
 
     # --- Execute the Core Pipeline ---
-    # 2. linkage() - using Rogers-Tanimoto distance + average linkage
+    # 2. linkage() - using Hamming distance + average linkage
     Z = linkage(
-        pdist(data.values, metric=config.TREE_DISTANCE_METRIC),
-        method=config.TREE_LINKAGE_METHOD,
+        pdist(data.values, metric=DEFAULT_BINARY_TREE_DISTANCE_METRIC),
+        method=DEFAULT_TREE_LINKAGE_METHOD,
     )
     print(
-        f"\nStep 2: Created hierarchy with {config.TREE_DISTANCE_METRIC} + {config.TREE_LINKAGE_METHOD} linkage."
+        f"\nStep 2: Created hierarchy with {DEFAULT_BINARY_TREE_DISTANCE_METRIC} + "
+        f"{DEFAULT_TREE_LINKAGE_METHOD} linkage."
     )
 
     # 3. PosetTree.from_linkage()

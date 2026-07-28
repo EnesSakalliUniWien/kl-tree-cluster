@@ -300,6 +300,4 @@ def test_case_hash_modulo_split_uses_stable_checksum() -> None:
 
     folds = _fold_ids(table, "case_hash_modulo_5")
 
-    assert folds.tolist() == [
-        zlib.crc32(value.encode("utf-8")) % 5 for value in table["case_id"]
-    ]
+    assert folds.tolist() == [zlib.crc32(value.encode("utf-8")) % 5 for value in table["case_id"]]

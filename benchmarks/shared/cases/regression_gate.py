@@ -29,6 +29,7 @@ REGRESSION_GATE_CASE_NAMES: tuple[str, ...] = (
     "overlap_unbal_4c_small",
 )
 
+
 def _build_case_index() -> dict[str, dict]:
     """Return all benchmark cases keyed by normalized unique case name."""
     return {str(case["name"]): case for case in get_default_test_cases()}
@@ -45,8 +46,7 @@ def get_regression_gate_test_cases() -> list[dict]:
     missing = [name for name in REGRESSION_GATE_CASE_NAMES if name not in case_index]
     if missing:
         raise ValueError(
-            "Regression gate references unknown benchmark cases: "
-            + ", ".join(missing)
+            "Regression gate references unknown benchmark cases: " + ", ".join(missing)
         )
 
     return [case_index[name].copy() for name in REGRESSION_GATE_CASE_NAMES]

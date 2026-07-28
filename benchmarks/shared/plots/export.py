@@ -39,8 +39,7 @@ def _benchmark_tree_layout() -> str:
     layout = layout.strip().lower()
     if layout not in {"radial", "rectangular"}:
         raise ValueError(
-            "TBS_BENCHMARK_TREE_LAYOUT must be 'radial' or 'rectangular', "
-            f"got {layout!r}."
+            f"TBS_BENCHMARK_TREE_LAYOUT must be 'radial' or 'rectangular', got {layout!r}."
         )
     return layout
 
@@ -54,9 +53,7 @@ def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> s
     if isinstance(found_clusters, (int, float, np.integer, np.floating)) and np.isfinite(
         float(found_clusters)
     ):
-        parts.append(
-            f"K={int(found_clusters)}" if compact else f"Found_K={int(found_clusters)}"
-        )
+        parts.append(f"K={int(found_clusters)}" if compact else f"Found_K={int(found_clusters)}")
     if isinstance(ari, (int, float, np.floating)) and np.isfinite(float(ari)):
         parts.append(f"A={float(ari):.3f}" if compact else f"ARI={float(ari):.3f}")
     if isinstance(nmi, (int, float, np.floating)) and np.isfinite(float(nmi)):
@@ -65,11 +62,23 @@ def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> s
     singleton_hit = result.singleton_outlier_isolated
     grouped_recovery = result.grouped_outlier_cluster_recovered
     if isinstance(outlier_f1, (int, float, np.floating)) and np.isfinite(float(outlier_f1)):
-        parts.append(f"OF1={float(outlier_f1):.3f}" if compact else f"Outlier_F1={float(outlier_f1):.3f}")
+        parts.append(
+            f"OF1={float(outlier_f1):.3f}" if compact else f"Outlier_F1={float(outlier_f1):.3f}"
+        )
     if isinstance(singleton_hit, (int, float, np.floating)) and np.isfinite(float(singleton_hit)):
-        parts.append(f"SOI={float(singleton_hit):.0f}" if compact else f"Singleton_Isolated={float(singleton_hit):.0f}")
-    if isinstance(grouped_recovery, (int, float, np.floating)) and np.isfinite(float(grouped_recovery)):
-        parts.append(f"GOR={float(grouped_recovery):.0f}" if compact else f"Grouped_Outlier_Recovered={float(grouped_recovery):.0f}")
+        parts.append(
+            f"SOI={float(singleton_hit):.0f}"
+            if compact
+            else f"Singleton_Isolated={float(singleton_hit):.0f}"
+        )
+    if isinstance(grouped_recovery, (int, float, np.floating)) and np.isfinite(
+        float(grouped_recovery)
+    ):
+        parts.append(
+            f"GOR={float(grouped_recovery):.0f}"
+            if compact
+            else f"Grouped_Outlier_Recovered={float(grouped_recovery):.0f}"
+        )
     return ", ".join(parts)
 
 
@@ -279,7 +288,6 @@ def _create_tree_figures_for_case(
             tree=tree_t,
             decomposition_results=decomp_t,
             annotations_df=annotations_df,
-            use_labels=True,
             node_size=int(plot_style["node_size"]),
             font_size=int(plot_style["font_size"]),
             title=title,
@@ -324,7 +332,6 @@ def _create_tree_panel_renderers_for_case(
                 tree=result.tree,
                 decomposition_results=result.decomposition,
                 annotations_df=result.annotations,
-                use_labels=True,
                 node_size=8,
                 font_size=6,
                 title="",

@@ -46,10 +46,7 @@ def _normalize_context(
 def _context_dict(
     context: Mapping[str, object],
 ) -> dict[str, ExternalContextValue]:
-    return {
-        str(key): _normalize_context_value(value)
-        for key, value in context.items()
-    }
+    return {str(key): _normalize_context_value(value) for key, value in context.items()}
 
 
 def _external_adjusted_p_value(
@@ -94,9 +91,7 @@ class ExternalSelectedTailCalibrationModel:
         for rule in self.rules:
             normalized = rule.normalized_context
             if normalized in seen:
-                raise ValueError(
-                    "External selected-tail calibration contexts must be unique."
-                )
+                raise ValueError("External selected-tail calibration contexts must be unique.")
             seen.add(normalized)
 
     def decision_for(
@@ -115,9 +110,7 @@ class ExternalSelectedTailCalibrationModel:
             context.update(dict(external_context))
         normalized_context = _context_dict(context)
         rule = self._find_rule(normalized_context)
-        internal_status = (
-            "not_evaluated" if internal_decision is None else internal_decision.status
-        )
+        internal_status = "not_evaluated" if internal_decision is None else internal_decision.status
         if rule is None:
             return CalibrationDecision(
                 status="undefined_external_not_admissible",

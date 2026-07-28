@@ -141,7 +141,9 @@ def load_binary_matrix(path: Path) -> pd.DataFrame:
     return data.astype(int)
 
 
-def component_feature_loadings(values: np.ndarray, eigvals: np.ndarray, eigvecs: np.ndarray) -> np.ndarray:
+def component_feature_loadings(
+    values: np.ndarray, eigvals: np.ndarray, eigvecs: np.ndarray
+) -> np.ndarray:
     """Return feature loadings for the sample-cosine eigenvectors.
 
     The cosine operator is X_norm X_norm^T. For positive eigenvalue lambda and
@@ -245,7 +247,9 @@ def plot_combined_axis_terms(
 
     selected_frames = []
     for _axis, frame in axis_frame.groupby("axis", sort=True):
-        selected_frames.append(frame.sort_values("abs_loading", ascending=False).head(terms_per_axis))
+        selected_frames.append(
+            frame.sort_values("abs_loading", ascending=False).head(terms_per_axis)
+        )
     if not selected_frames:
         return
     selected = pd.concat(selected_frames, ignore_index=True)
@@ -293,10 +297,14 @@ def plot_combined_axis_terms(
     plt.close(fig)
 
 
-def _selected_axis_term_heatmap(axis_frame: pd.DataFrame, *, terms_per_axis: int, max_terms: int) -> pd.DataFrame:
+def _selected_axis_term_heatmap(
+    axis_frame: pd.DataFrame, *, terms_per_axis: int, max_terms: int
+) -> pd.DataFrame:
     selected_frames = []
     for _axis, frame in axis_frame.groupby("axis", sort=True):
-        selected_frames.append(frame.sort_values("abs_loading", ascending=False).head(terms_per_axis))
+        selected_frames.append(
+            frame.sort_values("abs_loading", ascending=False).head(terms_per_axis)
+        )
     if not selected_frames:
         return pd.DataFrame()
     selected = pd.concat(selected_frames, ignore_index=True)
@@ -341,7 +349,9 @@ def draw_axis_terms_heatmap(
     ax = fig.add_subplot(111)
     if pivot.empty:
         ax.axis("off")
-        ax.text(0.5, 0.5, "No GO-term loading data available", ha="center", va="center", fontsize=13)
+        ax.text(
+            0.5, 0.5, "No GO-term loading data available", ha="center", va="center", fontsize=13
+        )
         return
     limit = float(np.nanmax(np.abs(pivot.to_numpy())))
     if not math.isfinite(limit) or limit <= 0.0:
@@ -433,10 +443,14 @@ def plot_subspace_embedding(
     else:
         fig, ax = plt.subplots(figsize=(8, 6.5))
     if labels is None:
-        scatter = ax.scatter(embedding[:, 0], embedding[:, 1], color="#4c78a8", s=18, alpha=0.72, linewidths=0)
+        scatter = ax.scatter(
+            embedding[:, 0], embedding[:, 1], color="#4c78a8", s=18, alpha=0.72, linewidths=0
+        )
         ax.set_title(f"{title}\nsubspace embedding; no cluster assignments ({method})")
     else:
-        scatter = ax.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap="turbo", s=18, alpha=0.88, linewidths=0)
+        scatter = ax.scatter(
+            embedding[:, 0], embedding[:, 1], c=labels, cmap="turbo", s=18, alpha=0.88, linewidths=0
+        )
         ax.set_title(f"{title}\nsubspace embedding by cluster ({method})")
     ax.set_xlabel("axis 1")
     ax.set_ylabel("axis 2")
@@ -483,7 +497,9 @@ def plot_diffusion_embedding(
         )
     else:
         fig, ax = plt.subplots(figsize=(8, 6.5))
-    scatter = ax.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap="turbo", s=18, alpha=0.88, linewidths=0)
+    scatter = ax.scatter(
+        embedding[:, 0], embedding[:, 1], c=labels, cmap="turbo", s=18, alpha=0.88, linewidths=0
+    )
     ax.set_title(f"{title}\nadaptive diffusion distance embedding by cluster")
     ax.set_xlabel("MDS axis 1")
     ax.set_ylabel("MDS axis 2")
@@ -557,7 +573,9 @@ def _draw_tree_subtree_clusters(
         spine.set_linewidth(0.6)
 
     ax_text.axis("off")
-    top_sizes = ", ".join(f"C{int(cid)}={int(size)}" for cid, size in cluster_sizes.head(16).items())
+    top_sizes = ", ".join(
+        f"C{int(cid)}={int(size)}" for cid, size in cluster_sizes.head(16).items()
+    )
     ax_text.text(
         0.0,
         0.98,
@@ -625,32 +643,48 @@ def attach_artifact_paths(ranking: pd.DataFrame) -> pd.DataFrame:
                 else "",
                 "linkage_matrix": getattr(row, "linkage_path", ""),
                 "tree_dendrogram_png": str(subspace_dir / f"{subspace_safe}__tree_dendrogram.png"),
-                "tree_subtree_clusters_png": str(subspace_dir / f"{subspace_safe}__tree_subtree_clusters.png"),
-                "subspace_embedding_png": str(subspace_dir / f"{subspace_safe}__subspace_embedding_clusters.png"),
+                "tree_subtree_clusters_png": str(
+                    subspace_dir / f"{subspace_safe}__tree_subtree_clusters.png"
+                ),
+                "subspace_embedding_png": str(
+                    subspace_dir / f"{subspace_safe}__subspace_embedding_clusters.png"
+                ),
                 "adaptive_diffusion_embedding_png": str(
                     subspace_dir / f"{subspace_safe}__adaptive_diffusion_embedding_clusters.png"
                 ),
-                "axis_terms_combined_png": str(subspace_dir / f"{subspace_safe}__axis_terms_combined.png"),
+                "axis_terms_combined_png": str(
+                    subspace_dir / f"{subspace_safe}__axis_terms_combined.png"
+                ),
                 "axis_top_terms": str(subspace_dir / f"{subspace_safe}__axis_top_terms.csv"),
-                "axis_term_loadings_all": str(subspace_dir / f"{subspace_safe}__axis_term_loadings_all.csv"),
-                "go_ic_quality_summary": str(subspace_dir / f"{subspace_safe}__go_ic_quality_summary.csv"),
+                "axis_term_loadings_all": str(
+                    subspace_dir / f"{subspace_safe}__axis_term_loadings_all.csv"
+                ),
+                "go_ic_quality_summary": str(
+                    subspace_dir / f"{subspace_safe}__go_ic_quality_summary.csv"
+                ),
                 "cluster_coherence": str(subspace_dir / f"{subspace_safe}__cluster_coherence.csv"),
-                "tfidf_cluster_quality": str(subspace_dir / f"{subspace_safe}__tfidf_cluster_quality.csv"),
+                "tfidf_cluster_quality": str(
+                    subspace_dir / f"{subspace_safe}__tfidf_cluster_quality.csv"
+                ),
                 "subspace_embedding_terms_only_png": str(
                     subspace_dir / f"{subspace_safe}__subspace_embedding_terms_only.png"
                 ),
                 "subspace_embedding_annotated_terms_png": str(
-                    subspace_dir / f"{subspace_safe}__subspace_embedding_clusters_annotated_terms.png"
+                    subspace_dir
+                    / f"{subspace_safe}__subspace_embedding_clusters_annotated_terms.png"
                 ),
                 "adaptive_diffusion_embedding_annotated_terms_png": str(
-                    subspace_dir / f"{subspace_safe}__adaptive_diffusion_embedding_clusters_annotated_terms.png"
+                    subspace_dir
+                    / f"{subspace_safe}__adaptive_diffusion_embedding_clusters_annotated_terms.png"
                 ),
             }
         )
     return pd.concat([out.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
 
 
-def add_specificity_aware_rank(ranking: pd.DataFrame, coherence_long: pd.DataFrame | None) -> pd.DataFrame:
+def add_specificity_aware_rank(
+    ranking: pd.DataFrame, coherence_long: pd.DataFrame | None
+) -> pd.DataFrame:
     out = ranking.copy()
     out["old_display_rank"] = out.get("display_rank", pd.Series(index=out.index, dtype=float))
     out["specific_cluster_count"] = 0
@@ -677,8 +711,12 @@ def add_specificity_aware_rank(ranking: pd.DataFrame, coherence_long: pd.DataFra
                 "specific_cluster_count": float(specific.sum()),
                 "specific_cluster_fraction": fraction,
                 "weighted_specificity_delta": weighted,
-                "median_specificity_delta": float(specific_deltas.median()) if len(specific_deltas) else 0.0,
-                "mean_specificity_delta": float(specific_deltas.mean()) if len(specific_deltas) else 0.0,
+                "median_specificity_delta": float(specific_deltas.median())
+                if len(specific_deltas)
+                else 0.0,
+                "mean_specificity_delta": float(specific_deltas.mean())
+                if len(specific_deltas)
+                else 0.0,
                 "specificity_score": 0.5 * fraction + 0.5 * weighted,
             }
         for column in [
@@ -689,7 +727,9 @@ def add_specificity_aware_rank(ranking: pd.DataFrame, coherence_long: pd.DataFra
             "mean_specificity_delta",
             "specificity_score",
         ]:
-            out[column] = out["run_id"].map(lambda run_id: metrics.get(str(run_id), {}).get(column, 0.0))
+            out[column] = out["run_id"].map(
+                lambda run_id: metrics.get(str(run_id), {}).get(column, 0.0)
+            )
         out["specific_cluster_count"] = out["specific_cluster_count"].astype(int)
 
     ok_mask = out["status"].eq("ok")
@@ -705,9 +745,13 @@ def add_specificity_aware_rank(ranking: pd.DataFrame, coherence_long: pd.DataFra
             ascending=[True, False, False, False, True],
         )
         ranks = dict(zip(order["run_id"], np.arange(1, len(order) + 1), strict=False))
-        out.loc[ok_mask, "specificity_aware_rank"] = out.loc[ok_mask, "run_id"].map(ranks).astype(int)
+        out.loc[ok_mask, "specificity_aware_rank"] = (
+            out.loc[ok_mask, "run_id"].map(ranks).astype(int)
+        )
         out.loc[ok_mask, "display_rank"] = out.loc[ok_mask, "specificity_aware_rank"].astype(int)
-    return out.sort_values(["status", "display_rank"], ascending=[False, True]).reset_index(drop=True)
+    return out.sort_values(["status", "display_rank"], ascending=[False, True]).reset_index(
+        drop=True
+    )
 
 
 def write_combined_axis_terms_pdf(ranking: pd.DataFrame, output_dir: Path) -> Path | None:
@@ -730,7 +774,9 @@ def write_combined_axis_terms_pdf(ranking: pd.DataFrame, output_dir: Path) -> Pa
     return pdf_path
 
 
-def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix: str) -> dict[str, str]:
+def write_workflow_pdfs(
+    output_dir: Path, ranking: pd.DataFrame, artifact_prefix: str
+) -> dict[str, str]:
     ok = ranking[ranking["status"].eq("ok")].sort_values("display_rank")
     plots_dir = output_dir / f"{artifact_prefix}_quality_aware_go_ic_plots"
     method_dir = (
@@ -743,7 +789,9 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
     method_dir.mkdir(parents=True, exist_ok=True)
     pages_dir.mkdir(parents=True, exist_ok=True)
 
-    method_prefix = f"{artifact_prefix}_quality_aware_go_ic_current__adaptive_diffusion_cosine_subspace"
+    method_prefix = (
+        f"{artifact_prefix}_quality_aware_go_ic_current__adaptive_diffusion_cosine_subspace"
+    )
     ranking.to_csv(method_dir / f"{method_prefix}_tree_ranking.csv", index=False)
 
     pdf_path = method_dir / f"{method_prefix}_tree_pages.pdf"
@@ -778,7 +826,8 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
                 ax = fig.add_subplot(111)
                 draw_image_panel(
                     ax,
-                    getattr(row, "tree_subtree_clusters_png", "") or getattr(row, "tree_dendrogram_png", ""),
+                    getattr(row, "tree_subtree_clusters_png", "")
+                    or getattr(row, "tree_dendrogram_png", ""),
                     f"{title}: tree with cluster assignments",
                 )
             fig.text(
@@ -799,7 +848,11 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
             plt.close(fig)
 
             fig, axes = plt.subplots(1, 2, figsize=(18, 9))
-            draw_image_panel(axes[0], getattr(row, "subspace_embedding_annotated_terms_png", ""), "Subspace embedding")
+            draw_image_panel(
+                axes[0],
+                getattr(row, "subspace_embedding_annotated_terms_png", ""),
+                "Subspace embedding",
+            )
             draw_image_panel(
                 axes[1],
                 getattr(row, "adaptive_diffusion_embedding_annotated_terms_png", ""),
@@ -825,7 +878,9 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
                 )
             else:
                 ax = fig.add_subplot(111)
-                draw_image_panel(ax, getattr(row, "axis_terms_combined_png", ""), f"{title}: GO-term loadings")
+                draw_image_panel(
+                    ax, getattr(row, "axis_terms_combined_png", ""), f"{title}: GO-term loadings"
+                )
                 fig.tight_layout()
             page_path = pages_dir / (
                 f"{rank:02d}_current__adaptive_diffusion_cosine_subspace__"
@@ -837,9 +892,13 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
 
     readable_pdf = method_dir / f"{method_prefix}_readable_subspace_cluster_pages.pdf"
     shutil.copyfile(pdf_path, readable_pdf)
-    shutil.copyfile(pdf_path, plots_dir / f"{artifact_prefix}_quality_aware_go_ic_all_tree_pages.pdf")
+    shutil.copyfile(
+        pdf_path, plots_dir / f"{artifact_prefix}_quality_aware_go_ic_all_tree_pages.pdf"
+    )
     shutil.copyfile(pdf_path, plots_dir / "all_tree_pages_ordered_by_go_ic.pdf")
-    ranking.to_csv(plots_dir / f"{artifact_prefix}_quality_aware_go_ic_tree_ranking.csv", index=False)
+    ranking.to_csv(
+        plots_dir / f"{artifact_prefix}_quality_aware_go_ic_tree_ranking.csv", index=False
+    )
 
     (method_dir / "README.md").write_text(
         "\n".join(
@@ -873,7 +932,9 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
         "method_dir": str(method_dir),
         "method_tree_pages_pdf": str(pdf_path),
         "readable_method_pages_pdf": str(readable_pdf),
-        "all_tree_pages_pdf": str(plots_dir / f"{artifact_prefix}_quality_aware_go_ic_all_tree_pages.pdf"),
+        "all_tree_pages_pdf": str(
+            plots_dir / f"{artifact_prefix}_quality_aware_go_ic_all_tree_pages.pdf"
+        ),
         "ordered_tree_pages_pdf": str(plots_dir / "all_tree_pages_ordered_by_go_ic.pdf"),
     }
 
@@ -895,7 +956,9 @@ def write_artifact_index(
                 "status": row.status,
                 "tree_dendrogram_png": getattr(row, "tree_dendrogram_png", ""),
                 "subspace_embedding_png": getattr(row, "subspace_embedding_png", ""),
-                "adaptive_diffusion_embedding_png": getattr(row, "adaptive_diffusion_embedding_png", ""),
+                "adaptive_diffusion_embedding_png": getattr(
+                    row, "adaptive_diffusion_embedding_png", ""
+                ),
                 "axis_terms_combined_png": getattr(row, "axis_terms_combined_png", ""),
             }
         )
@@ -982,7 +1045,9 @@ def main() -> None:
         "block_names": list(args.block_names or []),
         "top_terms_per_axis": int(args.top_terms_per_axis),
     }
-    (output_dir / "experiment_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+    (output_dir / "experiment_config.json").write_text(
+        json.dumps(config, indent=2), encoding="utf-8"
+    )
 
     summary_rows: list[dict[str, object]] = []
     cluster_coherence_frames: list[pd.DataFrame] = []
@@ -1008,7 +1073,9 @@ def main() -> None:
                     "weighting": weighting,
                     "component": int(component),
                     "eigenvalue": float(eigval),
-                    "fraction_of_kept_operator_energy": float(eigval / total_energy) if total_energy > 0 else math.nan,
+                    "fraction_of_kept_operator_energy": float(eigval / total_energy)
+                    if total_energy > 0
+                    else math.nan,
                 }
             )
 
@@ -1050,7 +1117,9 @@ def main() -> None:
             pd.DataFrame(
                 coords,
                 index=data.index.astype(str),
-                columns=[f"mode_{idx:02d}" for idx in range(block.block_start, block.block_end + 1)],
+                columns=[
+                    f"mode_{idx:02d}" for idx in range(block.block_start, block.block_end + 1)
+                ],
             ).rename_axis("gene").reset_index().to_csv(
                 subspace_dir / f"{subspace_safe}__subspace_coordinates.csv",
                 index=False,
@@ -1138,7 +1207,9 @@ def main() -> None:
                 assignments = assignments_from_labels(labels, data.index)
                 assignments_path = subspace_dir / f"{subspace_safe}__cluster_assignments.csv"
                 assignments.to_csv(assignments_path, index=False)
-                assignments["cluster_id"].value_counts().sort_index().rename_axis("cluster_id").reset_index(name="cluster_size").to_csv(
+                assignments["cluster_id"].value_counts().sort_index().rename_axis(
+                    "cluster_id"
+                ).reset_index(name="cluster_size").to_csv(
                     subspace_dir / f"{subspace_safe}__cluster_sizes.csv",
                     index=False,
                 )
@@ -1157,7 +1228,8 @@ def main() -> None:
                 plot_subspace_embedding(
                     coords,
                     labels,
-                    subspace_dir / f"{subspace_safe}__subspace_embedding_clusters_annotated_terms.png",
+                    subspace_dir
+                    / f"{subspace_safe}__subspace_embedding_clusters_annotated_terms.png",
                     subspace_id,
                     axis_term_lines=axis_term_lines,
                 )
@@ -1170,7 +1242,8 @@ def main() -> None:
                 plot_diffusion_embedding(
                     distances,
                     labels,
-                    subspace_dir / f"{subspace_safe}__adaptive_diffusion_embedding_clusters_annotated_terms.png",
+                    subspace_dir
+                    / f"{subspace_safe}__adaptive_diffusion_embedding_clusters_annotated_terms.png",
                     subspace_id,
                     axis_term_lines=axis_term_lines,
                 )
@@ -1180,11 +1253,15 @@ def main() -> None:
                 sizes = cluster_size_metrics(labels)
                 coherence_frame = coherence["coherence_table"].copy()
                 coherence_frame.insert(0, "run_id", block_record["run_id"])
-                coherence_frame.to_csv(subspace_dir / f"{subspace_safe}__cluster_coherence.csv", index=False)
+                coherence_frame.to_csv(
+                    subspace_dir / f"{subspace_safe}__cluster_coherence.csv", index=False
+                )
                 cluster_coherence_frames.append(coherence_frame)
                 tfidf_frame = tfidf_quality["tfidf_quality_table"].copy()
                 tfidf_frame.insert(0, "run_id", block_record["run_id"])
-                tfidf_frame.to_csv(subspace_dir / f"{subspace_safe}__tfidf_cluster_quality.csv", index=False)
+                tfidf_frame.to_csv(
+                    subspace_dir / f"{subspace_safe}__tfidf_cluster_quality.csv", index=False
+                )
                 tfidf_quality_frames.append(tfidf_frame)
                 rank_fields = {
                     **info,
@@ -1194,7 +1271,9 @@ def main() -> None:
                     "median_significant_terms_q05": coherence["median_significant_terms_q05"],
                     "min_cluster_q_value": coherence["min_cluster_q_value"],
                     "median_within_tfidf_cosine": tfidf_quality["median_within_tfidf_cosine"],
-                    "weighted_mean_within_tfidf_cosine": tfidf_quality["weighted_mean_within_tfidf_cosine"],
+                    "weighted_mean_within_tfidf_cosine": tfidf_quality[
+                        "weighted_mean_within_tfidf_cosine"
+                    ],
                 }
             else:
                 assignments_path = None
@@ -1230,16 +1309,22 @@ def main() -> None:
                     "weighted_mean_within_tfidf_cosine": math.nan,
                 }
 
-            pd.DataFrame([rank_fields]).to_csv(subspace_dir / f"{subspace_safe}__go_ic_quality_summary.csv", index=False)
+            pd.DataFrame([rank_fields]).to_csv(
+                subspace_dir / f"{subspace_safe}__go_ic_quality_summary.csv", index=False
+            )
             top_loadings.to_csv(subspace_dir / f"{subspace_safe}__axis_top_terms.csv", index=False)
             summary_rows.append(
                 {
                     **block_record,
                     "status": status,
                     "error": error,
-                    "assignments_path": str(assignments_path) if assignments_path is not None else "",
+                    "assignments_path": str(assignments_path)
+                    if assignments_path is not None
+                    else "",
                     "linkage_path": linkage_path,
-                    "axis_top_terms_path": str(subspace_dir / f"{subspace_safe}__axis_top_terms.csv"),
+                    "axis_top_terms_path": str(
+                        subspace_dir / f"{subspace_safe}__axis_top_terms.csv"
+                    ),
                     **rank_fields,
                 }
             )
@@ -1260,7 +1345,9 @@ def main() -> None:
         tiers = ranking.loc[ok_mask].apply(quality_tier, axis=1, result_type="expand")
         ranking.loc[ok_mask, "quality_tier"] = tiers[0].astype(int).to_numpy()
         ranking.loc[ok_mask, "quality_tier_label"] = tiers[1].astype(str).to_numpy()
-        ranking.loc[ok_mask, "raw_go_ic_rank"] = ranking.loc[ok_mask, "run_id"].map(raw_rank).astype(int)
+        ranking.loc[ok_mask, "raw_go_ic_rank"] = (
+            ranking.loc[ok_mask, "run_id"].map(raw_rank).astype(int)
+        )
         ok_sorted = ranking.loc[ok_mask].sort_values(
             [
                 "quality_tier",
@@ -1271,17 +1358,27 @@ def main() -> None:
             ],
             ascending=[True, True, False, False, True],
         )
-        display_rank = dict(zip(ok_sorted["run_id"], np.arange(1, len(ok_sorted) + 1), strict=False))
-        ranking.loc[ok_mask, "display_rank"] = ranking.loc[ok_mask, "run_id"].map(display_rank).astype(int)
-        ranking = ranking.sort_values(["status", "display_rank"], ascending=[False, True]).reset_index(drop=True)
-    coherence_long = pd.concat(cluster_coherence_frames, ignore_index=True) if cluster_coherence_frames else None
+        display_rank = dict(
+            zip(ok_sorted["run_id"], np.arange(1, len(ok_sorted) + 1), strict=False)
+        )
+        ranking.loc[ok_mask, "display_rank"] = (
+            ranking.loc[ok_mask, "run_id"].map(display_rank).astype(int)
+        )
+        ranking = ranking.sort_values(
+            ["status", "display_rank"], ascending=[False, True]
+        ).reset_index(drop=True)
+    coherence_long = (
+        pd.concat(cluster_coherence_frames, ignore_index=True) if cluster_coherence_frames else None
+    )
     ranking = attach_artifact_paths(ranking)
     ranking = add_specificity_aware_rank(ranking, coherence_long)
     ok_mask = ranking["status"].eq("ok")
     ranking_path = rankings_dir / f"{RESULT_PREFIX}_ranking.csv"
     ranking.to_csv(ranking_path, index=False)
     ranking.to_csv(rankings_dir / f"{RESULT_PREFIX}_specificity_aware_ranking.csv", index=False)
-    pd.DataFrame(block_rows).to_csv(rankings_dir / f"{RESULT_PREFIX}_subspace_blocks.csv", index=False)
+    pd.DataFrame(block_rows).to_csv(
+        rankings_dir / f"{RESULT_PREFIX}_subspace_blocks.csv", index=False
+    )
     pd.DataFrame(spectrum_rows).to_csv(rankings_dir / f"{RESULT_PREFIX}_spectrum.csv", index=False)
     if coherence_long is not None:
         coherence_long.to_csv(
@@ -1311,16 +1408,30 @@ def main() -> None:
 
         pdf_path = output_dir / f"{RESULT_PREFIX}_axis_terms_by_subspace.pdf"
         with PdfPages(pdf_path) as pdf:
-            for row in ranking[ranking["status"].eq("ok")].sort_values("display_rank").itertuples(index=False):
+            for row in (
+                ranking[ranking["status"].eq("ok")]
+                .sort_values("display_rank")
+                .itertuples(index=False)
+            ):
                 subspace_id = f"{row.weighting}__{row.block_name}"
                 subspace_safe = safe_name(subspace_id)
                 axis_path = Path(row.subspace_dir) / f"{subspace_safe}__axis_top_terms.csv"
                 top_terms = pd.read_csv(axis_path)
-                for axis, frame in top_terms[top_terms["selection"].eq("top_absolute")].groupby("axis", sort=True):
-                    plot_data = frame.sort_values("abs_loading", ascending=False).head(15).sort_values("loading")
+                for axis, frame in top_terms[top_terms["selection"].eq("top_absolute")].groupby(
+                    "axis", sort=True
+                ):
+                    plot_data = (
+                        frame.sort_values("abs_loading", ascending=False)
+                        .head(15)
+                        .sort_values("loading")
+                    )
                     fig, ax = plt.subplots(figsize=(11, 7))
                     colors = np.where(plot_data["loading"] >= 0, "#4c78a8", "#e45756")
-                    ax.barh(wrap_labels(plot_data["go_term"], width=42), plot_data["loading"], color=colors)
+                    ax.barh(
+                        wrap_labels(plot_data["go_term"], width=42),
+                        plot_data["loading"],
+                        color=colors,
+                    )
                     ax.axvline(0.0, color="#333333", linewidth=0.8)
                     ax.set_title(
                         f"Rank {int(row.display_rank)}: {subspace_id}, mode {int(axis):02d}\n"

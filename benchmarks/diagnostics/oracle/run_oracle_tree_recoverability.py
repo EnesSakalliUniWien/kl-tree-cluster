@@ -196,12 +196,8 @@ def _attach_benchmark_comparison(
             "benchmark CSV does not contain matching TBS rows for every oracle case. "
             f"Missing={missing_cases[:10]}."
         )
-    merged["tbs_to_oracle_subtree_gap"] = (
-        merged["oracle_subtree_ari"] - merged["tbs_ari"]
-    )
-    merged["tbs_to_oracle_true_k_gap"] = (
-        merged["oracle_true_k_subtree_ari"] - merged["tbs_ari"]
-    )
+    merged["tbs_to_oracle_subtree_gap"] = merged["oracle_subtree_ari"] - merged["tbs_ari"]
+    merged["tbs_to_oracle_true_k_gap"] = merged["oracle_true_k_subtree_ari"] - merged["tbs_ari"]
     merged["failure_class"] = [
         classify_tree_recoverability_failure(
             tbs_ari=float(row.tbs_ari),

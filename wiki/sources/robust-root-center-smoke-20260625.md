@@ -2,9 +2,9 @@
 title: Robust Root Center Smoke 2026-06-25
 type: source
 status: draft
-updated: 2026-06-25
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/robust_root_center_smoke.py
+  - benchmarks/diagnostics/calibration/root/center/robust_root_center_smoke.py
   - raw/assets/benchmark-results/robust_root_center_smoke_20260625/manifest.json
   - raw/assets/benchmark-results/robust_root_center_smoke_20260625/robust_root_center_rows.csv
   - raw/assets/benchmark-results/robust_root_center_smoke_20260625/robust_root_center_summary.csv
@@ -62,7 +62,7 @@ topology validation with a center estimate.
   `1024` random halfspace-depth directions, and a continuous candidate pool
   size of `400`.
 - `py_compile` and Ruff passed for
-  `benchmarks/diagnostics/calibration/robust_root_center_smoke.py`.
+  `benchmarks/diagnostics/calibration/root/center/robust_root_center_smoke.py`.
 
 ## Links
 

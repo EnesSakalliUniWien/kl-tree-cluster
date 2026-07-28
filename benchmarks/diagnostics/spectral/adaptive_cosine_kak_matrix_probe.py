@@ -111,9 +111,7 @@ def main() -> None:
         "n_features": int(data.shape[1]),
         "edge_alpha": float(args.edge_alpha),
         "sibling_alpha": float(args.sibling_alpha),
-        "enforce_internal_support_thresholds": bool(
-            args.enforce_internal_support_thresholds
-        ),
+        "enforce_internal_support_thresholds": bool(args.enforce_internal_support_thresholds),
     }
 
     rows: list[dict[str, object]] = []
@@ -188,9 +186,7 @@ def main() -> None:
                     block=block,
                     edge_alpha=args.edge_alpha,
                     sibling_alpha=args.sibling_alpha,
-                    enforce_internal_support_thresholds=(
-                        args.enforce_internal_support_thresholds
-                    ),
+                    enforce_internal_support_thresholds=(args.enforce_internal_support_thresholds),
                 )
                 elapsed_sec = time.perf_counter() - start_sec
                 assignment_path = (
@@ -220,9 +216,7 @@ def main() -> None:
                         "decomposition_num_clusters": int(
                             decomposition.get("num_clusters", len(cluster_sizes))
                         ),
-                        "sibling_test_method_counts": sibling_method_counts(
-                            annotations_df
-                        ),
+                        "sibling_test_method_counts": sibling_method_counts(annotations_df),
                         "assignments_path": str(assignment_path),
                         "error": "",
                     }
@@ -265,10 +259,7 @@ def main() -> None:
         f"Rows x columns: `{data.shape[0]} x {data.shape[1]}`",
         f"Edge alpha: `{args.edge_alpha}`",
         f"Sibling alpha: `{args.sibling_alpha}`",
-        (
-            "Internal support thresholds enforced: "
-            f"`{args.enforce_internal_support_thresholds}`"
-        ),
+        (f"Internal support thresholds enforced: `{args.enforce_internal_support_thresholds}`"),
         f"Max rank: `{args.max_rank}`",
         f"Weightings: `{', '.join(args.weightings)}`",
         "",

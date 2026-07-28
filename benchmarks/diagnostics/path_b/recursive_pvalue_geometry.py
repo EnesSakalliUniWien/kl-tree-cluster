@@ -24,7 +24,6 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.time import format_timestamp_utc
 from scipy.stats import chi2
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -161,7 +160,9 @@ def principal_subspace_alignment(
             "subspace_mean_squared_cosine": math.nan,
             "subspace_chordal_distance_normalized": math.nan,
         }
-    singular_values = np.linalg.svd(parent[:common_dimension] @ child[:common_dimension].T, compute_uv=False)
+    singular_values = np.linalg.svd(
+        parent[:common_dimension] @ child[:common_dimension].T, compute_uv=False
+    )
     clipped = np.clip(singular_values[:common_dimension], 0.0, 1.0)
     sum_sq = float(np.sum(clipped**2))
     return {
@@ -184,7 +185,10 @@ def _root(tree: nx.DiGraph) -> object:
 
 
 def _depths(tree: nx.DiGraph) -> dict[object, int]:
-    return {node: int(depth) for node, depth in nx.single_source_shortest_path_length(tree, _root(tree)).items()}
+    return {
+        node: int(depth)
+        for node, depth in nx.single_source_shortest_path_length(tree, _root(tree)).items()
+    }
 
 
 def _lookup(annotations: pd.DataFrame, node: object, column: str) -> object:
@@ -235,20 +239,15 @@ def build_recursive_pvalue_geometry_panels(
         sibling_stat = _lookup(annotations, node, "Sibling_Test_Statistic")
         sibling_df = _lookup(annotations, node, "Sibling_Degrees_of_Freedom")
         child_edge_bh_values = [
-            _lookup(annotations, child, "Child_Parent_Divergence_P_Value_BH")
-            for child in children
+            _lookup(annotations, child, "Child_Parent_Divergence_P_Value_BH") for child in children
         ]
         child_edge_bh_neglog = [neg_log10_pvalue(value) for value in child_edge_bh_values]
-        finite_child_edge_bh = [
-            value for value in child_edge_bh_neglog if math.isfinite(value)
-        ]
+        finite_child_edge_bh = [value for value in child_edge_bh_neglog if math.isfinite(value)]
         child_sibling_neglog = [
             neg_log10_pvalue(_lookup(annotations, child, "Sibling_Divergence_P_Value_Corrected"))
             for child in children
         ]
-        finite_child_sibling = [
-            value for value in child_sibling_neglog if math.isfinite(value)
-        ]
+        finite_child_sibling = [value for value in child_sibling_neglog if math.isfinite(value)]
         eig = eigenvalue_geometry(eigenvalues_by_node.get(str(node)))
         node_record = {
             "case_id": case_id,
@@ -300,7 +299,9 @@ def build_recursive_pvalue_geometry_panels(
             "sibling_bh_different": bool(_lookup(annotations, node, "Sibling_BH_Different"))
             if not pd.isna(_lookup(annotations, node, "Sibling_BH_Different"))
             else False,
-            "sibling_divergence_skipped": bool(_lookup(annotations, node, "Sibling_Divergence_Skipped"))
+            "sibling_divergence_skipped": bool(
+                _lookup(annotations, node, "Sibling_Divergence_Skipped")
+            )
             if not pd.isna(_lookup(annotations, node, "Sibling_Divergence_Skipped"))
             else False,
             "study_role": STUDY_ROLE,
@@ -336,7 +337,9 @@ def build_recursive_pvalue_geometry_panels(
                     "parent_sibling_alpha_margin": alpha_margin(sibling_bh_p, sibling_alpha),
                     "child_sibling_raw_p_value": child_sibling_raw_p,
                     "child_sibling_raw_neglog10_p": neg_log10_pvalue(child_sibling_raw_p),
-                    "child_sibling_raw_alpha_margin": alpha_margin(child_sibling_raw_p, sibling_alpha),
+                    "child_sibling_raw_alpha_margin": alpha_margin(
+                        child_sibling_raw_p, sibling_alpha
+                    ),
                     "child_sibling_bh_p_value": child_sibling_p,
                     "child_sibling_neglog10_p": neg_log10_pvalue(child_sibling_p),
                     "edge_raw_p_value": edge_p,
@@ -427,7 +430,9 @@ def summarize_recursive_pvalue_geometry(
             "case_id": "",
             "metric": "spearman",
             "value": _finite_corr(edge_panel, "edge_neglog10_bh_p", "parent_sibling_neglog10_p"),
-            "n_rows": _finite_pair_count(edge_panel, "edge_neglog10_bh_p", "parent_sibling_neglog10_p"),
+            "n_rows": _finite_pair_count(
+                edge_panel, "edge_neglog10_bh_p", "parent_sibling_neglog10_p"
+            ),
             "interpretation": "Coupling between edge evidence and the sibling test at the parent.",
         },
         {
@@ -452,8 +457,12 @@ def summarize_recursive_pvalue_geometry(
             "scope": "global",
             "case_id": "",
             "metric": "spearman",
-            "value": _finite_corr(edge_panel, "parent_sibling_neglog10_p", "child_sibling_neglog10_p"),
-            "n_rows": _finite_pair_count(edge_panel, "parent_sibling_neglog10_p", "child_sibling_neglog10_p"),
+            "value": _finite_corr(
+                edge_panel, "parent_sibling_neglog10_p", "child_sibling_neglog10_p"
+            ),
+            "n_rows": _finite_pair_count(
+                edge_panel, "parent_sibling_neglog10_p", "child_sibling_neglog10_p"
+            ),
             "interpretation": "Continuity of sibling evidence from a parent to child neighborhoods.",
         },
         {
@@ -535,9 +544,7 @@ def summarize_recursive_pvalue_geometry(
         },
     ]
     edge_groups = (
-        edge_panel.groupby("case_id", sort=True)
-        if "case_id" in edge_panel.columns
-        else []
+        edge_panel.groupby("case_id", sort=True) if "case_id" in edge_panel.columns else []
     )
     for case_id, case_edges in edge_groups:
         rows.extend(
@@ -647,9 +654,7 @@ def summarize_recursive_pvalue_geometry(
             ]
         )
     node_groups = (
-        node_panel.groupby("case_id", sort=True)
-        if "case_id" in node_panel.columns
-        else []
+        node_panel.groupby("case_id", sort=True) if "case_id" in node_panel.columns else []
     )
     for case_id, case_nodes in node_groups:
         rows.append(
@@ -755,7 +760,9 @@ def _write_report(
     global_summary = summary[summary["scope"].eq("global")] if "scope" in summary else summary
     for row in global_summary.itertuples(index=False):
         value = row.value
-        rendered = f"{value:.6f}" if isinstance(value, float) and math.isfinite(value) else str(value)
+        rendered = (
+            f"{value:.6f}" if isinstance(value, float) and math.isfinite(value) else str(value)
+        )
         lines.append(f"- `{row.summary_id}`: `{rendered}` ({row.interpretation})")
     lines.extend(
         [
@@ -789,7 +796,7 @@ def run_recursive_pvalue_geometry_diagnostic(
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
     spectral_minimum_dimension: int = 1,
-    passthrough: bool = config.PASSTHROUGH,
+    passthrough: bool = True,
 ) -> RecursivePValueGeometryOutputs:
     output_dir.mkdir(parents=True, exist_ok=True)
     cases = get_test_cases_by_suite(case_suite)
@@ -876,7 +883,11 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
     parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
     parser.add_argument("--spectral-minimum-dimension", type=int, default=1)
-    parser.add_argument("--passthrough", action=argparse.BooleanOptionalAction, default=config.PASSTHROUGH)
+    parser.add_argument(
+        "--passthrough",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
     return parser.parse_args(argv)
 
 

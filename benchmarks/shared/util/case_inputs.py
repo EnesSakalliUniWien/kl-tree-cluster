@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
-from tree_break_selection import config
+from tree_break_selection.tree.construction import DEFAULT_BINARY_TREE_DISTANCE_METRIC
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     contains_categorical_feature_columns,
@@ -47,9 +47,7 @@ def prepare_case_inputs(
             raise ValueError("Benchmark feature_space metadata must be a FeatureSpace.")
         validate_feature_space(tuple(data_t.columns), feature_space)
     elif contains_categorical_feature_columns(tuple(data_t.columns)):
-        raise ValueError(
-            "Categorical benchmark data must carry explicit feature_space metadata."
-        )
+        raise ValueError("Categorical benchmark data must carry explicit feature_space metadata.")
 
     needs_distance_matrix = any(
         method_id in _DISTANCE_MATRIX_METHODS for method_id in selected_methods
@@ -58,8 +56,8 @@ def prepare_case_inputs(
         method_id in _TBS_DISTANCE_TREE_METHODS for method_id in selected_methods
     )
     requires_precomputed_tbs_distance = bool(meta["requires_precomputed_tbs_distance"])
-    needs_distance_condensed = (
-        needs_distance_matrix or (needs_tbs_tree_distance and requires_precomputed_tbs_distance)
+    needs_distance_condensed = needs_distance_matrix or (
+        needs_tbs_tree_distance and requires_precomputed_tbs_distance
     )
 
     distance_condensed = None
@@ -83,10 +81,10 @@ def prepare_case_inputs(
         distance_condensed = squareform(distance_matrix)
 
     if needs_distance_matrix and distance_condensed is None:
-        distance_condensed = pdist(data_t.values, metric=config.TREE_DISTANCE_METRIC)
+        distance_condensed = pdist(data_t.values, metric=DEFAULT_BINARY_TREE_DISTANCE_METRIC)
     if needs_distance_matrix and distance_matrix is None:
         if distance_condensed is None:
-            distance_condensed = pdist(data_t.values, metric=config.TREE_DISTANCE_METRIC)
+            distance_condensed = pdist(data_t.values, metric=DEFAULT_BINARY_TREE_DISTANCE_METRIC)
         distance_matrix = squareform(distance_condensed)
 
     return PreparedCaseInputs(

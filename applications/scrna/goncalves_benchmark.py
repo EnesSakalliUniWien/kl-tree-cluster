@@ -278,7 +278,7 @@ def _write_dataset_report(
     has_raw_counts = "counts" in adata.layers
     if expression_kind == "count_like":
         workflow_note = (
-            "The script preserves the downloaded count matrix in `layers[\"counts\"]`, "
+            'The script preserves the downloaded count matrix in `layers["counts"]`, '
             "computes standard cell-level QC metrics, normalizes to 10,000 counts per "
             "cell, applies `log1p`, selects highly variable genes when needed, and "
             "recomputes PCA, neighbors, UMAP, and Leiden clustering."
@@ -286,7 +286,7 @@ def _write_dataset_report(
     else:
         workflow_note = (
             "The UCSC expression matrix is processed/scaled expression rather than raw "
-            "counts, so the script preserves it in `layers[\"input_expression\"]`, uses "
+            'counts, so the script preserves it in `layers["input_expression"]`, uses '
             "metadata `nCount_RNA` and `nFeature_RNA` for count QC summaries, skips "
             "count normalization/log1p, selects high-variance genes, and recomputes "
             "PCA, neighbors, UMAP, and Leiden clustering."

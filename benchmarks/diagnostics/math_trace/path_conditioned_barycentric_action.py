@@ -310,11 +310,7 @@ def evaluate_action_budget_guard_utility(
         n_flagged = int(getattr(guard, "n_flagged"))
         n_pure_flagged = int(getattr(guard, "n_pure_flagged"))
         n_mixed_flagged = int(getattr(guard, "n_mixed_flagged"))
-        break_even = (
-            float(n_pure_flagged / n_mixed_flagged)
-            if n_mixed_flagged > 0
-            else math.inf
-        )
+        break_even = float(n_pure_flagged / n_mixed_flagged) if n_mixed_flagged > 0 else math.inf
         for cost_ratio in mixed_context_cost_ratios:
             net_utility = float(n_pure_flagged - cost_ratio * n_mixed_flagged)
             rows.append(
@@ -326,9 +322,7 @@ def evaluate_action_budget_guard_utility(
                     "n_pure_flagged": n_pure_flagged,
                     "n_mixed_flagged": n_mixed_flagged,
                     "net_utility": net_utility,
-                    "net_utility_per_row": (
-                        float(net_utility / n_rows) if n_rows else math.nan
-                    ),
+                    "net_utility_per_row": (float(net_utility / n_rows) if n_rows else math.nan),
                     "net_utility_per_flag": (
                         float(net_utility / n_flagged) if n_flagged else math.nan
                     ),
@@ -337,12 +331,8 @@ def evaluate_action_budget_guard_utility(
                     "diagnostic_precision_for_pure_fragment": float(
                         getattr(guard, "diagnostic_precision_for_pure_fragment")
                     ),
-                    "pure_fragment_flag_rate": float(
-                        getattr(guard, "pure_fragment_flag_rate")
-                    ),
-                    "mixed_context_flag_rate": float(
-                        getattr(guard, "mixed_context_flag_rate")
-                    ),
+                    "pure_fragment_flag_rate": float(getattr(guard, "pure_fragment_flag_rate")),
+                    "mixed_context_flag_rate": float(getattr(guard, "mixed_context_flag_rate")),
                     "label_provenance": LABEL_PROVENANCE,
                     "study_role": STUDY_ROLE,
                 }
@@ -369,9 +359,8 @@ def summarize_benchmark(benchmark: pd.DataFrame | None) -> dict[str, Any]:
     skip_reason = tbs.get("skip_reason", pd.Series("", index=tbs.index)).astype(str)
     ari = pd.to_numeric(tbs.get("ari", pd.Series(np.nan, index=tbs.index)), errors="coerce")
     ok = status.eq("ok")
-    calibration_skips = (
-        status.eq("skip")
-        & skip_reason.str.contains("calibration|support|inflation", case=False, na=False)
+    calibration_skips = status.eq("skip") & skip_reason.str.contains(
+        "calibration|support|inflation", case=False, na=False
     )
     under_split = pd.to_numeric(
         tbs.get("under_split", pd.Series(0, index=tbs.index)),
@@ -396,12 +385,8 @@ def build_candidate_panel(
     benchmark_summary: dict[str, Any],
 ) -> pd.DataFrame:
     """Rank missing equation candidates without promoting production calibration."""
-    radius_rows = validation_summary[
-        validation_summary["model_id"].eq("radius_angle_action")
-    ]
-    radius_auc = (
-        float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
-    )
+    radius_rows = validation_summary[validation_summary["model_id"].eq("radius_angle_action")]
+    radius_auc = float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
     radius_evidence = math.isfinite(radius_auc) and radius_auc >= 0.85
     median_angle = _finite_median(geometry_summary["angle_to_leading_axis_deg_median"])
     median_independent = _finite_median(geometry_summary["independent_fraction_median"])
@@ -506,12 +491,8 @@ def _write_report(
     benchmark_summary: dict[str, Any],
     candidate_panel: pd.DataFrame,
 ) -> None:
-    radius_rows = validation_summary[
-        validation_summary["model_id"].eq("radius_angle_action")
-    ]
-    radius_auc = (
-        float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
-    )
+    radius_rows = validation_summary[validation_summary["model_id"].eq("radius_angle_action")]
+    radius_auc = float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
     top_candidate = str(candidate_panel.iloc[0]["candidate_path"])
     candidate_guards = guard_panel[
         guard_panel["recursive_decision"].eq("candidate_guard_validation_panel")
@@ -712,21 +693,15 @@ def run_path_conditioned_barycentric_action_diagnostic(
         candidate_panel=candidate_panel,
     )
 
-    radius_rows = validation_summary[
-        validation_summary["model_id"].eq("radius_angle_action")
-    ]
-    radius_auc = (
-        float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
-    )
+    radius_rows = validation_summary[validation_summary["model_id"].eq("radius_angle_action")]
+    radius_auc = float(radius_rows["median_auc"].iloc[0]) if not radius_rows.empty else math.nan
     summary = {
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
         "n_internal_geometry_rows": int(len(geometry)),
         "n_kak_blocks": int(len(geometry_summary)),
         "n_guard_candidates": int(
-            guard_panel["recursive_decision"]
-            .eq("candidate_guard_validation_panel")
-            .sum()
+            guard_panel["recursive_decision"].eq("candidate_guard_validation_panel").sum()
         ),
         "radius_angle_action_median_auc": radius_auc,
         "benchmark_summary": benchmark_summary,

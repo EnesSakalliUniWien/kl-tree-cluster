@@ -2,12 +2,12 @@
 title: Statistic Distribution Shape Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py
-  - tests/validation/93_test_statistic_distribution_shape_panel.py
+  - benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py
+  - tests/validation/calibration/statistics/93_test_statistic_distribution_shape_panel.py
   - benchmarks/validation/selected_edge_type1_geometry.py
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/wald_statistic/sibling_divergence_test.py
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
@@ -55,7 +55,7 @@ when alternate degrees of freedom and scale are available.
 
 ## Evidence
 
-- `tests/validation/93_test_statistic_distribution_shape_panel.py` verifies
+- `tests/validation/calibration/statistics/93_test_statistic_distribution_shape_panel.py` verifies
   df-mixture skew accounting, alternate covariance-inferred df/scale
   comparison, invalid-row rejection, and output writing.
 - Stored selected-edge edge statistics show severe chi-square tail mismatch

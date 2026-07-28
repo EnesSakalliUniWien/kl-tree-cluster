@@ -2,10 +2,10 @@
 title: Overlap Weak Truth Geometry 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_weak_truth_geometry.py
-  - tests/validation/110_test_overlap_weak_truth_geometry.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_weak_truth_geometry.py
+  - tests/validation/calibration/overlap/110_test_overlap_weak_truth_geometry.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_families.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_summary.csv
@@ -61,13 +61,13 @@ or wrong-granularity splits.
 
 ## Evidence
 
-- `tests/validation/110_test_overlap_weak_truth_geometry.py` verifies truth
+- `tests/validation/calibration/overlap/110_test_overlap_weak_truth_geometry.py` verifies truth
   geometry mode classification, signal-only weak row filtering, family
   aggregation, and output writing.
 - Verification passed:
-  `pytest tests/validation/110_test_overlap_weak_truth_geometry.py -q`
+  `pytest tests/validation/calibration/overlap/110_test_overlap_weak_truth_geometry.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_weak_truth_geometry.py tests/validation/110_test_overlap_weak_truth_geometry.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_weak_truth_geometry.py tests/validation/calibration/overlap/110_test_overlap_weak_truth_geometry.py`.
 
 ## Links
 

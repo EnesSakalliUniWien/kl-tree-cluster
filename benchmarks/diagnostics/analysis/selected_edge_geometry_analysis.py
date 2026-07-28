@@ -58,7 +58,9 @@ def _validate_edge_rows(edge_rows: pd.DataFrame) -> None:
         )
 
 
-def _clean_model_table(edge_rows: pd.DataFrame, features: Sequence[str]) -> tuple[pd.DataFrame, pd.Series]:
+def _clean_model_table(
+    edge_rows: pd.DataFrame, features: Sequence[str]
+) -> tuple[pd.DataFrame, pd.Series]:
     columns = list(features)
     table = edge_rows[columns + [TARGET_COLUMN]].replace([np.inf, -np.inf], np.nan).dropna()
     if table.empty:

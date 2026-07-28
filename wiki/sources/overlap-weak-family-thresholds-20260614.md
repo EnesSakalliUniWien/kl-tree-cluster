@@ -2,10 +2,10 @@
 title: Overlap Weak Family Thresholds 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_weak_family_thresholds.py
-  - tests/validation/109_test_overlap_weak_family_thresholds.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_weak_family_thresholds.py
+  - tests/validation/calibration/overlap/109_test_overlap_weak_family_thresholds.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_metric_separability.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_threshold_scan.csv
@@ -61,14 +61,14 @@ truth-misaligned families. It is diagnostic-only.
 
 ## Evidence
 
-- `tests/validation/109_test_overlap_weak_family_thresholds.py` verifies
+- `tests/validation/calibration/overlap/109_test_overlap_weak_family_thresholds.py` verifies
   family grouping by `(case_id, data_role, replicate)`, positive-family
   classification when any weak truth-aligned row is present, zero-negative
   family threshold scans, and output writing.
 - Verification passed:
-  `pytest tests/validation/109_test_overlap_weak_family_thresholds.py -q`
+  `pytest tests/validation/calibration/overlap/109_test_overlap_weak_family_thresholds.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_weak_family_thresholds.py tests/validation/109_test_overlap_weak_family_thresholds.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_weak_family_thresholds.py tests/validation/calibration/overlap/109_test_overlap_weak_family_thresholds.py`.
 
 ## Links
 

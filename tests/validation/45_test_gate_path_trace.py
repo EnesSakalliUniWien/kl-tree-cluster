@@ -104,9 +104,7 @@ def test_gate_path_trace_marks_oracle_boundary_split_by_actual_traversal() -> No
     statistical_trace = statistical_decision_trace_from_gate_path_trace(trace)
     assert tuple(statistical_trace.columns) == STATISTICAL_DECISION_TRACE_COLUMNS
 
-    statistical_root = statistical_trace.loc[
-        statistical_trace["node_id"] == root
-    ].iloc[0]
+    statistical_root = statistical_trace.loc[statistical_trace["node_id"] == root].iloc[0]
     assert statistical_root["case_id"] == "synthetic"
     assert statistical_root["node_depth"] == 0
     assert np.isclose(statistical_root["edge_raw_p"], 0.001)

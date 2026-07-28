@@ -17,7 +17,7 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-from benchmarks.diagnostics.calibration.selected_tail_law_q5_validation import (
+from benchmarks.diagnostics.calibration.selected.tail.selected_tail_law_q5_validation import (
     run_q5_selected_tail_law_validation,
 )
 from benchmarks.shared.cases import get_test_cases_by_suite
@@ -111,9 +111,7 @@ def _completed_variants(existing: pd.DataFrame) -> set[tuple[int, int, bool]]:
     if existing.empty:
         return set()
     table = add_phase1_variant_columns(existing)
-    completed = table[
-        table["spectral_minimum_dimension"].notna() & table["passthrough"].notna()
-    ]
+    completed = table[table["spectral_minimum_dimension"].notna() & table["passthrough"].notna()]
     return {
         (
             int(row.test_case),
@@ -197,18 +195,16 @@ def cluster_count_distribution(results: pd.DataFrame) -> pd.DataFrame:
 def q5_predictive_gain_summary(q5_summary: pd.DataFrame) -> pd.DataFrame:
     if q5_summary.empty:
         return pd.DataFrame()
-    baseline_rows = q5_summary[
-        q5_summary["model_id"].eq("q5_without_spectral_geometry")
-    ]
+    baseline_rows = q5_summary[q5_summary["model_id"].eq("q5_without_spectral_geometry")]
     if baseline_rows.empty:
         raise ValueError("Q5 summary is missing q5_without_spectral_geometry baseline.")
     baseline = baseline_rows.iloc[0]
     table = q5_summary.copy()
-    table["median_tail_auc_gain_vs_baseline"] = (
-        table["median_tail_auc"] - float(baseline["median_tail_auc"])
+    table["median_tail_auc_gain_vs_baseline"] = table["median_tail_auc"] - float(
+        baseline["median_tail_auc"]
     )
-    table["median_r_squared_gain_vs_baseline"] = (
-        table["median_holdout_r_squared"] - float(baseline["median_holdout_r_squared"])
+    table["median_r_squared_gain_vs_baseline"] = table["median_holdout_r_squared"] - float(
+        baseline["median_holdout_r_squared"]
     )
     table["median_tail_error_reduction_vs_baseline"] = (
         float(baseline["median_residual_tail_exceedance_absolute_error"])
@@ -457,10 +453,17 @@ def main(argv: Sequence[str] | None = None) -> None:
         selected_tail_records=args.selected_tail_records,
         run_selected_tail_q5=not bool(args.skip_selected_tail_q5),
     )
-    print(json.dumps(outputs.__dict__ | {
-        key: None if value is None else str(value)
-        for key, value in outputs.__dict__.items()
-    }, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            outputs.__dict__
+            | {
+                key: None if value is None else str(value)
+                for key, value in outputs.__dict__.items()
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

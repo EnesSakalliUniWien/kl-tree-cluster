@@ -2,10 +2,10 @@
 title: Overlap Threshold Stability Contract 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_threshold_stability_contract.py
-  - tests/validation/118_test_overlap_threshold_stability_contract.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_threshold_stability_contract.py
+  - tests/validation/calibration/overlap/118_test_overlap_threshold_stability_contract.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/overlap_threshold_stability_contract_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/overlap_threshold_stability_contract_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/manifest.json
@@ -54,13 +54,13 @@ production behavior.
 
 ## Evidence
 
-- `tests/validation/118_test_overlap_threshold_stability_contract.py` verifies
+- `tests/validation/calibration/overlap/118_test_overlap_threshold_stability_contract.py` verifies
   stage classification, selected-family-law blocking, final fail-closed status,
   and output writing.
 - Verification passed:
-  `pytest tests/validation/118_test_overlap_threshold_stability_contract.py -q`
+  `pytest tests/validation/calibration/overlap/118_test_overlap_threshold_stability_contract.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_threshold_stability_contract.py tests/validation/118_test_overlap_threshold_stability_contract.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_threshold_stability_contract.py tests/validation/calibration/overlap/118_test_overlap_threshold_stability_contract.py`.
 
 ## Links
 

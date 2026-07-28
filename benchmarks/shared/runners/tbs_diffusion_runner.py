@@ -40,8 +40,6 @@ GRAPHTOOLS_ADAPTIVE_NEIGHBOR_PROFILE_FIXED = "fixed"
 DEFAULT_GRAPHTOOLS_ADAPTIVE_NEIGHBOR_GRID = (5, 10, 15, 25, 40, 80, 160)
 
 
-
-
 def _normalize_graphtools_adaptive_neighbor_profile(profile: str | None) -> str:
     """Normalize the graphtools adaptive-neighbor profile name."""
     if profile is None:
@@ -260,8 +258,6 @@ def _resolve_graphtools_neighbor_search_k(
         }
     )
     return selected_k, metadata
-
-
 
 
 def _require_hamming_diffusion_input(

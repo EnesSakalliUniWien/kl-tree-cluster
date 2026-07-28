@@ -2,7 +2,7 @@
 title: Spectral Transport Passthrough Guard 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
   - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
@@ -12,15 +12,15 @@ sources:
   - benchmarks/shared/runners/dispatch.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/util/method_sets.py
-  - benchmarks/diagnostics/calibration/spectral_transport_overlap_dispatch_panel.py
-  - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
-  - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
-  - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_overlap_dispatch_panel.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_threshold_calibration_panel.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_family_traversal_panel.py
+  - benchmarks/diagnostics/calibration/spectral_transport/spectral_transport_promotion_gate.py
   - tests/localization/35_test_gates_traversal.py
   - tests/pipeline/51_test_dispatch_contract.py
   - tests/integration/63_test_local_structural_kernel_regression.py
-  - tests/validation/147_test_spectral_transport_overlap_dispatch_panel.py
-  - tests/validation/102_test_selected_family_traversal_panel.py
+  - tests/validation/calibration/spectral_transport/147_test_spectral_transport_overlap_dispatch_panel.py
+  - tests/validation/calibration/selected/family/102_test_selected_family_traversal_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_overlap_three_case
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_overlap_dispatch_panel
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_overlap_three_case_current

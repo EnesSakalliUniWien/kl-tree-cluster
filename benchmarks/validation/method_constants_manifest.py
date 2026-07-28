@@ -430,8 +430,7 @@ def _describe_source_path(path: Path) -> dict[str, Any]:
         "recognized_outputs": recognized_outputs,
         "used_as_evidence": False,
         "notes": (
-            "Candidate source only; this scaffold does not read metrics from benchmark "
-            "outputs."
+            "Candidate source only; this scaffold does not read metrics from benchmark outputs."
         ),
     }
 
@@ -486,9 +485,7 @@ def _validate_constants(value: Any, errors: list[str]) -> None:
         return
     ids = [entry.get("constant_id") for entry in value if isinstance(entry, Mapping)]
     if ids != list(CONSTANT_IDS):
-        errors.append(
-            "constant_id set and order must match the built-in method-constant contract"
-        )
+        errors.append("constant_id set and order must match the built-in method-constant contract")
 
     seen: set[str] = set()
     for index, entry in enumerate(value):
@@ -567,8 +564,7 @@ def _require_type(
         return
     if not isinstance(mapping[key], expected_type):
         errors.append(
-            f"{context}.{key} must be {expected_type.__name__}, "
-            f"got {type(mapping[key]).__name__}"
+            f"{context}.{key} must be {expected_type.__name__}, got {type(mapping[key]).__name__}"
         )
 
 

@@ -83,7 +83,9 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Lens spec family:weighting:block_name. Only raw_kak lenses are exact.",
     )
-    parser.add_argument("--tree-linkage-method", default="average", choices=["average", "complete", "ward"])
+    parser.add_argument(
+        "--tree-linkage-method", default="average", choices=["average", "complete", "ward"]
+    )
     parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
     parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
     parser.add_argument("--max-rank", type=int, default=80)
@@ -145,9 +147,7 @@ def feature_axis_debug_metrics(
         "feature_axis_reconstruction_rmse": float(
             np.sqrt(np.mean((reconstructed - expected) ** 2))
         ),
-        "feature_axis_orthogonality_max_abs_error": float(
-            np.max(np.abs(gram - identity))
-        ),
+        "feature_axis_orthogonality_max_abs_error": float(np.max(np.abs(gram - identity))),
     }
 
 
@@ -180,15 +180,15 @@ def feature_axis_scores(
             "axis_connection_score": connection,
         }
     )
-    table["common_axis_rank"] = table["abs_common_axis_loading"].rank(
-        method="first", ascending=False
-    ).astype(int)
-    table["variant_energy_rank"] = table["variant_loading_energy_fraction"].rank(
-        method="first", ascending=False
-    ).astype(int)
-    table["axis_connection_rank"] = table["axis_connection_score"].rank(
-        method="first", ascending=False
-    ).astype(int)
+    table["common_axis_rank"] = (
+        table["abs_common_axis_loading"].rank(method="first", ascending=False).astype(int)
+    )
+    table["variant_energy_rank"] = (
+        table["variant_loading_energy_fraction"].rank(method="first", ascending=False).astype(int)
+    )
+    table["axis_connection_rank"] = (
+        table["axis_connection_score"].rank(method="first", ascending=False).astype(int)
+    )
     return table.sort_values("axis_connection_rank")
 
 
@@ -244,7 +244,9 @@ def cluster_axis_summary(
             continue
         rest = ~mask
         cluster_prevalence = data.loc[mask].mean(axis=0)
-        rest_prevalence = data.loc[rest].mean(axis=0) if int(rest.sum()) else cluster_prevalence * 0.0
+        rest_prevalence = (
+            data.loc[rest].mean(axis=0) if int(rest.sum()) else cluster_prevalence * 0.0
+        )
         delta = (cluster_prevalence - rest_prevalence).sort_values(ascending=False)
         summary_rows.append(
             {
@@ -258,7 +260,9 @@ def cluster_axis_summary(
             }
         )
         for rank, (feature, value) in enumerate(delta.head(top_features).items(), start=1):
-            axis_row = score_lookup.loc[str(feature)] if str(feature) in score_lookup.index else None
+            axis_row = (
+                score_lookup.loc[str(feature)] if str(feature) in score_lookup.index else None
+            )
             top_rows.append(
                 {
                     "cluster_id": int(cluster_id),
@@ -277,7 +281,9 @@ def cluster_axis_summary(
                         else math.nan
                     ),
                     "axis_connection_score": (
-                        float(axis_row["axis_connection_score"]) if axis_row is not None else math.nan
+                        float(axis_row["axis_connection_score"])
+                        if axis_row is not None
+                        else math.nan
                     ),
                     "axis_connection_rank": (
                         int(axis_row["axis_connection_rank"]) if axis_row is not None else pd.NA
@@ -351,9 +357,7 @@ def run_lens(
     min_cluster_size: int,
 ) -> dict[str, object]:
     if spec.family != "raw_kak":
-        raise ValueError(
-            f"{spec.lens_id} is not exact-feature-mappable; use raw_kak lenses only."
-        )
+        raise ValueError(f"{spec.lens_id} is not exact-feature-mappable; use raw_kak lenses only.")
     block = find_block(blocks, spec.block_name)
     coordinates = coordinates_for_block(eigvals, eigvecs, block)
     common_axis_score = eigvecs[:, 0] * math.sqrt(float(eigvals[0]))
@@ -378,12 +382,10 @@ def run_lens(
         sibling_alpha=sibling_alpha,
     )
     assignments = build_sample_cluster_assignments(decomposition).loc[data.index]
-    reconstructed_block = row_normalized_values @ feature_axes[
-        :, block.block_start - 1 : block.block_end
-    ]
-    block_reconstruction_max_abs_error = float(
-        np.max(np.abs(reconstructed_block - coordinates))
+    reconstructed_block = (
+        row_normalized_values @ feature_axes[:, block.block_start - 1 : block.block_end]
     )
+    block_reconstruction_max_abs_error = float(np.max(np.abs(reconstructed_block - coordinates)))
 
     feature_scores = feature_axis_scores(
         features=data.columns,
@@ -419,10 +421,7 @@ def run_lens(
             "cluster_id": assignments["cluster_id"].astype(int).to_numpy(),
             "common_axis_score": common_axis_score,
             "variant_radius": np.linalg.norm(coordinates, axis=1),
-            **{
-                f"lens_coord_{i + 1}": coordinates[:, i]
-                for i in range(coordinates.shape[1])
-            },
+            **{f"lens_coord_{i + 1}": coordinates[:, i] for i in range(coordinates.shape[1])},
         }
     ).to_csv(lens_dir / "gene_lens_coordinates.csv", index=False)
     feature_scores.to_csv(lens_dir / "lens_feature_axis_scores.csv", index=False)
@@ -458,9 +457,7 @@ def run_lens(
         "largest_cluster_fraction": float(sizes.max() / len(labels)),
         "top_axis_connection_feature": str(feature_scores.iloc[0]["feature"]),
         "top_axis_connection_score": float(feature_scores.iloc[0]["axis_connection_score"]),
-        "block_coordinate_reconstruction_max_abs_error": (
-            block_reconstruction_max_abs_error
-        ),
+        "block_coordinate_reconstruction_max_abs_error": (block_reconstruction_max_abs_error),
         **axis_debug_metrics,
         "sibling_test_method_counts": sibling_method_counts(tree.annotations_df),
         "tree_metadata": repr(tree_metadata),
@@ -527,9 +524,7 @@ def main() -> None:
                 feature_axes,
                 axis_debug_metrics,
             )
-        eigvals, eigvecs, blocks, z, feature_axes, axis_debug_metrics = eigensystems[
-            spec.weighting
-        ]
+        eigvals, eigvecs, blocks, z, feature_axes, axis_debug_metrics = eigensystems[spec.weighting]
         rows.append(
             run_lens(
                 data=data,

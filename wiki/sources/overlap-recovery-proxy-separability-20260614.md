@@ -2,10 +2,10 @@
 title: Overlap Recovery Proxy Separability 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_recovery_proxy_separability.py
-  - tests/validation/111_test_overlap_recovery_proxy_separability.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_recovery_proxy_separability.py
+  - tests/validation/calibration/overlap/111_test_overlap_recovery_proxy_separability.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_metric_separability.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_threshold_scan.csv
@@ -56,13 +56,13 @@ observable structural quantities.
 
 ## Evidence
 
-- `tests/validation/111_test_overlap_recovery_proxy_separability.py` verifies
+- `tests/validation/calibration/overlap/111_test_overlap_recovery_proxy_separability.py` verifies
   proxy metric derivation, recovery versus fragment-like metric direction, and
   output writing.
 - Verification passed:
-  `pytest tests/validation/111_test_overlap_recovery_proxy_separability.py -q`
+  `pytest tests/validation/calibration/overlap/111_test_overlap_recovery_proxy_separability.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_recovery_proxy_separability.py tests/validation/111_test_overlap_recovery_proxy_separability.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_recovery_proxy_separability.py tests/validation/calibration/overlap/111_test_overlap_recovery_proxy_separability.py`.
 
 ## Links
 

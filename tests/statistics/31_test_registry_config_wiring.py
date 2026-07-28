@@ -140,22 +140,16 @@ def test_pipeline_supports_current_gate_annotation_contract() -> None:
     tested = out[out["Sibling_Sparse_Evidence_Method"].eq("fixed_coordinate_bh")]
     assert not tested.empty
     assert tested["Sibling_Sparse_Evidence_P_Value"].between(0.0, 1.0).all()
-    active_tested = out[
-        out["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate")
-    ]
+    active_tested = out[out["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate")]
     assert not active_tested.empty
-    assert active_tested["Sibling_Gate_P_Value_Calibration"].str.contains(
-        "empirical_null_inflation"
-    ).all()
-    assert active_tested["Sibling_Gate_P_Value_Role"].eq(
-        "active_traversal_sibling_gate"
-    ).all()
-    assert tested["Sibling_Dense_Evidence_Method"].eq(
-        "fixed_global_chi_square"
-    ).all()
-    assert tested["Sibling_Dense_Evidence_Calibration"].eq(
-        "fixed_subspace_chi_square"
-    ).all()
+    assert (
+        active_tested["Sibling_Gate_P_Value_Calibration"]
+        .str.contains("empirical_null_inflation")
+        .all()
+    )
+    assert active_tested["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate").all()
+    assert tested["Sibling_Dense_Evidence_Method"].eq("fixed_global_chi_square").all()
+    assert tested["Sibling_Dense_Evidence_Calibration"].eq("fixed_subspace_chi_square").all()
 
 
 def test_pipeline_supports_opt_in_fixed_coordinate_sibling_gate() -> None:
@@ -187,12 +181,8 @@ def test_pipeline_supports_opt_in_fixed_coordinate_sibling_gate() -> None:
     )
     assert tested["Sibling_Sparse_Evidence_Method"].eq("fixed_coordinate_bh").all()
     assert tested["Sibling_Gate_P_Value_Calibration"].eq("fixed_subspace_bh").all()
-    assert tested["Sibling_Gate_P_Value_Role"].eq(
-        "active_traversal_sibling_gate"
-    ).all()
-    assert tested["Sibling_Dense_Evidence_Method"].eq(
-        "fixed_global_chi_square"
-    ).all()
+    assert tested["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate").all()
+    assert tested["Sibling_Dense_Evidence_Method"].eq("fixed_global_chi_square").all()
     assert tested["Sibling_Fixed_Block_BH_P_Value"].between(0.0, 1.0).all()
     assert tested["Sibling_Fixed_Global_P_Value"].between(0.0, 1.0).all()
     assert (tested["Sibling_Projection_Dimension"] == "").all() or tested[
@@ -221,12 +211,8 @@ def test_pipeline_supports_opt_in_fixed_global_sibling_gate() -> None:
         tested["Sibling_Dense_Evidence_P_Value"].astype(float),
         tested["Sibling_Divergence_P_Value"].astype(float),
     )
-    assert tested["Sibling_Dense_Evidence_Method"].eq(
-        "fixed_global_chi_square"
-    ).all()
-    assert tested["Sibling_Gate_P_Value_Calibration"].eq(
-        "fixed_subspace_chi_square"
-    ).all()
+    assert tested["Sibling_Dense_Evidence_Method"].eq("fixed_global_chi_square").all()
+    assert tested["Sibling_Gate_P_Value_Calibration"].eq("fixed_subspace_chi_square").all()
     assert tested["Sibling_Degrees_of_Freedom"].gt(0.0).all()
 
 
@@ -418,9 +404,7 @@ def test_fixed_profile_resolves_refined_global_passthrough_candidate_constants()
     assert root_selective_replicates == 99
     assert root_selective_seed == 0
     assert root_selective_alpha == 0.01
-    assert root_selective_scope == (
-        "global_sibling_min_passthrough_descendant_refined"
-    )
+    assert root_selective_scope == ("global_sibling_min_passthrough_descendant_refined")
     assert SIBLING_GATE_PROFILES[profile_id].status == "diagnostic_candidate"
 
 
@@ -443,9 +427,7 @@ def test_fixed_profile_resolves_spectral_transport_passthrough_constants() -> No
         spectral_block_log_tolerance,
         spectral_unmatched_mode_penalty,
     ) = resolve_sibling_gate_profile_config(
-        sibling_gate_profile=(
-            "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"
-        ),
+        sibling_gate_profile=("fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"),
     )
 
     assert profile_id == "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"
@@ -458,9 +440,7 @@ def test_fixed_profile_resolves_spectral_transport_passthrough_constants() -> No
     assert root_selective_replicates == 99
     assert root_selective_seed == 0
     assert root_selective_alpha == 0.01
-    assert root_selective_scope == (
-        "global_sibling_min_passthrough_descendant_refined"
-    )
+    assert root_selective_scope == ("global_sibling_min_passthrough_descendant_refined")
     assert spectral_guard is True
     assert spectral_max_cost == 1.2
     assert spectral_require_mp_blocks is True
@@ -569,9 +549,7 @@ def test_pipeline_profile_avoids_adaptive_sibling_pca(monkeypatch) -> None:
         sibling_gate_profile="fixed_coordinate_guarded_v1",
     )
 
-    assert bundle.metadata.config.sibling_gate_profile_id == (
-        "fixed_coordinate_guarded_v1"
-    )
+    assert bundle.metadata.config.sibling_gate_profile_id == ("fixed_coordinate_guarded_v1")
     assert bundle.metadata.config.sibling_gate_method == "fixed_coordinate_bh"
     assert bundle.metadata.config.sibling_gate_alpha_penalty == 50.0
     assert bundle.metadata.config.root_stability_guard_threshold == 0.24
@@ -824,9 +802,7 @@ def test_selective_permutation_guard_closes_only_passthrough_descendant(
     assert bool(guarded.loc["root", "Sibling_BH_Different"]) is False
     assert bool(guarded.loc["B", "Sibling_BH_Different"]) is False
     assert bool(guarded.loc["B", "Selective_Permutation_Guard_Blocked"]) is True
-    assert guarded.loc["B", "Selective_Permutation_Guard_Scope"] == (
-        "passthrough_descendant"
-    )
+    assert guarded.loc["B", "Selective_Permutation_Guard_Scope"] == ("passthrough_descendant")
 
 
 def test_global_selected_family_guard_closes_passthrough_descendant(
@@ -1315,9 +1291,7 @@ def test_pipeline_selective_root_profile_runs_packaged_guard(monkeypatch) -> Non
         sibling_gate_profile="fixed_coordinate_selective_root_v1",
     )
 
-    assert bundle.metadata.config.sibling_gate_profile_id == (
-        "fixed_coordinate_selective_root_v1"
-    )
+    assert bundle.metadata.config.sibling_gate_profile_id == ("fixed_coordinate_selective_root_v1")
     assert bundle.metadata.config.sibling_gate_method == "fixed_coordinate_bh"
     assert bundle.metadata.config.root_selective_permutation_guard_replicates == 99
     assert bundle.metadata.config.root_selective_permutation_guard_seed == 0
@@ -1374,9 +1348,7 @@ def test_pipeline_selective_traversal_profile_sets_open_internal_scope(
         "fixed_coordinate_selective_traversal_v1"
     )
     assert bundle.metadata.config.root_selective_permutation_guard_replicates == 99
-    assert bundle.metadata.config.root_selective_permutation_guard_scope == (
-        "open_internal"
-    )
+    assert bundle.metadata.config.root_selective_permutation_guard_scope == ("open_internal")
     assert "Selective_Permutation_Guard_Blocked" in bundle.annotated_df.columns
 
 

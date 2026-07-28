@@ -78,9 +78,7 @@ def decompose_invariant_equivariant_space(
     kept_singular_values = singular_values[:n_axes]
     energies = kept_singular_values**2
     total_energy = singular_values.dot(singular_values)
-    energy_fraction = (
-        energies / total_energy if total_energy > 0.0 else np.zeros_like(energies)
-    )
+    energy_fraction = energies / total_energy if total_energy > 0.0 else np.zeros_like(energies)
     return InvariantEquivariantSpace(
         coordinates=coordinates,
         axes=axes,

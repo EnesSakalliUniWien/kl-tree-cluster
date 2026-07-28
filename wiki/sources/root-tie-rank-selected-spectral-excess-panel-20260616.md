@@ -2,10 +2,10 @@
 title: Root Tie Rank Selected Spectral Excess Panel 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_selected_spectral_excess_panel.py
-  - tests/validation/165_test_root_tie_rank_selected_spectral_excess_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_selected_spectral_excess_panel.py
+  - tests/validation/calibration/root/tie_rank/165_test_root_tie_rank_selected_spectral_excess_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_selected_spectral_excess_after_generated_replay
 tags:
   - source

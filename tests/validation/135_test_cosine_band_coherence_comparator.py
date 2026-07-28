@@ -122,9 +122,7 @@ def test_cosine_band_comparator_runs_fixed_bands_and_reports_coherence() -> None
     ok = rows[rows["status"].eq("ok")]
     assert "variation_02_05" in set(rows["block_name"])
     assert not ok.empty
-    assert "diagnostic_only_not_production_calibration" in set(
-        rows["production_status"]
-    )
+    assert "diagnostic_only_not_production_calibration" in set(rows["production_status"])
     assert ok["coherent_cluster_fraction"].max() > 0.0
     assert {"run_id", "cluster_id", "coherent_by_rule"}.issubset(coherence.columns)
     assert {"weighting", "component", "eigenvalue"}.issubset(spectrum.columns)
@@ -142,9 +140,7 @@ def test_cosine_band_comparator_writes_partial_checkpoints(tmp_path) -> None:
         min_prevalence_delta=0.50,
     )
 
-    checkpoint_rows = pd.read_csv(
-        tmp_path / "cosine_band_comparator_rows.partial.csv"
-    )
+    checkpoint_rows = pd.read_csv(tmp_path / "cosine_band_comparator_rows.partial.csv")
     assert checkpoint_rows.shape[0] == rows.shape[0]
     assert (tmp_path / "cosine_band_comparator_cluster_coherence.partial.csv").exists()
     assert (tmp_path / "cosine_band_comparator_spectrum.partial.csv").exists()

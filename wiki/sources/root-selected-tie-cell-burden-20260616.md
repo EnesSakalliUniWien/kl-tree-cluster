@@ -2,10 +2,10 @@
 title: Root Selected Tie Cell Burden 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_tie_cell_burden.py
-  - tests/validation/154_test_root_selected_tie_cell_burden.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_tie_cell_burden.py
+  - tests/validation/calibration/root/selected/154_test_root_selected_tie_cell_burden.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_tie_cell_burden_overlap_case_family
 tags:
   - source

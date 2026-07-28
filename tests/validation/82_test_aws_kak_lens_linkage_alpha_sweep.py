@@ -25,8 +25,7 @@ def _config(root: Path) -> AwsKakLensSweepConfig:
         edge_alphas=(0.001,),
         sibling_alphas=(0.01,),
         lenses=parse_lenses(
-            "raw_kak:tfidf:adaptive_modes_14_30,"
-            "raw_kak:binary:adaptive_modes_10_15"
+            "raw_kak:tfidf:adaptive_modes_14_30,raw_kak:binary:adaptive_modes_10_15"
         ),
         tree_linkage_methods=("average", "complete", "ward"),
         shard_count=3,

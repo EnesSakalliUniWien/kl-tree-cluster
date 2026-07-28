@@ -36,9 +36,7 @@ _THREAD_ENV_VARS = (
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run the fixed regression-gate benchmark suite."
-    )
+    parser = argparse.ArgumentParser(description="Run the fixed regression-gate benchmark suite.")
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -139,7 +137,11 @@ def _print_summary(df_results: pd.DataFrame, methods: list[str]) -> None:
             continue
 
         valid_truth = rows["true_clusters"] > 0
-        exact_k = int((rows.loc[valid_truth, "found_clusters"] == rows.loc[valid_truth, "true_clusters"]).sum())
+        exact_k = int(
+            (
+                rows.loc[valid_truth, "found_clusters"] == rows.loc[valid_truth, "true_clusters"]
+            ).sum()
+        )
         ari = rows["ari"].dropna()
         mean_ari = float(ari.mean()) if not ari.empty else float("nan")
         median_ari = float(ari.median()) if not ari.empty else float("nan")

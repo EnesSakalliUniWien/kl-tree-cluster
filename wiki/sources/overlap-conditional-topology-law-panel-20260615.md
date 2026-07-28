@@ -2,13 +2,13 @@
 title: Overlap Conditional Topology Law Panel 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py
-  - tests/validation/134_test_overlap_conditional_topology_law_panel.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_conditional_topology_law_panel.py
+  - tests/validation/calibration/overlap/134_test_overlap_conditional_topology_law_panel.py
   - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_family_traversal_panel.py
   - benchmarks/shared/runners/method_registry.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_component_summary.csv
@@ -125,13 +125,13 @@ threshold.
 
 ## Evidence
 
-- `tests/validation/134_test_overlap_conditional_topology_law_panel.py`
+- `tests/validation/calibration/overlap/134_test_overlap_conditional_topology_law_panel.py`
   verifies directed incidence, root/leaf handling, topology evidence
   monotonicity, selected-family/context-only non-promotion, missing-feature
   fail-closed behavior, explicit neighborhood-scale support accounting,
   analytical cases, and output writing.
 - Focused verification passed:
-  `pytest tests/validation/134_test_overlap_conditional_topology_law_panel.py -q`.
+  `pytest tests/validation/calibration/overlap/134_test_overlap_conditional_topology_law_panel.py -q`.
 - The topology-neighborhood contract is covered by tests for all-pairs tree
   distance caching, auxiliary parent-node caching, missing-parent-edge status,
   selected-nonnull support exclusion, and cached context ranking.

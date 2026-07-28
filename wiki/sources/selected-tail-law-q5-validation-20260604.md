@@ -2,10 +2,10 @@
 title: Selected Tail Law Q5 Validation 2026-06-04
 type: source
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
-  - tests/validation/68_test_selected_tail_law_q5_validation.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py
+  - tests/validation/calibration/selected/tail/68_test_selected_tail_law_q5_validation.py
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/manifest.json
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_summary.csv
@@ -63,10 +63,10 @@ production external calibration path.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py`
+- `benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py`
   implements the predeclared Q5 models, held-out validation splits, and
   residual-tail exceedance checks.
-- `tests/validation/68_test_selected_tail_law_q5_validation.py` verifies
+- `tests/validation/calibration/selected/tail/68_test_selected_tail_law_q5_validation.py` verifies
   predictor construction, holdout outputs, summary outputs, and file writing.
 - `raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv`
   records per-model validation metrics for replicate, case, feature-family,

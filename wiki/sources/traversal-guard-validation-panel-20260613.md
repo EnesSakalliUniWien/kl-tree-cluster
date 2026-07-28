@@ -2,10 +2,10 @@
 title: Traversal Guard Validation Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/traversal_guard_validation_panel.py
-  - tests/validation/90_test_traversal_guard_validation_panel.py
+  - benchmarks/diagnostics/calibration/traversal/traversal_guard_validation_panel.py
+  - tests/validation/calibration/traversal/90_test_traversal_guard_validation_panel.py
   - benchmarks/diagnostics/math_trace/path_conditioned_barycentric_action.py
   - wiki/analyses/null-edge-sibling-calibration-enhancement-plan.md
 tags:
@@ -39,9 +39,9 @@ thresholds on precomputed traversal rows labeled as `pure_fragment`,
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/traversal_guard_validation_panel.py`
+- `benchmarks/diagnostics/calibration/traversal/traversal_guard_validation_panel.py`
   defines the dataframe API, CLI, row output, summary output, and manifest.
-- `tests/validation/90_test_traversal_guard_validation_panel.py` verifies a
+- `tests/validation/calibration/traversal/90_test_traversal_guard_validation_panel.py` verifies a
   high-precision diagnostic candidate, a low-precision diagnostic-only guard,
   and output writing.
 - `benchmarks/diagnostics/math_trace/path_conditioned_barycentric_action.py`

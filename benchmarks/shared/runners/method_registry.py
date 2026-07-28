@@ -78,36 +78,33 @@ OPTIONAL_GPL_BENCHMARK_CLASS = "optional_gpl"
 DEFAULT_METHOD_GRID = "default_methods"
 GRAPHTOOLS_TREE_STRATEGY_GRID = "graphtools_adaptive_k_tree_strategy"
 
-GRAPHTOOLS_ADAPTIVE_K_TREE_STRATEGY_PARAMS = (
-    benchmark_grid(
-        benchmark_class=OPTIONAL_GPL_BENCHMARK_CLASS,
-        grid_name=GRAPHTOOLS_TREE_STRATEGY_GRID,
-        base_params={
-            **GRAPHTOOLS_ADAPTIVE_K_DIFFUSION_PARAMS,
-            **FIXED_TOPOLOGY_NNLS_BRANCH_TIME_PARAMS,
-        },
-        axes={
-            "tree_linkage_method": (
-                "average",
-                "complete",
-                "weighted",
-                "single",
-                "centroid",
-                "median",
-                "ward",
-            ),
-        },
-    )
-    + benchmark_grid(
-        benchmark_class=OPTIONAL_GPL_BENCHMARK_CLASS,
-        grid_name=GRAPHTOOLS_TREE_STRATEGY_GRID,
-        base_params={
-            **GRAPHTOOLS_ADAPTIVE_K_DIFFUSION_PARAMS,
-            "tree_rooting": "mad",
-            **FIXED_TOPOLOGY_NNLS_BRANCH_TIME_PARAMS,
-        },
-        axes={"tree_builder": ("neighbor_joining",)},
-    )
+GRAPHTOOLS_ADAPTIVE_K_TREE_STRATEGY_PARAMS = benchmark_grid(
+    benchmark_class=OPTIONAL_GPL_BENCHMARK_CLASS,
+    grid_name=GRAPHTOOLS_TREE_STRATEGY_GRID,
+    base_params={
+        **GRAPHTOOLS_ADAPTIVE_K_DIFFUSION_PARAMS,
+        **FIXED_TOPOLOGY_NNLS_BRANCH_TIME_PARAMS,
+    },
+    axes={
+        "tree_linkage_method": (
+            "average",
+            "complete",
+            "weighted",
+            "single",
+            "centroid",
+            "median",
+            "ward",
+        ),
+    },
+) + benchmark_grid(
+    benchmark_class=OPTIONAL_GPL_BENCHMARK_CLASS,
+    grid_name=GRAPHTOOLS_TREE_STRATEGY_GRID,
+    base_params={
+        **GRAPHTOOLS_ADAPTIVE_K_DIFFUSION_PARAMS,
+        "tree_rooting": "mad",
+        **FIXED_TOPOLOGY_NNLS_BRANCH_TIME_PARAMS,
+    },
+    axes={"tree_builder": ("neighbor_joining",)},
 )
 
 

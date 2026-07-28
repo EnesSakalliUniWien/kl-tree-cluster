@@ -338,12 +338,8 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         captured["projection_dimension_from_edge_comparisons"] = (
             projection_dimension_from_edge_comparisons
         )
-        captured["parent_principal_component_projection"] = (
-            parent_principal_component_projection
-        )
-        captured["parent_principal_component_eigenvalues"] = (
-            parent_principal_component_eigenvalues
-        )
+        captured["parent_principal_component_projection"] = parent_principal_component_projection
+        captured["parent_principal_component_eigenvalues"] = parent_principal_component_eigenvalues
         return 1.0, 1.0, 1.0, 0.5
 
     monkeypatch.setattr(

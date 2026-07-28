@@ -29,16 +29,12 @@ def resolve_methods_from_env(
 
     selected = [m.strip() for m in raw.split(",") if m.strip()]
     if not selected:
-        raise ValueError(
-            f"{env_var} is empty. Provide comma-separated method ids or 'all'."
-        )
+        raise ValueError(f"{env_var} is empty. Provide comma-separated method ids or 'all'.")
 
     unknown = [m for m in selected if m not in method_specs]
     if unknown:
         available = ", ".join(sorted(method_specs.keys()))
-        raise ValueError(
-            f"Unknown methods in {env_var}: {unknown}. Available: {available}"
-        )
+        raise ValueError(f"Unknown methods in {env_var}: {unknown}. Available: {available}")
     return selected
 
 
@@ -64,9 +60,7 @@ def resolve_selected_methods_and_param_sets(
         if method_id in params_by_method:
             explicit_params = params_by_method[method_id]
             if not explicit_params:
-                raise ValueError(
-                    f"Method {method_id!r} was given an empty parameter grid."
-                )
+                raise ValueError(f"Method {method_id!r} was given an empty parameter grid.")
             param_sets[method_id] = explicit_params
         else:
             param_sets[method_id] = method_specs[method_id].param_grid

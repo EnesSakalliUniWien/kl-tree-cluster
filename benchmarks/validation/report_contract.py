@@ -98,9 +98,7 @@ def validate_complete_report_context(
                 errors.append("alpha must be in (0, 1) when evidence is complete")
             continue
         if not isinstance(value, expected_type):
-            errors.append(
-                f"{key} must be {expected_type.__name__} when evidence is complete"
-            )
+            errors.append(f"{key} must be {expected_type.__name__} when evidence is complete")
     if report.get("primary_endpoint") != primary_endpoint:
         errors.append(f"primary_endpoint must be {primary_endpoint!r}")
 

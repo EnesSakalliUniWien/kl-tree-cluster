@@ -98,9 +98,7 @@ def statistical_decision_trace_from_gate_path_trace(
                 "edge_bh_p": _finite_min(
                     [series["left_edge_p_value_bh"], series["right_edge_p_value_bh"]]
                 ),
-                "edge_tested": _bool_any(
-                    [series["left_edge_tested"], series["right_edge_tested"]]
-                ),
+                "edge_tested": _bool_any([series["left_edge_tested"], series["right_edge_tested"]]),
                 "edge_rejected": _bool_any(
                     [series["left_edge_significant"], series["right_edge_significant"]]
                 ),

@@ -2,10 +2,10 @@
 title: Selected Neighborhood Measurability Law Diagnostic 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_measurability_law.py
-  - tests/validation/144_test_selected_neighborhood_measurability_law.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_measurability_law.py
+  - tests/validation/calibration/selected/neighborhood/144_test_selected_neighborhood_measurability_law.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_measurability_law_overlap_expanded
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_measurability_law_overlap_expanded_candidates
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_refined_candidate_audit_smoke/measurability_law
@@ -78,9 +78,9 @@ label.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_neighborhood_measurability_law.py`
+- `benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_measurability_law.py`
   implements the evaluator, summary, CLI, and output manifest.
-- `tests/validation/144_test_selected_neighborhood_measurability_law.py`
+- `tests/validation/calibration/selected/neighborhood/144_test_selected_neighborhood_measurability_law.py`
   validates the mathematical and row-level contracts.
 - The two main manifests record full-row and candidate-only expanded overlap
   runs; the candidate manifest now records the joined interpolation and

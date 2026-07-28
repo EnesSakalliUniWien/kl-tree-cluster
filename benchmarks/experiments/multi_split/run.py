@@ -127,9 +127,7 @@ def run_multi_split_benchmark(
         for rep in range(n_replicates):
             current += 1
             if verbose:
-                print(
-                    f"[{current}/{total}] Groups={n_groups}, Replicate {rep + 1}/{n_replicates}"
-                )
+                print(f"[{current}/{total}] Groups={n_groups}, Replicate {rep + 1}/{n_replicates}")
 
             rng = np.random.RandomState(base_seed + rep * 1000 + n_groups * 100)
 
@@ -245,9 +243,7 @@ def plot_multi_split_results(df: pd.DataFrame) -> plt.Figure:
     )
     ax.set_xlabel("True Number of Groups", fontsize=12)
     ax.set_ylabel("Score", fontsize=12)
-    ax.set_title(
-        "Clustering Performance vs Number of Groups", fontsize=14, weight="bold"
-    )
+    ax.set_title("Clustering Performance vs Number of Groups", fontsize=14, weight="bold")
     ax.legend(frameon=False)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(-0.05, 1.05)
@@ -319,9 +315,7 @@ def plot_multi_split_results(df: pd.DataFrame) -> plt.Figure:
         labels.append(str(k))
 
     # Add diagonal reference
-    ax.plot(
-        range(len(n_groups_list)), n_groups_list, "r--", linewidth=2, label="True K"
-    )
+    ax.plot(range(len(n_groups_list)), n_groups_list, "r--", linewidth=2, label="True K")
     ax.set_xticks(positions)
     ax.set_xticklabels(labels)
     ax.set_xlabel("True Number of Groups", fontsize=12)
@@ -353,9 +347,7 @@ def plot_multi_split_heatmap(
 
     # ARI heatmap
     ax = axes[0]
-    im = ax.imshow(
-        pivot_ari.values, cmap="viridis", aspect="auto", vmin=0, vmax=1, origin="lower"
-    )
+    im = ax.imshow(pivot_ari.values, cmap="viridis", aspect="auto", vmin=0, vmax=1, origin="lower")
     ax.set_xticks(range(len(pivot_ari.columns)))
     ax.set_xticklabels([f"{x:.2f}" for x in pivot_ari.columns], rotation=45, ha="right")
     ax.set_yticks(range(len(pivot_ari.index)))
@@ -392,9 +384,7 @@ def plot_multi_split_heatmap(
         origin="lower",
     )
     ax.set_xticks(range(len(pivot_correct.columns)))
-    ax.set_xticklabels(
-        [f"{x:.2f}" for x in pivot_correct.columns], rotation=45, ha="right"
-    )
+    ax.set_xticklabels([f"{x:.2f}" for x in pivot_correct.columns], rotation=45, ha="right")
     ax.set_yticks(range(len(pivot_correct.index)))
     ax.set_yticklabels(pivot_correct.index)
     ax.set_xlabel("Between-Group Branch Length", fontsize=12)

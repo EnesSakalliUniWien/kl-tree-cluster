@@ -251,11 +251,7 @@ def generate_phylogenetic_data(
         within_taxon_branch_length=within_taxon_branch_length,
     )
 
-    leaf_sequences = {
-        leaf.id: leaf.sequence.copy()
-        for leaf in leaves
-        if leaf.sequence is not None
-    }
+    leaf_sequences = {leaf.id: leaf.sequence.copy() for leaf in leaves if leaf.sequence is not None}
 
     metadata = {
         "n_taxa": n_taxa,

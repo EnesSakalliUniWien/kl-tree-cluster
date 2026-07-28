@@ -40,8 +40,7 @@ LEVEL_MATRIX_QUALITY = AnalysisLevel(
     is_canonical=False,
     interpretation="Feature-matrix diagnostics before any tree or TBS gate is run.",
     inconsistency=(
-        "Input-quality level only: no tree assignments, GO-IC ranking, or "
-        "reader-facing tree pages."
+        "Input-quality level only: no tree assignments, GO-IC ranking, or reader-facing tree pages."
     ),
 )
 LEVEL_PIPELINE_ORCHESTRATION = AnalysisLevel(
@@ -231,7 +230,9 @@ def collect_features(path: Path) -> dict[str, object]:
     axis_term_table_count = sum(
         1
         for file in files
-        if file.suffix.lower() == ".csv" and "axis" in file.name.lower() and "term" in file.name.lower()
+        if file.suffix.lower() == ".csv"
+        and "axis" in file.name.lower()
+        and "term" in file.name.lower()
     )
     has_method_split_pdfs = any(
         "_by_method" in rel_file and rel_file.endswith(".pdf") for rel_file in rel_files

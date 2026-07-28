@@ -72,8 +72,7 @@ def case_metadata(
     )
     if has_precomputed_distance and not requires_precomputed_tbs_distance:
         raise ValueError(
-            "Precomputed TBS tree distances require "
-            "requires_precomputed_tbs_distance=True."
+            "Precomputed TBS tree distances require requires_precomputed_tbs_distance=True."
         )
     if requires_precomputed_tbs_distance and precomputed_distance_condensed is None:
         raise ValueError(

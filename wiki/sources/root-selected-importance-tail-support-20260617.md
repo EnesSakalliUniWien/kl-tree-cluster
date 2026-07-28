@@ -2,15 +2,15 @@
 title: Root Selected Importance Tail Support 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_null_proposal_frontier.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_generated_neighborhood_replay.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_conditioned_coherent_topology_join.py
-  - benchmarks/diagnostics/calibration/root_selected_spectral_tail_law_panel.py
-  - tests/validation/168_test_root_tie_rank_conditioned_coherent_topology_join.py
-  - tests/validation/158_test_root_tie_rank_null_proposal_frontier.py
-  - tests/validation/169_test_root_selected_spectral_tail_law_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_null_proposal_frontier.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_generated_neighborhood_replay.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_conditioned_coherent_topology_join.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_spectral_tail_law_panel.py
+  - tests/validation/calibration/root/tie_rank/168_test_root_tie_rank_conditioned_coherent_topology_join.py
+  - tests/validation/calibration/root/tie_rank/158_test_root_tie_rank_null_proposal_frontier.py
+  - tests/validation/calibration/root/selected/169_test_root_selected_spectral_tail_law_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_frontier_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_replay_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_smoke

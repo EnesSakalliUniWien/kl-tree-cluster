@@ -107,7 +107,9 @@ def _make_synthetic_results() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _write_synthetic_audit(output_dir: Path, *, case_num: int, method_slug: str, accepted: bool) -> None:
+def _write_synthetic_audit(
+    output_dir: Path, *, case_num: int, method_slug: str, accepted: bool
+) -> None:
     audit_dir = output_dir / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
     sibling_p = 0.002 if accepted else 0.35
@@ -355,7 +357,9 @@ def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Pat
     assert artifacts.correlation_summary_csv.exists()
     assert artifacts.pairwise_method_summary_csv.exists()
     assert artifacts.regression_ari_csv is not None and artifacts.regression_ari_csv.exists()
-    assert artifacts.regression_exact_k_csv is not None and artifacts.regression_exact_k_csv.exists()
+    assert (
+        artifacts.regression_exact_k_csv is not None and artifacts.regression_exact_k_csv.exists()
+    )
     assert artifacts.plots_pdf is not None and artifacts.plots_pdf.exists()
 
     augmented_rows = pd.read_csv(artifacts.augmented_rows_csv)
@@ -365,9 +369,10 @@ def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Pat
 
     method_summary = pd.read_csv(artifacts.method_summary_csv)
     assert list(method_summary["method"][:2]) == ["kmeans", "tbs"]
-    assert method_summary.loc[method_summary["method"] == "kmeans", "mean_ari"].iloc[0] > method_summary.loc[
-        method_summary["method"] == "tbs", "mean_ari"
-    ].iloc[0]
+    assert (
+        method_summary.loc[method_summary["method"] == "kmeans", "mean_ari"].iloc[0]
+        > method_summary.loc[method_summary["method"] == "tbs", "mean_ari"].iloc[0]
+    )
 
     section_summary = pd.read_csv(artifacts.section_summary_csv)
     assert {"gaussian", "binary", "categorical", "overlapping", "phylogenetic", "sbm"}.issubset(
@@ -523,7 +528,9 @@ def test_attach_audit_factors_rejects_missing_sibling_decision_column(tmp_path: 
     assert augmented_rows.loc[0, "audit_available"] == 0.0
 
 
-def test_analyze_benchmark_relationships_handles_missing_branch_length_column(tmp_path: Path) -> None:
+def test_analyze_benchmark_relationships_handles_missing_branch_length_column(
+    tmp_path: Path,
+) -> None:
     audit_dir = tmp_path / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(

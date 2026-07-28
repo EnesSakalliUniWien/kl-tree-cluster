@@ -2,9 +2,9 @@
 title: Julia Selected Family Run 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/run_selected_family_matrix.py
+  - benchmarks/diagnostics/calibration/selected/family/run_selected_family_matrix.py
   - tree_break_selection/plot/multiscale_umap.py
   - raw/assets/benchmark-results/julia_selected_family_20260614/manifest.json
   - raw/assets/benchmark-results/julia_selected_family_20260614/cluster_assignments.csv

@@ -2,10 +2,10 @@
 title: Overlap Branch-Incidence Junction Panel 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_branch_incidence_junction_panel.py
-  - tests/validation/127_test_overlap_branch_incidence_junction_panel.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_branch_incidence_junction_panel.py
+  - tests/validation/calibration/overlap/127_test_overlap_branch_incidence_junction_panel.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/overlap_branch_incidence_junction_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/overlap_branch_incidence_junction_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/manifest.json
@@ -80,12 +80,12 @@ The current focused overlap failures live in the second mode.
 
 ## Evidence
 
-- `tests/validation/127_test_overlap_branch_incidence_junction_panel.py`
+- `tests/validation/calibration/overlap/127_test_overlap_branch_incidence_junction_panel.py`
   verifies the branch-incidence geometry classifier and output writing.
 - Verification passed:
-  `pytest tests/validation/127_test_overlap_branch_incidence_junction_panel.py -q`
+  `pytest tests/validation/calibration/overlap/127_test_overlap_branch_incidence_junction_panel.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_branch_incidence_junction_panel.py tests/validation/127_test_overlap_branch_incidence_junction_panel.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_branch_incidence_junction_panel.py tests/validation/calibration/overlap/127_test_overlap_branch_incidence_junction_panel.py`.
 
 ## Links
 

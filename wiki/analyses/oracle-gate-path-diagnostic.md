@@ -2,15 +2,15 @@
 title: Oracle Gate-Path Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
   - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/gate_path_trace.py
-  - benchmarks/diagnostics/calibration/sibling_inflation_diagnostic.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_inflation_diagnostic.py
   - benchmarks/shared/tbs_tree_context.py
   - benchmarks/diagnostics/oracle/run_oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/run_gate_path_trace.py
-  - benchmarks/diagnostics/calibration/run_sibling_inflation_diagnostic.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/run_sibling_inflation_diagnostic.py
   - raw/assets/benchmark-results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv
   - raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace.csv
   - raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv
@@ -24,7 +24,7 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
-  - tree_break_selection/config.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - tree_break_selection/hierarchy_analysis/tree_decomposition.py
 tags:
@@ -476,7 +476,7 @@ production calibration model.
 
 The next mathematical question was whether the huge inflation factors could be
 explained by the projected-Wald reference law itself. The diagnostic
-`benchmarks/diagnostics/calibration/run_gaussian_sibling_null_calibration.py` isolates the fixed
+`benchmarks/diagnostics/calibration/sibling/nulls/run_gaussian_sibling_null_calibration.py` isolates the fixed
 orthonormal-subspace null:
 
 \[
@@ -654,21 +654,21 @@ partition.
 - `benchmarks/diagnostics/oracle/gate_path_trace.py` constructs the node-level comparison
   between actual traversal, oracle boundaries, edge gates, sibling gates,
   inflation, and pass-through status.
-- `benchmarks/diagnostics/calibration/sibling_inflation_diagnostic.py` constructs the
+- `benchmarks/diagnostics/calibration/sibling/nulls/sibling_inflation_diagnostic.py` constructs the
   leave-one-out, strict-null, and blocked-or-null-like inflation variants and
   records explicit calibration-support statuses.
-- `benchmarks/diagnostics/calibration/gaussian_sibling_null_calibration.py` defines the
+- `benchmarks/diagnostics/calibration/sibling/nulls/gaussian_sibling_null_calibration.py` defines the
   fixed-subspace Gaussian sibling-null diagnostic contract and keeps the
   non-continuous case labeled as a standardized-\(z\) proxy rather than a
   feature-family null.
-- `benchmarks/diagnostics/calibration/run_gaussian_sibling_null_calibration.py` runs that external
+- `benchmarks/diagnostics/calibration/sibling/nulls/run_gaussian_sibling_null_calibration.py` runs that external
   diagnostic on selected sibling blocker contexts.
-- `benchmarks/diagnostics/calibration/selection_conditioned_sibling_null.py` defines the
+- `benchmarks/diagnostics/calibration/sibling/nulls/selection_conditioned_sibling_null.py` defines the
   level-1 local edge-selection null diagnostic for sibling blocker contexts.
-- `benchmarks/diagnostics/calibration/run_selection_conditioned_sibling_null.py` runs the fixed-tree,
+- `benchmarks/diagnostics/calibration/sibling/nulls/run_selection_conditioned_sibling_null.py` runs the fixed-tree,
   fixed-projection local edge-selection diagnostic on selected sibling
   blockers.
-- `benchmarks/diagnostics/calibration/run_tree_bh_selection_conditioned_sibling_null.py` runs the
+- `benchmarks/diagnostics/calibration/sibling/nulls/run_tree_bh_selection_conditioned_sibling_null.py` runs the
   fixed-tree root Tree-BH edge-path diagnostic without fitting unsupported
   sibling calibration.
 - `benchmarks/shared/tbs_tree_context.py` centralizes the benchmark TBS tree
@@ -714,8 +714,8 @@ partition.
 - `tree_break_selection/hierarchy_analysis/statistics/alpha_contract.py`
   records the canonical statistical thresholds: `DEFAULT_EDGE_ALPHA = 0.001`
   and `DEFAULT_SIBLING_ALPHA = 0.01`.
-- `tree_break_selection/config.py` records the runtime traversal option
-  `PASSTHROUGH = True`.
+- `tree_break_selection/hierarchy_analysis/tree_decomposition.py` exposes
+  pass-through directly as a method-boundary option, defaulting to `True`.
 - `tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
   implements the split and pass-through gate logic described here.
 

@@ -2,10 +2,10 @@
 title: Overlap Context-Negative Bayesian Topology Law 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_law.py
-  - tests/validation/132_test_overlap_context_negative_bayesian_topology_law.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_context_negative_bayesian_topology_law.py
+  - tests/validation/calibration/overlap/132_test_overlap_context_negative_bayesian_topology_law.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_component_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_summary.csv
@@ -62,14 +62,14 @@ negative context.
 
 ## Evidence
 
-- `tests/validation/132_test_overlap_context_negative_bayesian_topology_law.py`
+- `tests/validation/calibration/overlap/132_test_overlap_context_negative_bayesian_topology_law.py`
   verifies that high topology values increase likelihood, a balanced
   income/outcome truth row ranks first in a synthetic case, missing components
   contribute neutral evidence, and the runner writes all outputs.
 - Verification passed:
-  `pytest tests/validation/132_test_overlap_context_negative_bayesian_topology_law.py -q`
+  `pytest tests/validation/calibration/overlap/132_test_overlap_context_negative_bayesian_topology_law.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_law.py tests/validation/132_test_overlap_context_negative_bayesian_topology_law.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_bayesian_topology_law.py tests/validation/calibration/overlap/132_test_overlap_context_negative_bayesian_topology_law.py`.
 
 ## Links
 

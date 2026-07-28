@@ -94,9 +94,7 @@ def build_sample_cluster_assignments(
     rows: dict[str, dict[str, object]] = {}
     for cluster_identifier, cluster_metadata in raw_cluster_assignments.items():
         if not isinstance(cluster_metadata, dict):
-            raise TypeError(
-                f"Cluster {cluster_identifier!r} metadata must be a dictionary."
-            )
+            raise TypeError(f"Cluster {cluster_identifier!r} metadata must be a dictionary.")
         missing_fields = {"root_node", "leaves", "size"} - set(cluster_metadata)
         if missing_fields:
             missing = ", ".join(sorted(missing_fields))
@@ -116,9 +114,7 @@ def build_sample_cluster_assignments(
             )
         for sample_identifier in leaves:
             if sample_identifier in rows:
-                raise ValueError(
-                    f"Sample {sample_identifier!r} appears in multiple clusters."
-                )
+                raise ValueError(f"Sample {sample_identifier!r} appears in multiple clusters.")
             rows[sample_identifier] = {
                 "cluster_id": cluster_identifier,
                 "cluster_root": root,

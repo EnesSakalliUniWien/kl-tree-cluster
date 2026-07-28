@@ -72,9 +72,7 @@ class GateAnnotationConfigMetadata:
     spectral_transport_passthrough_guard: bool = False
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST
     spectral_transport_require_mp_blocks: bool = True
-    spectral_transport_block_log_tolerance: float = (
-        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-    )
+    spectral_transport_block_log_tolerance: float = DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
     spectral_transport_unmatched_mode_penalty: float = (
         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
     )

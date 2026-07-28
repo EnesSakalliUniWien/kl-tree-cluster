@@ -232,9 +232,7 @@ def test_child_parent_categorical_contrast_covariance_uses_parent_multinomial_bl
 
 
 def test_mixed_feature_space_contrast_covariance_combines_block_charts() -> None:
-    feature_space = infer_feature_space_from_columns(
-        ("B0", "F0_c0", "F0_c1", "F0_c2", "B1")
-    )
+    feature_space = infer_feature_space_from_columns(("B0", "F0_c0", "F0_c1", "F0_c2", "B1"))
     left = np.array([0.2, 0.1, 0.3, 0.6, 0.8], dtype=np.float64)
     right = np.array([0.5, 0.2, 0.2, 0.6, 0.4], dtype=np.float64)
 
@@ -534,13 +532,11 @@ def test_grouped_categorical_null_whitening_matches_block_formula() -> None:
         contrast_covariance_module,
         "_build_grouped_categorical_null_whitened_tangent_matrix",
     )
-    grouped = (
-        contrast_covariance_module._build_grouped_categorical_null_whitened_tangent_matrix(
-            observations,
-            null_distribution,
-            feature_space,
-            ridge=1e-12,
-        )
+    grouped = contrast_covariance_module._build_grouped_categorical_null_whitened_tangent_matrix(
+        observations,
+        null_distribution,
+        feature_space,
+        ridge=1e-12,
     )
 
     expected = np.column_stack(
@@ -587,13 +583,11 @@ def test_grouped_categorical_null_whitening_supports_mixed_category_counts() -> 
         contrast_covariance_module,
         "_build_grouped_categorical_null_whitened_tangent_matrix",
     )
-    grouped = (
-        contrast_covariance_module._build_grouped_categorical_null_whitened_tangent_matrix(
-            observations,
-            null_distribution,
-            feature_space,
-            ridge=1e-12,
-        )
+    grouped = contrast_covariance_module._build_grouped_categorical_null_whitened_tangent_matrix(
+        observations,
+        null_distribution,
+        feature_space,
+        ridge=1e-12,
     )
 
     expected = np.column_stack(

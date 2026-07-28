@@ -37,9 +37,7 @@ def open_pdf_pages(
     from matplotlib.backends.backend_pdf import PdfPages
 
     if output_pdf is None:
-        output_pdf = resolve_pdf_output_path(
-            None, plots_root=plots_root, started_at=started_at
-        )
+        output_pdf = resolve_pdf_output_path(None, plots_root=plots_root, started_at=started_at)
 
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
     return output_pdf, PdfPages(output_pdf)

@@ -88,7 +88,5 @@ def test_pipeline_exposes_active_sibling_gate_calibration() -> None:
 
     active = out[out["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate")]
     assert not active.empty
-    assert active["Sibling_Gate_P_Value_Calibration"].eq(
-        "empirical_null_inflation"
-    ).all()
+    assert active["Sibling_Gate_P_Value_Calibration"].eq("empirical_null_inflation").all()
     assert active["Sibling_Divergence_P_Value"].between(0.0, 1.0).all()

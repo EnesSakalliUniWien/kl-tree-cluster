@@ -166,9 +166,9 @@ def _resolve_contrast_inputs(
 
     if comparison == "sibling":
         variance_scale = _sibling_variance_scale(first_sample_size, second_sample_size)
-        covariance_distribution = (
-            first_sample_size * first + second_sample_size * second
-        ) / (first_sample_size + second_sample_size)
+        covariance_distribution = (first_sample_size * first + second_sample_size * second) / (
+            first_sample_size + second_sample_size
+        )
     elif comparison == "child_parent":
         variance_scale = _child_parent_variance_scale(first_sample_size, second_sample_size)
         covariance_distribution = second
@@ -359,12 +359,9 @@ def _compute_vectorized_whitened_wald_contrast(
     if _uses_grouped_categorical_null_whitening(resolved.feature_space):
         return _build_grouped_categorical_whitened_wald_contrast(resolved)
 
-    if (
-        resolved.feature_space.family_label == "continuous"
-        and all(
-            resolved.continuous_covariance_by_block[block.name].ndim == 1
-            for block in resolved.feature_space.continuous_blocks
-        )
+    if resolved.feature_space.family_label == "continuous" and all(
+        resolved.continuous_covariance_by_block[block.name].ndim == 1
+        for block in resolved.feature_space.continuous_blocks
     ):
         return _build_diagonal_continuous_whitened_wald_contrast(resolved)
 
@@ -531,9 +528,7 @@ def _build_grouped_categorical_null_whitened_tangent_matrix(
 ) -> NDArray[np.float64]:
     """Vectorize the exact simplex block whitening map by category count."""
     if not _uses_grouped_categorical_null_whitening(feature_space):
-        raise ValueError(
-            "Grouped categorical whitening requires a pure categorical feature space."
-        )
+        raise ValueError("Grouped categorical whitening requires a pure categorical feature space.")
 
     output = np.empty(
         (distributions.shape[0], feature_space.contrast_dimension),
@@ -640,9 +635,7 @@ def _categorical_blocks_by_category_count(
             raise ValueError(
                 "Categorical block grouping requires a pure categorical feature space."
             )
-        blocks_by_category_count.setdefault(block.raw_dimension, []).append(
-            (block_index, block)
-        )
+        blocks_by_category_count.setdefault(block.raw_dimension, []).append((block_index, block))
     return blocks_by_category_count
 
 
@@ -713,9 +706,7 @@ def _validate_continuous_covariance_by_block(
             )
         return {}
     if continuous_covariance_by_block is None:
-        raise ValueError(
-            "Continuous feature blocks require continuous_covariance_by_block."
-        )
+        raise ValueError("Continuous feature blocks require continuous_covariance_by_block.")
 
     expected_block_names = {block.name for block in continuous_blocks}
     actual_block_names = set(continuous_covariance_by_block)
@@ -748,20 +739,16 @@ def _validate_continuous_covariance_by_block(
         if covariance.ndim == 1:
             if float(np.min(covariance)) < -1e-10:
                 raise ValueError(
-                    f"Continuous diagonal covariance block {block.name!r} must be "
-                    "non-negative."
+                    f"Continuous diagonal covariance block {block.name!r} must be non-negative."
                 )
             covariance_blocks[block.name] = covariance
             continue
         if not np.allclose(covariance, covariance.T, atol=1e-10, rtol=1e-8):
-            raise ValueError(
-                f"Continuous covariance block {block.name!r} must be symmetric."
-            )
+            raise ValueError(f"Continuous covariance block {block.name!r} must be symmetric.")
         eigenvalues = np.linalg.eigvalsh(covariance)
         if float(np.min(eigenvalues)) < -1e-10:
             raise ValueError(
-                f"Continuous covariance block {block.name!r} must be positive "
-                "semidefinite."
+                f"Continuous covariance block {block.name!r} must be positive semidefinite."
             )
         covariance_blocks[block.name] = covariance
     return covariance_blocks
@@ -799,9 +786,7 @@ def _tree_time_variance_multiplier(
         return 1.0
     tree_time_value = float(tree_time)
     if not np.isfinite(tree_time_value) or tree_time_value < 0.0:
-        raise ValueError(
-            f"tree_time must be a finite non-negative value; got {tree_time!r}."
-        )
+        raise ValueError(f"tree_time must be a finite non-negative value; got {tree_time!r}.")
     if tree_time_value == 0.0:
         return 1.0
     if tree_time_normalizer is None:
@@ -880,8 +865,7 @@ def _block_contrast_covariance(
         reduced_second = block_second[:-1]
         reduced_probability = block_covariance_distribution[:-1]
         covariance = (
-            np.diag(reduced_probability)
-            - np.outer(reduced_probability, reduced_probability)
+            np.diag(reduced_probability) - np.outer(reduced_probability, reduced_probability)
         ) * variance_scale + ridge * np.eye(block.contrast_dimension, dtype=np.float64)
         return (
             (reduced_first - reduced_second).astype(np.float64, copy=False),

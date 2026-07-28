@@ -2,10 +2,10 @@
 title: Root Tie Rank Calibration Feasibility 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_calibration_feasibility.py
-  - tests/validation/156_test_root_tie_rank_calibration_feasibility.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_calibration_feasibility.py
+  - tests/validation/calibration/root/tie_rank/156_test_root_tie_rank_calibration_feasibility.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family
 tags:
   - source

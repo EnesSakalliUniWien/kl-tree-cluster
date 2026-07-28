@@ -57,7 +57,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--experiment-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--dataset-label", default=None)
-    parser.add_argument("--top-subspaces", type=int, default=0, help="0 means all completed subspaces.")
+    parser.add_argument(
+        "--top-subspaces", type=int, default=0, help="0 means all completed subspaces."
+    )
     parser.add_argument("--top-clusters-per-subspace", type=int, default=8)
     parser.add_argument("--genes-per-cluster", type=int, default=8)
     parser.add_argument("--terms-per-cluster", type=int, default=4)
@@ -84,7 +86,9 @@ def subspace_dir_name(row: pd.Series) -> str:
         prefix = f"failed{block_id:02d}"
     else:
         prefix = "rankNA"
-    return f"{prefix}_{safe_name(row.get('weighting', ''))}_{safe_name(row.get('block_name', ''))}".strip("_")
+    return f"{prefix}_{safe_name(row.get('weighting', ''))}_{safe_name(row.get('block_name', ''))}".strip(
+        "_"
+    )
 
 
 def attach_organized_plot_paths(ranking: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
@@ -105,7 +109,9 @@ def attach_organized_plot_paths(ranking: pd.DataFrame, output_dir: Path) -> pd.D
         full_space_path = subspace_dir / "full_space_embedding_clusters.png"
         full_space_paths.append(str(full_space_path) if full_space_path.exists() else "")
         generated_subspace_path = subspace_dir / "subspace_embedding_clusters.png"
-        subspace_paths.append(str(generated_subspace_path) if generated_subspace_path.exists() else "")
+        subspace_paths.append(
+            str(generated_subspace_path) if generated_subspace_path.exists() else ""
+        )
     ranking["radial_tree_clusters_png"] = radial_paths
     ranking["full_space_embedding_clusters_png"] = full_space_paths
     ranking["organized_subspace_embedding_clusters_png"] = subspace_paths
@@ -139,7 +145,9 @@ def attach_roster_status(ranking: pd.DataFrame, output_dir: Path) -> pd.DataFram
         errors="ignore",
     ).merge(status[keep], on="run_id", how="left")
     if "subspace_embedding_clusters_png" in merged.columns:
-        merged["organized_subspace_embedding_clusters_png"] = merged["subspace_embedding_clusters_png"].fillna("")
+        merged["organized_subspace_embedding_clusters_png"] = merged[
+            "subspace_embedding_clusters_png"
+        ].fillna("")
     return merged
 
 
@@ -190,7 +198,9 @@ def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(path)
     frame = pd.read_csv(path)
-    rank_col = "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
+    rank_col = (
+        "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
+    )
     frame["_rank"] = pd.to_numeric(frame[rank_col], errors="coerce")
     if "run_id" not in frame.columns:
         if "method_run_id" in frame.columns:
@@ -202,7 +212,9 @@ def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
                 + "__"
                 + frame["block_name"].astype(str)
             )
-    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(drop=True)
+    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(
+        drop=True
+    )
 
 
 def local_top_terms_for_cluster(
@@ -256,12 +268,16 @@ def representative_genes_for_cluster(
     )
 
 
-def gene_annotation_blurbs(data: pd.DataFrame, genes: Iterable[str], term_columns: list[str]) -> list[str]:
+def gene_annotation_blurbs(
+    data: pd.DataFrame, genes: Iterable[str], term_columns: list[str]
+) -> list[str]:
     blurbs: list[str] = []
     for gene in genes:
         active = [col for col in term_columns if int(data.loc[gene, col]) == 1]
         if not active:
-            active = data.loc[gene].sort_values(ascending=False).loc[lambda s: s > 0].index[:3].tolist()
+            active = (
+                data.loc[gene].sort_values(ascending=False).loc[lambda s: s > 0].index[:3].tolist()
+            )
         terms = [parse_go_term(col)[0] for col in active[:3]]
         blurbs.append(f"{gene}: " + "; ".join(terms))
     return blurbs
@@ -486,7 +502,9 @@ def build_cluster_annotations(
                     representative_gene_proteins=[],
                     local_top_terms=local_terms["go_term"].astype(str).tolist(),
                     local_top_go_ids=local_terms["go_id"].astype(str).tolist(),
-                    representative_gene_annotations=gene_annotation_blurbs(data, genes, top_columns),
+                    representative_gene_annotations=gene_annotation_blurbs(
+                        data, genes, top_columns
+                    ),
                 )
             )
     return annotations
@@ -532,7 +550,9 @@ def load_cluster_annotations_from_roster(
     frame = pd.read_csv(roster_path)
     if frame.empty:
         return []
-    frame["_coherent_sort"] = frame.get("coherent_by_rule", False).astype(str).str.lower().eq("true")
+    frame["_coherent_sort"] = (
+        frame.get("coherent_by_rule", False).astype(str).str.lower().eq("true")
+    )
     frame["_delta_sort"] = pd.to_numeric(frame.get("top_term_prevalence_delta"), errors="coerce")
     frame["_size_sort"] = pd.to_numeric(frame.get("cluster_size"), errors="coerce")
     frame = frame.sort_values(
@@ -546,7 +566,9 @@ def load_cluster_annotations_from_roster(
         annotations.append(
             ClusterAnnotation(
                 run_id=str(row.get("run_id", "")),
-                display_rank=int(float(row.get("display_rank", row.get("specificity_aware_rank", -1))))
+                display_rank=int(
+                    float(row.get("display_rank", row.get("specificity_aware_rank", -1)))
+                )
                 if pd.notna(row.get("display_rank", row.get("specificity_aware_rank", np.nan)))
                 else -1,
                 weighting=str(row.get("weighting", "")),
@@ -558,19 +580,27 @@ def load_cluster_annotations_from_roster(
                 n_significant_terms_q05=to_int(row.get("n_significant_terms_q05", 0)),
                 min_q_value=to_float(row.get("min_q_value", math.nan)),
                 top_term=str(row.get("top_term", "")) if pd.notna(row.get("top_term", "")) else "",
-                top_go_id=str(row.get("top_go_id", "")) if pd.notna(row.get("top_go_id", "")) else "",
+                top_go_id=str(row.get("top_go_id", ""))
+                if pd.notna(row.get("top_go_id", ""))
+                else "",
                 top_term_prevalence_delta=to_float(row.get("top_term_prevalence_delta", math.nan)),
                 representative_genes=split_semicolon(row.get("representative_genes", "")),
-                representative_gene_proteins=split_semicolon(row.get("representative_gene_proteins", "")),
+                representative_gene_proteins=split_semicolon(
+                    row.get("representative_gene_proteins", "")
+                ),
                 local_top_terms=split_semicolon(row.get("local_top_terms", "")),
                 local_top_go_ids=split_semicolon(row.get("local_top_go_ids", "")),
-                representative_gene_annotations=split_annotations(row.get("representative_gene_annotations", "")),
+                representative_gene_annotations=split_annotations(
+                    row.get("representative_gene_annotations", "")
+                ),
             )
         )
     return annotations
 
 
-def axis_go_ids(ranking: pd.DataFrame, *, experiment_dir: Path, per_subspace: int = 12) -> list[str]:
+def axis_go_ids(
+    ranking: pd.DataFrame, *, experiment_dir: Path, per_subspace: int = 12
+) -> list[str]:
     ids: list[str] = []
     for row in ranking.itertuples(index=False):
         path = resolve_path(getattr(row, "axis_top_terms", ""), experiment_dir)
@@ -579,7 +609,9 @@ def axis_go_ids(ranking: pd.DataFrame, *, experiment_dir: Path, per_subspace: in
         frame = pd.read_csv(path)
         if "selection" in frame.columns:
             frame = frame[frame["selection"].eq("top_absolute")]
-        for go_id in frame.sort_values("abs_loading", ascending=False).get("go_id", []).head(per_subspace):
+        for go_id in (
+            frame.sort_values("abs_loading", ascending=False).get("go_id", []).head(per_subspace)
+        ):
             if isinstance(go_id, str) and go_id.startswith("GO:"):
                 ids.append(go_id)
     return ids
@@ -614,10 +646,14 @@ def write_csv_outputs(
                 "representative_gene_proteins": ";".join(proteins),
                 "local_top_terms": ";".join(annotation.local_top_terms),
                 "local_top_go_ids": ";".join(annotation.local_top_go_ids),
-                "representative_gene_annotations": " | ".join(annotation.representative_gene_annotations),
+                "representative_gene_annotations": " | ".join(
+                    annotation.representative_gene_annotations
+                ),
             }
         )
-    pd.DataFrame(rows).to_csv(output_dir / "subspace_cluster_gene_annotation_summary.csv", index=False)
+    pd.DataFrame(rows).to_csv(
+        output_dir / "subspace_cluster_gene_annotation_summary.csv", index=False
+    )
     quickgo_rows = [
         {"go_id": go_id, **record} for go_id, record in sorted(cache.get("quickgo", {}).items())
     ]
@@ -625,7 +661,9 @@ def write_csv_outputs(
     uniprot_rows = [
         {"gene": gene, **record} for gene, record in sorted(cache.get("uniprot", {}).items())
     ]
-    pd.DataFrame(uniprot_rows).to_csv(output_dir / "uniprot_representative_gene_interpretations.csv", index=False)
+    pd.DataFrame(uniprot_rows).to_csv(
+        output_dir / "uniprot_representative_gene_interpretations.csv", index=False
+    )
 
 
 def draw_subspace_plot_page(
@@ -720,7 +758,8 @@ def draw_subspace_annotation_page(
             f"C{ann.cluster_id} n={ann.cluster_size} coherent={ann.coherent_by_rule} delta={ann.top_term_prevalence_delta:.3f}",
             f"Top term: {truncate(top_term_label, 145)}",
             "Genes: " + "; ".join(truncate(label, 42) for label in top_gene_labels),
-            "Gene GO examples: " + " | ".join(truncate(text, 52) for text in ann.representative_gene_annotations[:3]),
+            "Gene GO examples: "
+            + " | ".join(truncate(text, 52) for text in ann.representative_gene_annotations[:3]),
         ]
         cluster_blocks.append("\n".join(block))
     ax_text.axis("off")

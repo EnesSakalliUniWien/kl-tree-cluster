@@ -2,10 +2,10 @@
 title: Data-Independent Sibling Gate Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
-  - tests/validation/99_test_data_independent_sibling_gate_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_panel.py
+  - tests/validation/calibration/sibling/gates/99_test_data_independent_sibling_gate_panel.py
   - raw/inbox/data-independent-sibling-gate-smoke-20260613.md
   - raw/inbox/data-independent-sibling-gate-transfer-20260613.md
 tags:
@@ -64,7 +64,7 @@ selected-topology penalty grid.
 
 ## Evidence
 
-- `tests/validation/99_test_data_independent_sibling_gate_panel.py` verifies
+- `tests/validation/calibration/sibling/gates/99_test_data_independent_sibling_gate_panel.py` verifies
   the coordinate-wise p-values, summary statuses, contract behavior, and output
   writing.
 - `raw/inbox/data-independent-sibling-gate-smoke-20260613.md` records the

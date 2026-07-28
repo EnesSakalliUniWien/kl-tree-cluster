@@ -87,9 +87,7 @@ class TraversalSiblingFdrConfig:
         if not np.isfinite(self.alpha) or not (0.0 < float(self.alpha) <= 1.0):
             raise ValueError(f"alpha must be finite and in (0, 1]; got {self.alpha!r}.")
         if not np.isfinite(self.edge_alpha) or not (0.0 < float(self.edge_alpha) <= 1.0):
-            raise ValueError(
-                f"edge_alpha must be finite and in (0, 1]; got {self.edge_alpha!r}."
-            )
+            raise ValueError(f"edge_alpha must be finite and in (0, 1]; got {self.edge_alpha!r}.")
         if not self.case_names:
             raise ValueError("case_names must contain at least one case.")
 
@@ -127,9 +125,7 @@ def estimate_fdr(rows: Iterable[dict[str, object]]) -> dict[str, float]:
             float(int(row["n_false_rejections"])) / float(max(1, int(row["n_rejections"])))
             for row in ok_rows
         ]
-        false_rejection_indicators = [
-            float(int(row["n_false_rejections"]) > 0) for row in ok_rows
-        ]
+        false_rejection_indicators = [float(int(row["n_false_rejections"]) > 0) for row in ok_rows]
         mean_fdp = float(np.mean(fdps))
         false_rejection_rate = float(np.mean(false_rejection_indicators))
     else:
@@ -242,7 +238,9 @@ def _run_synthetic_valid_p_replicate(
     }
 
 
-def _projection_inputs(tree: nx.DiGraph, spectral_context: object) -> tuple[
+def _projection_inputs(
+    tree: nx.DiGraph, spectral_context: object
+) -> tuple[
     dict[str, int],
     dict[str, np.ndarray],
     dict[str, np.ndarray],
@@ -418,9 +416,7 @@ def _run_case_replicate(
         }
 
     n_decisions, n_rejections = _count_sibling_decisions(sibling_annotations)
-    n_candidates = int(
-        sum(1 for node in tree.nodes if len(list(tree.successors(node))) == 2)
-    )
+    n_candidates = int(sum(1 for node in tree.nodes if len(list(tree.successors(node))) == 2))
     return {
         "schema_version": SCHEMA_VERSION,
         "layer": str(layer),
@@ -441,7 +437,9 @@ def _run_case_replicate(
     }
 
 
-def _replicate_tuple(config: TraversalSiblingFdrConfig, replicate_indices: Sequence[int] | None) -> tuple[int, ...]:
+def _replicate_tuple(
+    config: TraversalSiblingFdrConfig, replicate_indices: Sequence[int] | None
+) -> tuple[int, ...]:
     if replicate_indices is None:
         indices = tuple(range(config.replicates))
     else:
@@ -555,11 +553,7 @@ def run_traversal_sibling_fdr_layers(
         run_traversal_sibling_fdr_layer(config, replicate_indices=replicate_indices)
         for config in configs
     ]
-    simulation_rows = [
-        row
-        for output in layer_outputs
-        for row in output["simulation_rows"]
-    ]
+    simulation_rows = [row for output in layer_outputs for row in output["simulation_rows"]]
     summary_rows = [output["summary"] for output in layer_outputs]
     pd.DataFrame.from_records(simulation_rows).to_csv(
         output_dir / SIMULATION_OUTPUT_NAME,

@@ -26,7 +26,9 @@ def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -
 
 @pytest.mark.slow
 def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
-    case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
+    case = next(
+        case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c"
+    )
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
@@ -134,19 +136,15 @@ def test_tbs_runner_accepts_fixed_sibling_gate_profile() -> None:
     assert result.extra["root_stability_subsample_replicates"] == 12
     assert result.extra["root_stability_tree_distance_metric"] == "hamming"
     assert result.extra["root_stability_tree_linkage_method"] == "average"
-    assert result.extra["root_selective_permutation_guard_tree_distance_metric"] == (
-        "hamming"
-    )
-    assert result.extra["root_selective_permutation_guard_tree_linkage_method"] == (
-        "average"
-    )
+    assert result.extra["root_selective_permutation_guard_tree_distance_metric"] == ("hamming")
+    assert result.extra["root_selective_permutation_guard_tree_linkage_method"] == ("average")
     assert result.extra["spectral_transport_passthrough_guard"] is False
     assert result.extra["spectral_transport_max_cost"] == 1.2
     assert result.extra["spectral_transport_require_mp_blocks"] is True
 
 
 def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() -> None:
-    from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_panel import (
+    from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
         _generate_data_with_truth,
     )
     from benchmarks.validation.selected_edge_type1_geometry import (
@@ -155,10 +153,7 @@ def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() ->
     )
     from sklearn.metrics import adjusted_rand_score
 
-    case = next(
-        case
-        for case in _select_cases(suite="full", case_names=("cat_clear_3cat_4c",))
-    )
+    case = next(case for case in _select_cases(suite="full", case_names=("cat_clear_3cat_4c",)))
     (
         case_id,
         source_family,
@@ -200,15 +195,9 @@ def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() ->
         assert run.extra["root_selective_permutation_guard_replicates"] == 99
         results[role] = {
             "found_clusters": int(run.found_clusters),
-            "ari": float(
-                adjusted_rand_score(np.asarray(truth, dtype=int), np.asarray(run.labels))
-            ),
-            "root_selective_p": float(
-                annotations.at[root, "Root_Selective_Permutation_P_Value"]
-            ),
-            "blocked": bool(
-                annotations.at[root, "Root_Selective_Permutation_Guard_Blocked"]
-            ),
+            "ari": float(adjusted_rand_score(np.asarray(truth, dtype=int), np.asarray(run.labels))),
+            "root_selective_p": float(annotations.at[root, "Root_Selective_Permutation_P_Value"]),
+            "blocked": bool(annotations.at[root, "Root_Selective_Permutation_Guard_Blocked"]),
         }
 
     assert results["null"]["found_clusters"] == 1

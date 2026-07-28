@@ -233,7 +233,10 @@ def audit_cluster_table(
 
 
 def cluster_label_counts(frame: pd.DataFrame) -> dict[str, int]:
-    return {str(key): int(value) for key, value in frame["meaningfulness_label"].value_counts().sort_index().items()}
+    return {
+        str(key): int(value)
+        for key, value in frame["meaningfulness_label"].value_counts().sort_index().items()
+    }
 
 
 def summarize_subspaces(cluster_stats: pd.DataFrame, null_stats: pd.DataFrame) -> pd.DataFrame:
@@ -243,7 +246,9 @@ def summarize_subspaces(cluster_stats: pd.DataFrame, null_stats: pd.DataFrame) -
         first = frame.iloc[0]
         strong = tested["meaningfulness_label"].eq("strong")
         enriched = tested["n_significant_terms"].gt(0)
-        weak = tested["meaningfulness_label"].isin(["weak_or_not_enriched", "statistical_but_broad"])
+        weak = tested["meaningfulness_label"].isin(
+            ["weak_or_not_enriched", "statistical_but_broad"]
+        )
         null_frame = null_stats[null_stats["run_id"].eq(run_id)]
         observed_enriched_fraction = float(enriched.mean()) if len(tested) else math.nan
         observed_strong_fraction = float(strong.mean()) if len(tested) else math.nan
@@ -269,7 +274,10 @@ def summarize_subspaces(cluster_stats: pd.DataFrame, null_stats: pd.DataFrame) -
             empirical_p_strong = math.nan
         if len(tested) < 3:
             eigenband_coherence = "insufficient_tested_clusters"
-        elif observed_enriched_fraction > null_enriched_p95 and observed_strong_fraction > null_strong_p95:
+        elif (
+            observed_enriched_fraction > null_enriched_p95
+            and observed_strong_fraction > null_strong_p95
+        ):
             eigenband_coherence = "coherent"
         elif observed_enriched_fraction > null_enriched_p95:
             eigenband_coherence = "coherent_enrichment_only"
@@ -294,11 +302,17 @@ def summarize_subspaces(cluster_stats: pd.DataFrame, null_stats: pd.DataFrame) -
                 "strong_fraction": observed_strong_fraction,
                 "enriched_fraction": observed_enriched_fraction,
                 "weak_or_broad_fraction": float(weak.mean()) if len(tested) else math.nan,
-                "median_best_q_value": float(tested["best_q_value"].median()) if len(tested) else math.nan,
-                "median_top_lift": float(tested["top_lift"].replace([np.inf, -np.inf], np.nan).median())
+                "median_best_q_value": float(tested["best_q_value"].median())
                 if len(tested)
                 else math.nan,
-                "median_significant_terms": float(tested["n_significant_terms"].median()) if len(tested) else math.nan,
+                "median_top_lift": float(
+                    tested["top_lift"].replace([np.inf, -np.inf], np.nan).median()
+                )
+                if len(tested)
+                else math.nan,
+                "median_significant_terms": float(tested["n_significant_terms"].median())
+                if len(tested)
+                else math.nan,
                 "null_enriched_fraction_mean": null_enriched_mean,
                 "null_enriched_fraction_p95": null_enriched_p95,
                 "empirical_p_enriched_fraction": empirical_p_enriched,
@@ -340,7 +354,9 @@ def null_partition_stats(
     rows = []
     for run_id, run_frame in membership.groupby("run_id", sort=False):
         first = run_frame.iloc[0]
-        cluster_sizes = run_frame.groupby("cluster_id", sort=False)["gene"].nunique().astype(int).tolist()
+        cluster_sizes = (
+            run_frame.groupby("cluster_id", sort=False)["gene"].nunique().astype(int).tolist()
+        )
         genes = sorted(set(run_frame["gene"].astype(str)) & set(gene_to_position))
         if sum(cluster_sizes) != len(genes):
             cluster_sizes = sorted(cluster_sizes, reverse=True)
@@ -382,9 +398,15 @@ def null_partition_stats(
                     "block_name": first.get("block_name", ""),
                     "assignment_source": first.get("assignment_source", ""),
                     "n_tested_clusters": len(labels),
-                    "null_strong_fraction": float(labels_series.eq("strong").mean()) if len(labels) else math.nan,
-                    "null_enriched_fraction": float(sig_series.gt(0).mean()) if len(sig_series) else math.nan,
-                    "null_median_significant_terms": float(sig_series.median()) if len(sig_series) else math.nan,
+                    "null_strong_fraction": float(labels_series.eq("strong").mean())
+                    if len(labels)
+                    else math.nan,
+                    "null_enriched_fraction": float(sig_series.gt(0).mean())
+                    if len(sig_series)
+                    else math.nan,
+                    "null_median_significant_terms": float(sig_series.median())
+                    if len(sig_series)
+                    else math.nan,
                 }
             )
     return pd.DataFrame(rows)
@@ -399,13 +421,20 @@ def summarize_by_assignment(subspace_summary: pd.DataFrame) -> pd.DataFrame:
                 "n_subspaces": len(frame),
                 "mean_strong_fraction": float(frame["strong_fraction"].mean()),
                 "mean_enriched_fraction": float(frame["enriched_fraction"].mean()),
-                "median_empirical_p_enriched_fraction": float(frame["empirical_p_enriched_fraction"].median()),
-                "median_empirical_p_strong_fraction": float(frame["empirical_p_strong_fraction"].median()),
+                "median_empirical_p_enriched_fraction": float(
+                    frame["empirical_p_enriched_fraction"].median()
+                ),
+                "median_empirical_p_strong_fraction": float(
+                    frame["empirical_p_strong_fraction"].median()
+                ),
                 "mean_null_enriched_fraction": float(frame["null_enriched_fraction_mean"].mean()),
                 "mean_null_strong_fraction": float(frame["null_strong_fraction_mean"].mean()),
                 "eigenband_coherence_counts": ";".join(
                     f"{key}:{value}"
-                    for key, value in frame["eigenband_coherence"].value_counts().sort_index().items()
+                    for key, value in frame["eigenband_coherence"]
+                    .value_counts()
+                    .sort_index()
+                    .items()
                 ),
             }
         )
@@ -586,7 +615,9 @@ def main() -> None:
     weak_examples = (
         cluster_stats[
             cluster_stats["tested"]
-            & cluster_stats["meaningfulness_label"].isin(["weak_or_not_enriched", "statistical_but_broad"])
+            & cluster_stats["meaningfulness_label"].isin(
+                ["weak_or_not_enriched", "statistical_but_broad"]
+            )
         ]
         .sort_values(["best_q_value", "top_lift"], ascending=[False, True], na_position="last")
         .head(args.top_examples)
@@ -595,13 +626,19 @@ def main() -> None:
     cluster_stats.to_csv(output_dir / "cluster_meaningfulness.csv", index=False)
     null_stats.to_csv(output_dir / "null_partition_summary.csv", index=False)
     subspace_summary.to_csv(output_dir / "subspace_meaningfulness_summary.csv", index=False)
-    assignment_summary.to_csv(output_dir / "assignment_source_meaningfulness_summary.csv", index=False)
+    assignment_summary.to_csv(
+        output_dir / "assignment_source_meaningfulness_summary.csv", index=False
+    )
     top_examples.to_csv(output_dir / "top_meaningful_cluster_examples.csv", index=False)
     weak_examples.to_csv(output_dir / "weak_or_broad_cluster_examples.csv", index=False)
     top_go_ids = [
-        go_id for go_id in top_examples["top_go_id"].dropna().astype(str).drop_duplicates().tolist() if go_id
+        go_id
+        for go_id in top_examples["top_go_id"].dropna().astype(str).drop_duplicates().tolist()
+        if go_id
     ][:50]
-    (output_dir / "quickgo_top_term_ids.txt").write_text(",".join(top_go_ids) + "\n", encoding="utf-8")
+    (output_dir / "quickgo_top_term_ids.txt").write_text(
+        ",".join(top_go_ids) + "\n", encoding="utf-8"
+    )
     (output_dir / "meaningfulness_report.md").write_text(
         "\n".join(
             report_lines(

@@ -2,10 +2,10 @@
 title: Root Selected Same Geometry External Support Attempt 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_same_geometry_external_support_attempt.py
-  - tests/validation/182_test_root_selected_same_geometry_external_support_attempt.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_same_geometry_external_support_attempt.py
+  - tests/validation/calibration/root/selected/182_test_root_selected_same_geometry_external_support_attempt.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_same_geometry_external_support_attempt_five_target_tiny_smoke
 tags:
   - source

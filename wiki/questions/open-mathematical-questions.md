@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -38,11 +38,11 @@ sources:
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - wiki/sources/selected-tail-law-q5-validation-20260604.md
-  - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_summary.csv
   - wiki/sources/recursive-method-followups-20260604.md
-  - benchmarks/diagnostics/calibration/sibling_null_weight_rule_validation.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_weight_rule_validation.py
   - raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/sibling_null_weight_rule_summary.csv
   - benchmarks/diagnostics/spectral/sibling_projection_dimension_rule_grid.py
   - raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/sibling_projection_dimension_rule_grid.csv
@@ -59,12 +59,12 @@ sources:
   - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_contract.csv
   - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_summary.csv
   - wiki/sources/selected-tail-promotion-gate-20260604.md
-  - benchmarks/diagnostics/calibration/selected_tail_promotion_gate.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_promotion_gate.py
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_contexts.csv
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_q5_promotion_gate.csv
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_summary.csv
   - wiki/sources/selected-tail-parent-size-balance-stability-20260604.md
-  - benchmarks/diagnostics/calibration/selected_tail_parent_size_balance_stability.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_parent_size_balance_stability.py
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_contexts.csv
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_parent_folds.csv
   - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_summary.csv
@@ -74,7 +74,7 @@ sources:
   - wiki/sources/mnist-continuous-alpha-sweep-20260605.md
   - wiki/sources/selected-tail-promotion-gate-debug-20260605.md
   - wiki/sources/internal-calibration-q9-q10-q11-debug-20260605.md
-  - benchmarks/diagnostics/calibration/internal_support_threshold_validation.py
+  - benchmarks/diagnostics/calibration/statistics/internal_support_threshold_validation.py
   - wiki/sources/mixed-internal-calibration-sweeps-20260605.md
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
@@ -94,12 +94,12 @@ sources:
   - wiki/analyses/manuscript-life-science-readiness.md
   - benchmarks/validation/method_constants_manifest.py
   - benchmarks/validation/feature_covariance_calibration.py
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py
-  - benchmarks/diagnostics/calibration/null_law_decomposition_panel.py
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
-  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py
+  - benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_traversal_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - raw/inbox/data-independent-sibling-gate-smoke-20260613.md
@@ -607,7 +607,7 @@ projected-Wald/Tree-BH calibration analysis under a fixed hierarchy.
 
 The thresholds are now recorded as canonical method constants in
 `tree_break_selection/hierarchy_analysis/statistics/alpha_contract.py`, not
-as mutable `config.py` values: `DEFAULT_EDGE_ALPHA = 0.001` and
+as mutable package globals: `DEFAULT_EDGE_ALPHA = 0.001` and
 `DEFAULT_SIBLING_ALPHA = 0.01`. These values are deliberately conservative
 and still need validation as method constants; the cleanup only made their
 assignment explicit and reportable, it did not tune them.

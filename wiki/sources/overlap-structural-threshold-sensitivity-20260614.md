@@ -2,10 +2,10 @@
 title: Overlap Structural Threshold Sensitivity 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_structural_threshold_sensitivity.py
-  - tests/validation/104_test_overlap_structural_threshold_sensitivity.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_structural_threshold_sensitivity.py
+  - tests/validation/calibration/overlap/104_test_overlap_structural_threshold_sensitivity.py
   - raw/assets/benchmark-results/overlap_structural_sibling_20260614/threshold_sensitivity/overlap_structural_threshold_sensitivity.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_20260614/threshold_sensitivity/overlap_structural_threshold_recommendations.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv
@@ -74,13 +74,13 @@ and signal retention in binary overlap cases.
 
 ## Evidence
 
-- `tests/validation/104_test_overlap_structural_threshold_sensitivity.py`
+- `tests/validation/calibration/overlap/104_test_overlap_structural_threshold_sensitivity.py`
   verifies false-null blocking, truth-aligned signal retention,
   heterogeneous-warning separation, recommendation scoring, and output files.
 - Verification passed:
-  `pytest tests/validation/104_test_overlap_structural_threshold_sensitivity.py -q`
+  `pytest tests/validation/calibration/overlap/104_test_overlap_structural_threshold_sensitivity.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_structural_threshold_sensitivity.py tests/validation/104_test_overlap_structural_threshold_sensitivity.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_structural_threshold_sensitivity.py tests/validation/calibration/overlap/104_test_overlap_structural_threshold_sensitivity.py`.
 
 ## Links
 

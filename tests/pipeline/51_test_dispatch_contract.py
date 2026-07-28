@@ -465,9 +465,7 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     graphtools_params = graphtools_diffusion.param_grid[0]
     graphtools_nnls_diffusion = METHOD_SPECS["tbs_diffusion_graphtools_nnls"]
     graphtools_nnls_params = graphtools_nnls_diffusion.param_grid[0]
-    graphtools_adaptive_nnls_diffusion = METHOD_SPECS[
-        "tbs_diffusion_graphtools_adaptive_nnls"
-    ]
+    graphtools_adaptive_nnls_diffusion = METHOD_SPECS["tbs_diffusion_graphtools_adaptive_nnls"]
     graphtools_adaptive_nnls_params = graphtools_adaptive_nnls_diffusion.param_grid[0]
 
     assert nn_diffusion.name == "TBS (Hamming NN Diffusion)"
@@ -504,9 +502,7 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     assert graphtools_params["kernel_symm"] == "+"
     assert graphtools_params["branch_length_optimization_method"] == "linkage_ultrametric"
 
-    assert graphtools_nnls_diffusion.name == (
-        "TBS (graphtools Kernel Diffusion, NNLS Branch-Time)"
-    )
+    assert graphtools_nnls_diffusion.name == ("TBS (graphtools Kernel Diffusion, NNLS Branch-Time)")
     assert graphtools_nnls_params["diffusion_method"] == "graphtools_kernel_diffusion"
     assert graphtools_nnls_params["k_neighbors"] == 10
     assert graphtools_nnls_params["decay"] == 40
@@ -514,21 +510,15 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     assert graphtools_nnls_params["edge_branch_length_variance_policy"] == (
         "normalized_branch_length"
     )
-    assert graphtools_nnls_params["branch_length_optimization_method"] == (
-        "fixed_topology_nnls"
-    )
+    assert graphtools_nnls_params["branch_length_optimization_method"] == ("fixed_topology_nnls")
     assert graphtools_nnls_params["branch_length_optimization_pair_sample_size"] == 50_000
 
     assert graphtools_adaptive_nnls_diffusion.name == (
         "TBS (graphtools Kernel Diffusion, Adaptive-K NNLS Branch-Time)"
     )
-    assert graphtools_adaptive_nnls_params["diffusion_method"] == (
-        "graphtools_kernel_diffusion"
-    )
+    assert graphtools_adaptive_nnls_params["diffusion_method"] == ("graphtools_kernel_diffusion")
     assert graphtools_adaptive_nnls_params["k_neighbors"] == 10
-    assert graphtools_adaptive_nnls_params["adaptive_neighbor_profile"] == (
-        "fragmentation_guard"
-    )
+    assert graphtools_adaptive_nnls_params["adaptive_neighbor_profile"] == ("fragmentation_guard")
     assert graphtools_adaptive_nnls_params["adaptive_neighbor_grid"] == (
         5,
         10,
@@ -573,13 +563,12 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     graphtools_adaptive_nnls_neighbor_joining_params = next(
         params for params in tree_strategy_grid if params["tree_builder"] == "neighbor_joining"
     )
-    assert graphtools_adaptive_nnls_neighbor_joining_params["tree_builder"] == (
-        "neighbor_joining"
-    )
+    assert graphtools_adaptive_nnls_neighbor_joining_params["tree_builder"] == ("neighbor_joining")
     assert graphtools_adaptive_nnls_neighbor_joining_params["tree_rooting"] == "mad"
-    assert graphtools_adaptive_nnls_neighbor_joining_params[
-        "branch_length_optimization_method"
-    ] == "fixed_topology_nnls"
+    assert (
+        graphtools_adaptive_nnls_neighbor_joining_params["branch_length_optimization_method"]
+        == "fixed_topology_nnls"
+    )
 
 
 def test_run_clustering_result_forwards_adaptive_nnls_branch_time_params(monkeypatch):
@@ -667,12 +656,8 @@ def test_run_clustering_result_forwards_graphtools_adaptive_k_params(monkeypatch
     assert captured["kwargs"]["tree_builder"] == "linkage"
     assert captured["kwargs"]["tree_rooting"] == "linkage_root"
     assert captured["kwargs"]["tree_linkage_method"] == "average"
-    assert captured["kwargs"]["edge_branch_length_variance_policy"] == (
-        "normalized_branch_length"
-    )
-    assert captured["kwargs"]["branch_length_optimization_method"] == (
-        "fixed_topology_nnls"
-    )
+    assert captured["kwargs"]["edge_branch_length_variance_policy"] == ("normalized_branch_length")
+    assert captured["kwargs"]["branch_length_optimization_method"] == ("fixed_topology_nnls")
 
 
 def test_run_clustering_result_forwards_graphtools_neighbor_joining_tree_params(
@@ -681,7 +666,9 @@ def test_run_clustering_result_forwards_graphtools_neighbor_joining_tree_params(
     captured = {}
     original_spec = METHOD_SPECS["tbs_diffusion_graphtools_adaptive_nnls"]
     neighbor_joining_params = next(
-        params for params in original_spec.param_grid if params["tree_builder"] == "neighbor_joining"
+        params
+        for params in original_spec.param_grid
+        if params["tree_builder"] == "neighbor_joining"
     )
 
     def _capture_runner(*args, **kwargs):

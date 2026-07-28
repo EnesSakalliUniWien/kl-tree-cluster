@@ -33,13 +33,7 @@ def _labels_from_assignment_table(
     ordered_index = _sample_index(sample_index).rename("sample_id")
     if assignments_table.empty:
         return np.full(len(ordered_index), -1, dtype=int)
-    return (
-        assignments_table["cluster_id"]
-        .reindex(ordered_index)
-        .fillna(-1)
-        .astype(int)
-        .to_numpy()
-    )
+    return assignments_table["cluster_id"].reindex(ordered_index).fillna(-1).astype(int).to_numpy()
 
 
 def _sample_index(sample_names: Sequence[object] | pd.Index) -> pd.Index:

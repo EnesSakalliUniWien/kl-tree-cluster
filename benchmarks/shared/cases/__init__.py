@@ -174,8 +174,7 @@ def get_test_cases_by_suite(suite: str) -> list[dict]:
     normalized_suite = str(suite).strip().lower()
     if normalized_suite not in BENCHMARK_CASE_SUITES:
         raise ValueError(
-            f"Unknown benchmark suite: {suite!r}. "
-            f"Available: {sorted(BENCHMARK_CASE_SUITES)}"
+            f"Unknown benchmark suite: {suite!r}. Available: {sorted(BENCHMARK_CASE_SUITES)}"
         )
 
     all_cases = get_default_test_cases()
@@ -197,8 +196,4 @@ def get_test_cases_by_suite(suite: str) -> list[dict]:
     else:
         raise AssertionError(f"Unhandled benchmark suite: {normalized_suite!r}")
 
-    return [
-        case
-        for case in all_cases
-        if str(case["generator"]) in allowed_generators
-    ]
+    return [case for case in all_cases if str(case["generator"]) in allowed_generators]

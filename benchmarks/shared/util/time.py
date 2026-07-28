@@ -59,9 +59,7 @@ def normalize_stage_timings(
             continue
         value = float(stage_timings[key])
         if not np.isfinite(value) or value < 0.0:
-            raise ValueError(
-                f"Stage timing {key!r} must be finite and non-negative; got {value}."
-            )
+            raise ValueError(f"Stage timing {key!r} must be finite and non-negative; got {value}.")
         normalized[key] = value
     return normalized
 

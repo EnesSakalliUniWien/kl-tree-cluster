@@ -1,1 +1,1 @@
-"""Calibration diagnostics for sibling gate behavior."""
+"""Responsibility-grouped calibration diagnostics."""

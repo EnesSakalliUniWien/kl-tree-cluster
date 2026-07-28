@@ -2,10 +2,10 @@
 title: Internal vs Selected Hierarchy Inflation 2026-06-03
 type: source
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/internal_vs_selected_hierarchy_inflation.py
-  - tests/validation/56_test_internal_vs_selected_hierarchy_inflation.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/internal_vs_selected_hierarchy_inflation.py
+  - tests/validation/calibration/selected/hierarchy/56_test_internal_vs_selected_hierarchy_inflation.py
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/manifest.json
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
 tags:
@@ -55,10 +55,10 @@ The run used `25` selected-hierarchy null replicates for
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/internal_vs_selected_hierarchy_inflation.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/internal_vs_selected_hierarchy_inflation.py`
   implements the comparison between internal support, selected-hierarchy
   support, required blocking scale, and cross-scale ratios.
-- `tests/validation/56_test_internal_vs_selected_hierarchy_inflation.py`
+- `tests/validation/calibration/selected/hierarchy/56_test_internal_vs_selected_hierarchy_inflation.py`
   checks the projected-Wald blocking-scale calculation and a smoke run that
   writes explicit support statuses.
 - `raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv`

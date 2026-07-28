@@ -2,10 +2,10 @@
 title: Overlap Structural Decision Zones 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_structural_decision_zones.py
-  - tests/validation/107_test_overlap_structural_decision_zones.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_structural_decision_zones.py
+  - tests/validation/calibration/overlap/107_test_overlap_structural_decision_zones.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/manifest.json
@@ -71,13 +71,13 @@ blocked rows.
 
 ## Evidence
 
-- `tests/validation/107_test_overlap_structural_decision_zones.py` verifies
+- `tests/validation/calibration/overlap/107_test_overlap_structural_decision_zones.py` verifies
   stable, weak, context-blocked, and nonaccepted zone assignment; signed
   continuous margins; summary truth role counts; and output writing.
 - Verification passed:
-  `pytest tests/validation/107_test_overlap_structural_decision_zones.py -q`
+  `pytest tests/validation/calibration/overlap/107_test_overlap_structural_decision_zones.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_structural_decision_zones.py tests/validation/107_test_overlap_structural_decision_zones.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_structural_decision_zones.py tests/validation/calibration/overlap/107_test_overlap_structural_decision_zones.py`.
 
 ## Links
 

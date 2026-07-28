@@ -2,10 +2,10 @@
 title: Overlap Threshold Hierarchy 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_threshold_hierarchy.py
-  - tests/validation/116_test_overlap_threshold_hierarchy.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_threshold_hierarchy.py
+  - tests/validation/calibration/overlap/116_test_overlap_threshold_hierarchy.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_hierarchy/overlap_threshold_hierarchy.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_hierarchy/manifest.json
 tags:
@@ -55,13 +55,13 @@ but it does not define a production calibration rule.
 
 ## Evidence
 
-- `tests/validation/116_test_overlap_threshold_hierarchy.py` verifies ordered
+- `tests/validation/calibration/overlap/116_test_overlap_threshold_hierarchy.py` verifies ordered
   stage synthesis, fragment-threshold sourcing from the guard scan, and output
   writing.
 - Verification passed:
-  `pytest tests/validation/116_test_overlap_threshold_hierarchy.py -q`
+  `pytest tests/validation/calibration/overlap/116_test_overlap_threshold_hierarchy.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_threshold_hierarchy.py tests/validation/116_test_overlap_threshold_hierarchy.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_threshold_hierarchy.py tests/validation/calibration/overlap/116_test_overlap_threshold_hierarchy.py`.
 
 ## Links
 

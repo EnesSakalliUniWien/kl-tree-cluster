@@ -59,7 +59,7 @@ def _large_cluster_palette(n: int) -> List[str]:
     for i in range(n):
         hue = i / max(n, 1)
         saturation = 0.62 + 0.23 * ((i % 3) / 2)
-        value = 0.74 + 0.16 * ((i % 2))
+        value = 0.74 + 0.16 * (i % 2)
         colors.append(mcolors.to_hex(colorsys.hsv_to_rgb(hue, saturation, value)))
     return _max_contrast_order(colors)
 

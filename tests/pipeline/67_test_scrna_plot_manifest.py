@@ -18,12 +18,7 @@ def _load_scrna_plot_pipeline_module():
 
 def test_plot_manifest_json_records_generated_timestamp(tmp_path):
     pipeline = _load_scrna_plot_pipeline_module()
-    rows = [
-        {
-            field: ""
-            for field in pipeline.MANIFEST_FIELDS
-        }
-    ]
+    rows = [{field: "" for field in pipeline.MANIFEST_FIELDS}]
     rows[0].update(
         {
             "dataset": "pancreas",

@@ -2,11 +2,11 @@
 title: Differential Statistic Validity Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - tests/validation/96_test_differential_statistic_validity_panel.py
-  - benchmarks/diagnostics/calibration/production_admissibility_contract.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
+  - tests/validation/calibration/statistics/96_test_differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py
   - benchmarks/validation/selected_edge_type1_geometry.py
 tags:
   - source
@@ -54,7 +54,7 @@ stability before any production promotion.
 
 ## Evidence
 
-- `tests/validation/96_test_differential_statistic_validity_panel.py` verifies
+- `tests/validation/calibration/statistics/96_test_differential_statistic_validity_panel.py` verifies
   Fisher boundary detection, categorical boundary detection,
   finite-difference agreement with the analytic projected-quadratic derivative,
   small-eigengap projection instability, fixed-subspace diagnostic-only

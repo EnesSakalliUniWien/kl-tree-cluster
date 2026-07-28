@@ -278,9 +278,7 @@ def test_decide_empirical_null_calibration_accepts_custom_support_thresholds() -
     )
 
     assert decision.status == "internal_admissible"
-    assert decision.support["support_contract_status"] == (
-        "passes_internal_support_thresholds"
-    )
+    assert decision.support["support_contract_status"] == ("passes_internal_support_thresholds")
     assert decision.support["support_contract_failure_reasons"] == ""
 
 
@@ -470,7 +468,9 @@ def test_compute_inflation_adjusted_sibling_tests_uses_external_selected_tail_co
     assert methods == ["external_selected_tail_scalar"]
 
 
-def test_compute_inflation_adjusted_sibling_tests_uses_external_when_internal_model_absent() -> None:
+def test_compute_inflation_adjusted_sibling_tests_uses_external_when_internal_model_absent() -> (
+    None
+):
     records = [
         _make_record(
             "target",
@@ -604,7 +604,9 @@ def test_fit_empirical_null_inflation_model_enforces_one_sided_inflation_floor()
     assert model.baseline_empirical_inflation_factor == 1.0
 
 
-def test_fit_empirical_null_inflation_model_reports_underflow_stable_effective_sample_size() -> None:
+def test_fit_empirical_null_inflation_model_reports_underflow_stable_effective_sample_size() -> (
+    None
+):
     records = [
         _make_record("p0", stat=4.0, degrees_of_freedom=1.0, sibling_null_weight=1e-240),
         _make_record("p1", stat=8.0, degrees_of_freedom=2.0, sibling_null_weight=2e-240),

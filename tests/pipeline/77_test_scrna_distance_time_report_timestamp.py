@@ -29,10 +29,7 @@ def test_distance_time_model_report_records_generated_timestamp(tmp_path):
         generated_at="2026-06-24T20:16:00+02:00",
     )
 
-    report = (tmp_path / "edge_gate_distance_time_model_analysis.md").read_text(
-        encoding="utf-8"
-    )
+    report = (tmp_path / "edge_gate_distance_time_model_analysis.md").read_text(encoding="utf-8")
     assert report.startswith(
-        "# Edge gate distance/time model analysis\n\n"
-        "Generated at: 2026-06-24T20:16:00+02:00\n"
+        "# Edge gate distance/time model analysis\n\nGenerated at: 2026-06-24T20:16:00+02:00\n"
     )

@@ -41,11 +41,15 @@ def summarize_tail_law(table: pd.DataFrame, alpha: float = 0.05) -> pd.DataFrame
     grouped = variables.groupby(group_columns, dropna=False) if group_columns else [((), variables)]
     for keys, group in grouped:
         ratio = pd.to_numeric(group["selected_ratio"], errors="coerce").dropna()
-        exceedance = ratio > ratio.quantile(1.0 - alpha) if not ratio.empty else pd.Series(dtype=bool)
+        exceedance = (
+            ratio > ratio.quantile(1.0 - alpha) if not ratio.empty else pd.Series(dtype=bool)
+        )
         row: dict[str, object] = {
             "n_records": int(len(group)),
             "n_ratio_records": int(len(ratio)),
-            "heldout_exceedance_rate_at_alpha": float(exceedance.mean()) if len(exceedance) else np.nan,
+            "heldout_exceedance_rate_at_alpha": float(exceedance.mean())
+            if len(exceedance)
+            else np.nan,
             "heldout_exceedance_se": (
                 float(np.sqrt(alpha * (1.0 - alpha) / len(exceedance)))
                 if len(exceedance)

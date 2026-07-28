@@ -223,9 +223,7 @@ def _mean_within_tfidf_cosine_by_cluster(
             out[int(cluster_id)] = math.nan
             continue
         gram = (tfidf[idx] @ tfidf[idx].T).toarray()
-        out[int(cluster_id)] = float(
-            (gram.sum() - np.trace(gram)) / (len(idx) * (len(idx) - 1))
-        )
+        out[int(cluster_id)] = float((gram.sum() - np.trace(gram)) / (len(idx) * (len(idx) - 1)))
     return out
 
 
@@ -359,12 +357,12 @@ def build_cosine_band_coherence_rows(
             bands = legacy_cosine_bands(len(eigvals))
             if band_names is not None:
                 requested_bands = {str(name) for name in band_names}
-                bands = [
-                    band for band in bands if str(band.block_name) in requested_bands
-                ]
+                bands = [band for band in bands if str(band.block_name) in requested_bands]
                 missing_bands = requested_bands - {str(band.block_name) for band in bands}
                 if missing_bands:
-                    raise ValueError(f"Unknown or unavailable band_names: {sorted(missing_bands)!r}")
+                    raise ValueError(
+                        f"Unknown or unavailable band_names: {sorted(missing_bands)!r}"
+                    )
         except Exception as exc:  # noqa: BLE001 - diagnostic table records failures.
             rows.append(
                 {
@@ -462,9 +460,7 @@ def build_cosine_band_coherence_rows(
                             (cluster_sizes == 1).sum() / max(n_clusters, 1)
                         ),
                         "coherent_cluster_count": coherent_count,
-                        "coherent_cluster_fraction": float(
-                            coherent_count / max(n_clusters, 1)
-                        ),
+                        "coherent_cluster_fraction": float(coherent_count / max(n_clusters, 1)),
                         "median_cluster_significant_terms_q05": (
                             float(coherence["n_significant_terms_q05"].median())
                             if not coherence.empty
@@ -478,9 +474,7 @@ def build_cosine_band_coherence_rows(
                         "ari": math.nan,
                         "nmi": math.nan,
                         "runtime_sec": float(time.perf_counter() - start),
-                        "sibling_test_method_counts": sibling_method_counts(
-                            annotations_df
-                        ),
+                        "sibling_test_method_counts": sibling_method_counts(annotations_df),
                         "production_status": "diagnostic_only_not_production_calibration",
                         "error": "",
                     }

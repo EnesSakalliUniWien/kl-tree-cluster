@@ -2,10 +2,10 @@
 title: Selected Tail Topology Refinement 2026-06-03
 type: source
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_tail_topology_refinement.py
-  - tests/validation/58_test_selected_tail_topology_refinement.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_topology_refinement.py
+  - tests/validation/calibration/selected/tail/58_test_selected_tail_topology_refinement.py
   - raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_ratio_tail_law.csv
@@ -73,10 +73,10 @@ admissible calibration rule.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_tail_topology_refinement.py`
+- `benchmarks/diagnostics/calibration/selected/tail/selected_tail_topology_refinement.py`
   implements the refinement diagnostic and writes base/refined comparison
   tables.
-- `tests/validation/58_test_selected_tail_topology_refinement.py` verifies bin
+- `tests/validation/calibration/selected/tail/58_test_selected_tail_topology_refinement.py` verifies bin
   construction, input contracts, support summaries, and output writing.
 - `raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/manifest.json`
   records the row-level input run over the four target cases.

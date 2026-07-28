@@ -34,9 +34,7 @@ MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES = 512 * 1024 * 1024
 MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV = (
     "TBS_MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION"
 )
-MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV = (
-    "TBS_MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB"
-)
+MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV = "TBS_MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB"
 
 
 def _positive_int_from_env(name: str, default: int) -> int:
@@ -86,8 +84,7 @@ def validate_continuous_covariance_min_child_leaf_count(value: int) -> int:
     count = int(value)
     if count <= 0:
         raise ValueError(
-            "continuous_covariance_min_child_leaf_count must be positive; "
-            f"got {value!r}."
+            f"continuous_covariance_min_child_leaf_count must be positive; got {value!r}."
         )
     return count
 
@@ -219,14 +216,12 @@ def _calculate_hierarchy_node_distribution(
     tree.nodes[node_id]["distribution"] = parent_distribution
 
     if feature_space.has_continuous_blocks:
-        tree.nodes[node_id][_CONTINUOUS_SCATTER_BY_BLOCK] = (
-            _calculate_hierarchy_continuous_scatter(
-                tree,
-                children,
-                parent_distribution,
-                feature_space,
-                use_dense_continuous_covariance,
-            )
+        tree.nodes[node_id][_CONTINUOUS_SCATTER_BY_BLOCK] = _calculate_hierarchy_continuous_scatter(
+            tree,
+            children,
+            parent_distribution,
+            feature_space,
+            use_dense_continuous_covariance,
         )
 
 
@@ -411,10 +406,7 @@ def resolve_node_continuous_covariance_by_block(
     if len(children) != 2:
         return parent_covariance_by_block
 
-    child_leaf_counts = [
-        int(tree.nodes[child_id]["leaf_count"])
-        for child_id in children
-    ]
+    child_leaf_counts = [int(tree.nodes[child_id]["leaf_count"]) for child_id in children]
     if any(count < min_child_leaf_count for count in child_leaf_counts):
         return parent_covariance_by_block
 
@@ -442,12 +434,11 @@ def resolve_node_continuous_covariance_by_block(
             child_covariances_by_block,
             strict=True,
         ):
-            weighted_covariance_sum += (
-                float(child_leaf_count - 1)
-                * np.asarray(child_covariance_by_block[block.name], dtype=np.float64)
+            weighted_covariance_sum += float(child_leaf_count - 1) * np.asarray(
+                child_covariance_by_block[block.name], dtype=np.float64
             )
-        within_covariance_by_block[block.name] = (
-            weighted_covariance_sum / float(residual_denominator)
+        within_covariance_by_block[block.name] = weighted_covariance_sum / float(
+            residual_denominator
         )
 
     return within_covariance_by_block

@@ -2,10 +2,11 @@
 title: Tree Construction Method Map
 type: analysis
 status: reviewed
-updated: 2026-07-27
+updated: 2026-07-28
 sources:
   - tree_break_selection/tree/README.md
   - tree_break_selection/tree/io.py
+  - tree_break_selection/tree/construction.py
   - tree_break_selection/tree/phylogenetic.py
   - tree_break_selection/tree/optimized_branch_lengths.py
   - tree_break_selection/space_separation/diffusion.py
@@ -43,6 +44,11 @@ oriented by minimum ancestor deviation (MAD). Raw linkage ultrametric lengths
 and fixed-topology NNLS are alternative edge-length policies on an existing
 topology, not additional tree builders. Gate profiles and traversal settings
 are further downstream.
+
+The canonical binary distance (`hamming`) and linkage method (`average`) are
+immutable defaults owned by `tree/construction.py`. Alternative geometry and
+topology choices are explicit method inputs; there is no mutable package-wide
+runtime configuration.
 
 ## Details
 

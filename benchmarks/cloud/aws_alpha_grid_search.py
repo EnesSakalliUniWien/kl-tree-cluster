@@ -312,7 +312,9 @@ def main() -> None:
     if args.command == "run-shard":
         shard_index = resolve_shard_index(args.shard_index)
         run_shard(configured, shard_index)
-        print(f"Wrote alpha-grid shard {shard_index} to {make_shard_spec(configured, shard_index).output_dir}")
+        print(
+            f"Wrote alpha-grid shard {shard_index} to {make_shard_spec(configured, shard_index).output_dir}"
+        )
     elif args.command == "merge":
         merge_shards(configured)
         print(f"Wrote merged alpha-grid study to {configured.output_dir / 'merged'}")

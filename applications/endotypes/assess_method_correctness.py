@@ -47,7 +47,9 @@ from scipy.stats import fisher_exact
 # ═══════════════════════════════════════════════════════════════════════════
 
 DEFAULT_FEATURE_MATRIX = Path("data/feature_matrices/HC_feature_matrix_GO_CC.tsv")
-DEFAULT_ASSIGNMENTS = Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv")
+DEFAULT_ASSIGNMENTS = Path(
+    "benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv"
+)
 RESULT_DIRS = {
     0.01: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_001"),
     0.05: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005"),
@@ -347,7 +349,9 @@ def enrichment_summary(fm: pd.DataFrame, assign: pd.DataFrame, min_size: int = 2
         else (
             "GOOD — majority of clusters are enriched"
             if frac > 0.7
-            else "MODERATE" if frac > 0.5 else "WEAK"
+            else "MODERATE"
+            if frac > 0.5
+            else "WEAK"
         )
     )
     print(f"  Verdict                     : {verdict}")
@@ -837,8 +841,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_FEATURE_MATRIX,
         help=(
-            "Binary gene×pathway TSV "
-            "(default: data/feature_matrices/HC_feature_matrix_GO_CC.tsv)"
+            "Binary gene×pathway TSV (default: data/feature_matrices/HC_feature_matrix_GO_CC.tsv)"
         ),
     )
     p.add_argument(

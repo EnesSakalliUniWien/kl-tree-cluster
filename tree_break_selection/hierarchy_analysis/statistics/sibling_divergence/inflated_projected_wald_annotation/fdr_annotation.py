@@ -37,9 +37,7 @@ def _validate_sibling_results(
 
     if not np.isfinite(test_statistics).all():
         raise ValueError("Sibling test statistics must be finite before FDR correction.")
-    if not np.isfinite(degrees_of_freedom_values).all() or np.any(
-        degrees_of_freedom_values < 0
-    ):
+    if not np.isfinite(degrees_of_freedom_values).all() or np.any(degrees_of_freedom_values < 0):
         raise ValueError(
             "Sibling test degrees of freedom must be finite and non-negative before FDR correction."
         )
@@ -81,8 +79,7 @@ def _parent_passes_traversal_prerequisites(
 
     if "Child_Parent_Divergence_Significant" not in annotations_df.columns:
         raise ValueError(
-            "Traversal-aligned sibling FDR requires "
-            "'Child_Parent_Divergence_Significant'."
+            "Traversal-aligned sibling FDR requires 'Child_Parent_Divergence_Significant'."
         )
 
     missing_children = [child for child in children if child not in annotations_df.index]
@@ -141,9 +138,7 @@ def apply_traversal_aligned_sibling_bh_results(
         annotations_df.loc[parents, "Sibling_Gate_P_Value_Calibration"] = [
             _sibling_gate_calibration_label(label) for label in method_labels
         ]
-        annotations_df.loc[parents, "Sibling_Gate_P_Value_Role"] = (
-            "active_traversal_sibling_gate"
-        )
+        annotations_df.loc[parents, "Sibling_Gate_P_Value_Role"] = "active_traversal_sibling_gate"
 
     parent_index = {parent: index for index, parent in enumerate(parents)}
     frontier = _root_nodes(tree)

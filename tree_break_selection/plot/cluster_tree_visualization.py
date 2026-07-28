@@ -19,21 +19,64 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 from .cluster_color_mapping import build_cluster_color_spec, present_cluster_ids
-from .config import (
-    EDGE_DRAW_ORDER,
-    EDGE_STYLES,
-    HALO_SIZE_MULTIPLIER,
-    HALO_SIZE_OFFSET,
-    HALO_STYLES,
-    INTERNAL_NODE_STYLE,
-    LEAF_NODE_STYLE,
-    LEGEND_NODE_MARKER_SIZE,
-    UNASSIGNED_NODE_COLOR,
-)
 
 CHILD_PARENT_SIGNIFICANT_COL = "Child_Parent_Divergence_Significant"
 SIBLING_DIFFERENT_COL = "Sibling_BH_Different"
 SIBLING_SKIPPED_COL = "Sibling_Divergence_Skipped"
+
+UNASSIGNED_NODE_COLOR = "#CCCCCC"
+INTERNAL_NODE_COLOR = "#D7D7D7"
+LEAF_NODE_STYLE = {
+    "alpha": 0.92,
+    "linewidths": 0.6,
+    "edgecolors": "#F4F4F4",
+}
+INTERNAL_NODE_STYLE = {
+    "alpha": 0.78,
+    "linewidths": 0.0,
+    "node_color": INTERNAL_NODE_COLOR,
+}
+EDGE_DRAW_ORDER = ("missing", "not_different", "different")
+EDGE_STYLES = {
+    "missing": {
+        "edge_color": "#8A8A8A",
+        "width": 0.8,
+        "style": "dashed",
+        "alpha": 0.75,
+        "legend_label": "Edge: sibling test missing",
+    },
+    "not_different": {
+        "edge_color": "#BEBEBE",
+        "width": 1.0,
+        "style": "solid",
+        "alpha": 0.8,
+        "legend_label": "Edge: sibling not different",
+    },
+    "different": {
+        "edge_color": "#1F1F1F",
+        "width": 2.0,
+        "style": "solid",
+        "alpha": 0.98,
+        "legend_label": "Edge: sibling different",
+    },
+}
+HALO_SIZE_MULTIPLIER = 2.8
+HALO_SIZE_OFFSET = 14
+HALO_STYLES = {
+    "significant": {
+        "edgecolors": "#1C1C1C",
+        "linewidths": 1.2,
+        "linestyle": "solid",
+        "legend_label": "Node: child-parent significant",
+    },
+    "tested_not_significant": {
+        "edgecolors": "#6E6E6E",
+        "linewidths": 1.2,
+        "linestyle": (0, (1.0, 1.7)),
+        "legend_label": "Node: tested, not significant",
+    },
+}
+LEGEND_NODE_MARKER_SIZE = 7
 
 
 def _lookup_annotation_value(annotations_df, node_id: object, column_name: str) -> object:
@@ -520,12 +563,10 @@ def plot_tree_with_clusters(
     tree,
     decomposition_results: Dict,
     annotations_df,
-    use_labels: bool = True,
     width: int = 900,
     height: int = 600,
     node_size: int = 20,
     font_size: int = 10,
-    show_cluster_boundaries: bool = True,
     colormap: Optional[str] = None,
     title: Optional[str] = None,
     layout: str = "rectangular",
@@ -538,15 +579,8 @@ def plot_tree_with_clusters(
     """
     Plot hierarchical tree with cluster assignments.
 
-    Notes
-    -----
-    - This is intentionally a lightweight plot. ``show_cluster_boundaries`` is a
-      placeholder (not implemented).
-    - Leaf nodes are colored by their cluster ID; internal nodes are gray.
+    Leaf nodes are colored by their cluster ID; internal nodes are gray.
     """
-    _ = show_cluster_boundaries
-    _ = use_labels
-
     cluster_assignments = decomposition_results["cluster_assignments"]
     num_clusters = decomposition_results["num_clusters"]
 

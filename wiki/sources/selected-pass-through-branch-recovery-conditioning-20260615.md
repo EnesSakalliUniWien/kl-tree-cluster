@@ -2,10 +2,10 @@
 title: Selected Pass-Through Branch Recovery Conditioning 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_pass_through_branch_recovery_conditioning.py
-  - tests/validation/140_test_selected_pass_through_branch_recovery_conditioning.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_pass_through_branch_recovery_conditioning.py
+  - tests/validation/calibration/selected/family/140_test_selected_pass_through_branch_recovery_conditioning.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_pass_through_branch_recovery_focused
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_pass_through_branch_recovery_real_overlap
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_pass_through_branch_recovery_focused_feature_geometry
@@ -282,7 +282,7 @@ branch-positive rows are real, but they are not retained pass-through rows.
 
 ## Evidence
 
-- `tests/validation/140_test_selected_pass_through_branch_recovery_conditioning.py`
+- `tests/validation/calibration/selected/family/140_test_selected_pass_through_branch_recovery_conditioning.py`
   verifies focused fixture class coverage, feature-geometry separation,
   balance-product leakage, path-based feature-geometry construction,
   fail-closed summary behavior, and output writing.

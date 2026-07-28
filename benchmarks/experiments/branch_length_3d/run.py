@@ -103,14 +103,10 @@ def compute_grid_summary(combined: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
-def plot_3d_surface(
-    summary: pd.DataFrame, n_leaves: int, n_replicates: int
-) -> plt.Figure:
+def plot_3d_surface(summary: pd.DataFrame, n_leaves: int, n_replicates: int) -> plt.Figure:
     """Create 3D surface plot of ARI vs branch_length and n_features."""
     # Pivot to create grid
-    pivot = summary.pivot(
-        index="n_features", columns="branch_length", values="ari_mean"
-    )
+    pivot = summary.pivot(index="n_features", columns="branch_length", values="ari_mean")
 
     X = pivot.columns.values  # branch_length
     Y = pivot.index.values  # n_features
@@ -160,15 +156,11 @@ def plot_3d_surface(
 
 def plot_heatmap(summary: pd.DataFrame, n_leaves: int, n_replicates: int) -> plt.Figure:
     """Create heatmap of ARI vs branch_length and n_features."""
-    pivot = summary.pivot(
-        index="n_features", columns="branch_length", values="ari_mean"
-    )
+    pivot = summary.pivot(index="n_features", columns="branch_length", values="ari_mean")
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    im = ax.imshow(
-        pivot.values, cmap="viridis", aspect="auto", vmin=0, vmax=1, origin="lower"
-    )
+    im = ax.imshow(pivot.values, cmap="viridis", aspect="auto", vmin=0, vmax=1, origin="lower")
 
     # Set ticks
     ax.set_xticks(range(len(pivot.columns)))
@@ -297,18 +289,12 @@ def plot_correct_split_rate(combined: pd.DataFrame, n_leaves: int) -> plt.Figure
 
     # Plot 2: Heatmap of correct split rate
     ax = axes[1]
-    pivot = summary.pivot(
-        index="n_features", columns="branch_length", values="correct_split_rate"
-    )
+    pivot = summary.pivot(index="n_features", columns="branch_length", values="correct_split_rate")
 
-    im = ax.imshow(
-        pivot.values, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1, origin="lower"
-    )
+    im = ax.imshow(pivot.values, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1, origin="lower")
 
     ax.set_xticks(range(len(pivot.columns)))
-    ax.set_xticklabels(
-        [f"{x:.2f}" for x in pivot.columns], rotation=45, ha="right", fontsize=8
-    )
+    ax.set_xticklabels([f"{x:.2f}" for x in pivot.columns], rotation=45, ha="right", fontsize=8)
     ax.set_yticks(range(len(pivot.index)))
     ax.set_yticklabels(pivot.index)
 
@@ -404,9 +390,7 @@ def main():
     print()
 
     # Pivot table for display
-    pivot = summary.pivot(
-        index="n_features", columns="branch_length", values="ari_mean"
-    )
+    pivot = summary.pivot(index="n_features", columns="branch_length", values="ari_mean")
     print("Mean ARI by (Features × Branch Length):")
     print(pivot.round(2).to_string())
 
@@ -419,9 +403,7 @@ def main():
 
     # Create plots
     fig1 = plot_3d_surface(summary, n_leaves, n_replicates)
-    fig1.savefig(
-        output_dir / "branch_length_3d_surface.png", dpi=150, bbox_inches="tight"
-    )
+    fig1.savefig(output_dir / "branch_length_3d_surface.png", dpi=150, bbox_inches="tight")
     print(f"Saved: {output_dir / 'branch_length_3d_surface.png'}")
 
     fig2 = plot_heatmap(summary, n_leaves, n_replicates)
@@ -429,9 +411,7 @@ def main():
     print(f"Saved: {output_dir / 'branch_length_heatmap.png'}")
 
     fig3 = plot_line_by_features(summary, n_leaves)
-    fig3.savefig(
-        output_dir / "branch_length_by_features.png", dpi=150, bbox_inches="tight"
-    )
+    fig3.savefig(output_dir / "branch_length_by_features.png", dpi=150, bbox_inches="tight")
     print(f"Saved: {output_dir / 'branch_length_by_features.png'}")
 
     # Plot correct split rate
@@ -445,9 +425,7 @@ def main():
     print("CORRECT SPLIT RATE")
     print("=" * 70)
     correct_summary = (
-        combined.groupby(["branch_length", "n_features"])["correct_split"]
-        .mean()
-        .unstack()
+        combined.groupby(["branch_length", "n_features"])["correct_split"].mean().unstack()
     )
     print(correct_summary.round(2).to_string())
 

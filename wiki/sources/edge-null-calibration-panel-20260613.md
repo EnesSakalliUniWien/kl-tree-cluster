@@ -2,10 +2,10 @@
 title: Edge Null Calibration Panel 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/edge_null_calibration_panel.py
-  - tests/validation/88_test_edge_null_calibration_panel.py
+  - benchmarks/diagnostics/calibration/edge/edge_null_calibration_panel.py
+  - tests/validation/calibration/edge/88_test_edge_null_calibration_panel.py
   - wiki/analyses/null-edge-sibling-calibration-enhancement-plan.md
 tags:
   - source
@@ -39,9 +39,9 @@ edge-test rows separately for `fixed_tree_null`, `selected_tree_null`, and
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/edge_null_calibration_panel.py` defines
+- `benchmarks/diagnostics/calibration/edge/edge_null_calibration_panel.py` defines
   the dataframe API, CSV runner, manifest, CLI, and role contract.
-- `tests/validation/88_test_edge_null_calibration_panel.py` verifies nominal
+- `tests/validation/calibration/edge/88_test_edge_null_calibration_panel.py` verifies nominal
   fixed-tree null behavior, inflated selected-tree null behavior, descriptive
   selected signal retention, unknown-role rejection, and output writing.
 - [[null-edge-sibling-calibration-enhancement-plan]] names the edge-null panel

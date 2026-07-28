@@ -2,10 +2,10 @@
 title: Overlap Residual Family Recovery 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_residual_family_recovery.py
-  - tests/validation/114_test_overlap_residual_family_recovery.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_residual_family_recovery.py
+  - tests/validation/calibration/overlap/114_test_overlap_residual_family_recovery.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_metric_separability.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_threshold_scan.csv
@@ -59,13 +59,13 @@ non-recovery families. Oracle truth labels are used only for evaluation.
 
 ## Evidence
 
-- `tests/validation/114_test_overlap_residual_family_recovery.py` verifies
+- `tests/validation/calibration/overlap/114_test_overlap_residual_family_recovery.py` verifies
   residual family aggregation after fragment blocking, metric summary/AUC
   output, and file writing.
 - Verification passed:
-  `pytest tests/validation/114_test_overlap_residual_family_recovery.py -q`
+  `pytest tests/validation/calibration/overlap/114_test_overlap_residual_family_recovery.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_residual_family_recovery.py tests/validation/114_test_overlap_residual_family_recovery.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_residual_family_recovery.py tests/validation/calibration/overlap/114_test_overlap_residual_family_recovery.py`.
 
 ## Links
 

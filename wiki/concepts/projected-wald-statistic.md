@@ -2,19 +2,19 @@
 title: Projected-Wald Statistic
 type: concept
 status: reviewed
-updated: 2026-06-23
+updated: 2026-07-28
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/sections/method/edge_test.tex
   - manuscript/sections/method/sibling_test.tex
-  - benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py
-  - benchmarks/diagnostics/calibration/covariance_laplacian_panel.py
-  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py
-  - benchmarks/diagnostics/calibration/null_law_decomposition_panel.py
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
-  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
-  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
+  - benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py
+  - benchmarks/diagnostics/calibration/statistics/covariance_laplacian_panel.py
+  - benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py
+  - benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_traversal_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/fixed_subspace_annotation.py
   - tests/statistics/44_test_fixed_coordinate_fdr_candidates.py
@@ -271,27 +271,27 @@ categorical support evidence remains open.
   sibling projection dimension, and orthonormal reference law.
 - `manuscript/guides/full_method_logic_map.md` gives the canonical
   terminology and assumptions.
-- `benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py`
+- `benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py`
   compares current chi-square df against covariance-inferred df/scale.
-- `benchmarks/diagnostics/calibration/covariance_laplacian_panel.py` separates
+- `benchmarks/diagnostics/calibration/statistics/covariance_laplacian_panel.py` separates
   sibling contrast covariance connectivity from parent spectral covariance
   connectivity.
-- `benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py`
+- `benchmarks/diagnostics/calibration/statistics/differential_statistic_validity_panel.py`
   tests local Fisher, projection, and nonsmooth selection conditions for the
   projected-Wald sibling statistic.
-- `benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py`
+- `benchmarks/diagnostics/calibration/statistics/regularized_wald_statistic_panel.py`
   tests smoothed projected-Wald variants under fixed-tree-first null
   validation.
-- `benchmarks/diagnostics/calibration/null_law_decomposition_panel.py`
+- `benchmarks/diagnostics/calibration/statistics/null_law_decomposition_panel.py`
   decomposes fixed-topology sibling null behavior into same-sample adaptive,
   independent tree-sample, and random fixed orthonormal projection sources.
-- `benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py`
+- `benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_panel.py`
   evaluates fixed-coordinate sibling gates as a non-cross-fit candidate repair
   for same-data selected topology.
-- `benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py`
+- `benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_traversal_panel.py`
   evaluates the fixed gates through the actual top-down decomposition
   traversal.
-- `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`
+- `benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py`
   validates the runtime fixed-profile path and the opt-in selected-root
   permutation guard evidence fields.
 

@@ -2,12 +2,12 @@
 title: Selected Ratio Tail Law Diagnostic 2026-06-02
 type: source
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - benchmarks/diagnostics/calibration/selected_tail_admissibility_domain.py
-  - tests/validation/53_test_selected_hierarchy_geometry_covariates.py
-  - tests/validation/57_test_selected_tail_admissibility_domain.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_admissibility_domain.py
+  - tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py
+  - tests/validation/calibration/selected/tail/57_test_selected_tail_admissibility_domain.py
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/geometry_summary_by_case.csv
@@ -134,10 +134,10 @@ a general external calibration law.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   implements the descriptive selected-ratio tail-law table and explicit
   production-admissibility checks.
-- `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
+- `tests/validation/calibration/selected/hierarchy/53_test_selected_hierarchy_geometry_covariates.py`
   validates context support reporting, held-out exceedance estimation,
   admissibility failures, and output creation.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json`

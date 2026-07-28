@@ -2,15 +2,15 @@
 title: Barycentric Method Literature Request 2026-06-04
 type: source
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
   - raw/inbox/barycentric-method-literature-request-20260604.txt
   - manuscript/sections/method/representation.tex
   - manuscript/sections/method/notation.tex
   - manuscript/sections/method/assumptions_validation.tex
   - manuscript/references.bib
-  - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
-  - tests/validation/68_test_selected_tail_law_q5_validation.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_law_q5_validation.py
+  - tests/validation/calibration/selected/tail/68_test_selected_tail_law_q5_validation.py
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_summary.csv
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv
 tags:

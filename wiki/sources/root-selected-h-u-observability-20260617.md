@@ -2,19 +2,19 @@
 title: Root Selected H U Observability 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/node_spectral_result.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
   - tree_break_selection/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence_annotation/spectral_context.py
-  - benchmarks/diagnostics/calibration/root_selected_region_margins.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_conditioned_coherent_topology_join.py
-  - benchmarks/diagnostics/calibration/root_selected_h_u_observability_panel.py
-  - tests/validation/55_test_root_selected_region_margins.py
-  - tests/validation/168_test_root_tie_rank_conditioned_coherent_topology_join.py
-  - tests/validation/175_test_root_selected_h_u_observability_panel.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_region_margins.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_conditioned_coherent_topology_join.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_h_u_observability_panel.py
+  - tests/validation/calibration/root/selected/55_test_root_selected_region_margins.py
+  - tests/validation/calibration/root/tie_rank/168_test_root_tie_rank_conditioned_coherent_topology_join.py
+  - tests/validation/calibration/root/selected/175_test_root_selected_h_u_observability_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_mild_accumulated
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_h_u_observability_mild_accumulated

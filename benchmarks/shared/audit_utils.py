@@ -160,8 +160,7 @@ def export_case_and_method_matrix_audits(
         keys = sorted(leaf_distributions.keys(), key=str)
         values = [np.asarray(leaf_distributions[k]) for k in keys]
         if all(
-            v.size > 0 and v.dtype != object and np.issubdtype(v.dtype, np.number)
-            for v in values
+            v.size > 0 and v.dtype != object and np.issubdtype(v.dtype, np.number) for v in values
         ):
             try:
                 stacked = np.stack(values, axis=0)

@@ -380,9 +380,7 @@ def order_artifacts(
 def cluster_color_values(labels: pd.Series) -> tuple[np.ndarray, dict[int, int]]:
     labels_int = labels.astype(int)
     sizes = labels_int.value_counts()
-    rank_by_cluster = {
-        int(cluster_id): int(rank) for rank, cluster_id in enumerate(sizes.index)
-    }
+    rank_by_cluster = {int(cluster_id): int(rank) for rank, cluster_id in enumerate(sizes.index)}
     return labels_int.map(rank_by_cluster).to_numpy(dtype=int), rank_by_cluster
 
 
@@ -403,9 +401,7 @@ def compute_embedding(
         raise ValueError("Embedding input has zero columns.")
     if values.shape[1] == 1:
         rng = np.random.default_rng(random_state)
-        values = np.column_stack(
-            [values[:, 0], rng.normal(0.0, 1e-9, size=values.shape[0])]
-        )
+        values = np.column_stack([values[:, 0], rng.normal(0.0, 1e-9, size=values.shape[0])])
 
     if method == "umap":
         import umap
@@ -446,7 +442,9 @@ def load_or_compute_global_embedding(
         sep = "\t" if global_embedding_path.suffix.lower() in {".tsv", ".tab"} else ","
         global_embedding = pd.read_csv(global_embedding_path, sep=sep)
         if "gene" not in global_embedding.columns:
-            global_embedding = global_embedding.rename(columns={global_embedding.columns[0]: "gene"})
+            global_embedding = global_embedding.rename(
+                columns={global_embedding.columns[0]: "gene"}
+            )
         numeric_columns = [
             column
             for column in global_embedding.columns
@@ -478,7 +476,9 @@ def load_or_compute_global_embedding(
     x_col = f"Global {method.upper()} axis 1"
     y_col = f"Global {method.upper()} axis 2"
     return (
-        pd.DataFrame({"gene": data.index.to_numpy(), x_col: embedding[:, 0], y_col: embedding[:, 1]}),
+        pd.DataFrame(
+            {"gene": data.index.to_numpy(), x_col: embedding[:, 0], y_col: embedding[:, 1]}
+        ),
         x_col,
         y_col,
     )
@@ -634,17 +634,14 @@ def compute_internal_tree_geometry(
         sibling_centroid_distance = vector_norm(sibling_vector)
         parent_radius_q50 = quantile_or_nan(parent_radius, 0.50)
         parent_radius_scale = (
-            max(parent_radius_q50, 1e-12)
-            if math.isfinite(parent_radius_q50)
-            else math.nan
+            max(parent_radius_q50, 1e-12) if math.isfinite(parent_radius_q50) else math.nan
         )
         child_radius_scale = max(
             quantile_or_nan(left_radius, 0.50) + quantile_or_nan(right_radius, 0.50),
             1e-12,
         )
         common_axis_mean_delta = float(
-            np.mean(common_axis_score[left_leaves])
-            - np.mean(common_axis_score[right_leaves])
+            np.mean(common_axis_score[left_leaves]) - np.mean(common_axis_score[right_leaves])
         )
 
         rows.append(
@@ -669,15 +666,11 @@ def compute_internal_tree_geometry(
                 "left_branch_norm": vector_norm(left_branch),
                 "right_branch_norm": vector_norm(right_branch),
                 "sibling_centroid_distance": sibling_centroid_distance,
-                "sibling_centroid_cosine_from_origin": vector_cosine(
-                    left_centroid, right_centroid
-                ),
+                "sibling_centroid_cosine_from_origin": vector_cosine(left_centroid, right_centroid),
                 "sibling_centroid_angle_from_origin_deg": angle_between_vectors_deg(
                     left_centroid, right_centroid
                 ),
-                "sibling_branch_cosine_from_parent": vector_cosine(
-                    left_branch, right_branch
-                ),
+                "sibling_branch_cosine_from_parent": vector_cosine(left_branch, right_branch),
                 "sibling_branch_angle_from_parent_deg": angle_between_vectors_deg(
                     left_branch, right_branch
                 ),
@@ -698,9 +691,7 @@ def compute_internal_tree_geometry(
                 "right_branch_angle_to_leading_axis_deg": (
                     unoriented_angle_to_leading_axis_deg(right_branch)
                 ),
-                "parent_centroid_independent_fraction": independent_fraction(
-                    parent_centroid
-                ),
+                "parent_centroid_independent_fraction": independent_fraction(parent_centroid),
                 "left_branch_independent_fraction": independent_fraction(left_branch),
                 "right_branch_independent_fraction": independent_fraction(right_branch),
                 "parent_common_axis_mean": float(np.mean(common_axis_score[parent_leaves])),
@@ -733,9 +724,7 @@ def compute_block_geometry(
     radius = np.linalg.norm(coords, axis=1)
     leading_coord = coords[:, 0] if coords.shape[1] else np.zeros(len(data))
     independent_radius = (
-        np.linalg.norm(coords[:, 1:], axis=1)
-        if coords.shape[1] > 1
-        else np.zeros(len(data))
+        np.linalg.norm(coords[:, 1:], axis=1) if coords.shape[1] > 1 else np.zeros(len(data))
     )
     with np.errstate(divide="ignore", invalid="ignore"):
         signed_cos_to_axis = np.divide(
@@ -750,9 +739,7 @@ def compute_block_geometry(
             out=np.zeros_like(independent_radius, dtype=float),
             where=radius > 1e-12,
         )
-    angle_to_axis_deg = np.degrees(
-        np.arccos(np.clip(np.abs(signed_cos_to_axis), 0.0, 1.0))
-    )
+    angle_to_axis_deg = np.degrees(np.arccos(np.clip(np.abs(signed_cos_to_axis), 0.0, 1.0)))
 
     sample_geometry = pd.DataFrame(
         {
@@ -801,18 +788,12 @@ def compute_block_geometry(
         "radius_q90": quantile_or_nan(radius, 0.90),
         "radius_max": float(np.max(radius)),
         "radius_common_axis_correlation": corr_or_nan(radius, common_axis_score),
-        "leading_coord_common_axis_correlation": corr_or_nan(
-            leading_coord, common_axis_score
-        ),
+        "leading_coord_common_axis_correlation": corr_or_nan(leading_coord, common_axis_score),
         "angle_to_leading_axis_deg_q10": quantile_or_nan(angle_to_axis_deg, 0.10),
         "angle_to_leading_axis_deg_q50": quantile_or_nan(angle_to_axis_deg, 0.50),
         "angle_to_leading_axis_deg_q90": quantile_or_nan(angle_to_axis_deg, 0.90),
-        "independent_radius_fraction_q50": quantile_or_nan(
-            independent_radius_fraction, 0.50
-        ),
-        "independent_radius_fraction_q90": quantile_or_nan(
-            independent_radius_fraction, 0.90
-        ),
+        "independent_radius_fraction_q50": quantile_or_nan(independent_radius_fraction, 0.50),
+        "independent_radius_fraction_q90": quantile_or_nan(independent_radius_fraction, 0.90),
         **pairwise,
     }
     return sample_geometry, summary
@@ -904,7 +885,9 @@ def build_artifacts(
         if not np.isfinite(distances).all() or np.allclose(distances, 0.0):
             raise ValueError(f"Degenerate block distances for {weighting}/{block.block_name}")
         linkage_matrix = linkage(distances, method="average")
-        assignment = load_assignment(resolve_assignment_path(results_dir, row["assignments_path"]), data.index)
+        assignment = load_assignment(
+            resolve_assignment_path(results_dir, row["assignments_path"]), data.index
+        )
         colors, _ = cluster_color_values(assignment["cluster_id"])
         emb2 = compute_embedding(
             coords,
@@ -1254,7 +1237,11 @@ def draw_per_block_pages(
             wspace=0.30,
             hspace=0.34,
         )
-        axes = [fig.add_subplot(grid[0, 0]), fig.add_subplot(grid[0, 1]), fig.add_subplot(grid[1, 0])]
+        axes = [
+            fig.add_subplot(grid[0, 0]),
+            fig.add_subplot(grid[0, 1]),
+            fig.add_subplot(grid[1, 0]),
+        ]
         tree_grid = grid[0, 2].subgridspec(2, 1, height_ratios=[0.82, 0.18], hspace=0.03)
         ax_tree = fig.add_subplot(tree_grid[0, 0])
         ax_strip = fig.add_subplot(tree_grid[1, 0])

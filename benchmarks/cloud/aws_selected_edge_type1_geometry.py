@@ -74,7 +74,9 @@ def make_shard_spec(
     """Assign replicate indices to one shard by modulo partition."""
     validate_shard_contract(shard_index=shard_index, shard_count=configured.shard_count)
     replicate_indices = tuple(
-        index for index in range(configured.replicates) if index % configured.shard_count == shard_index
+        index
+        for index in range(configured.replicates)
+        if index % configured.shard_count == shard_index
     )
     if not replicate_indices:
         raise ValueError(

@@ -11,9 +11,7 @@ class SupportRole(StrEnum):
 
     NULL_ANCHOR = "null_anchor"
     STOPPED_EDGE_NULL_ANCHOR = "stopped_edge_null_anchor"
-    ALGORITHM_SELECTED_SIGNAL_LIKE_EXCLUDED = (
-        "algorithm_selected_signal_like_excluded"
-    )
+    ALGORITHM_SELECTED_SIGNAL_LIKE_EXCLUDED = "algorithm_selected_signal_like_excluded"
     TRUTH_SIGNAL = "truth_signal"
     UNKNOWN = "unknown"
 
@@ -61,7 +59,10 @@ def classify_support_role(row: Mapping[str, object]) -> SupportRole:
         return SupportRole.NULL_ANCHOR
     if _truthy(row.get("is_edge_blocked")) or _truthy(row.get("edge_blocked")):
         return SupportRole.STOPPED_EDGE_NULL_ANCHOR
-    if _truthy(row.get("is_truth_signal")) or str(row.get("topology_signal_role", "")).lower() == "signal":
+    if (
+        _truthy(row.get("is_truth_signal"))
+        or str(row.get("topology_signal_role", "")).lower() == "signal"
+    ):
         return SupportRole.TRUTH_SIGNAL
     if _truthy(row.get("is_selected_nonnull")) or _truthy(
         row.get("algorithm_selected_signal_like")

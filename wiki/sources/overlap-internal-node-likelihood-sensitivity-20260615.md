@@ -2,10 +2,10 @@
 title: Overlap Internal-Node Likelihood Sensitivity 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_sensitivity.py
-  - tests/validation/123_test_overlap_internal_node_likelihood_sensitivity.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_internal_node_likelihood_sensitivity.py
+  - tests/validation/calibration/overlap/123_test_overlap_internal_node_likelihood_sensitivity.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_sensitivity/overlap_internal_node_likelihood_sensitivity.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_sensitivity/overlap_internal_node_likelihood_sensitivity_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_sensitivity/manifest.json
@@ -51,13 +51,13 @@ diagnostic-only and does not promote a production threshold.
 
 ## Evidence
 
-- `tests/validation/123_test_overlap_internal_node_likelihood_sensitivity.py`
+- `tests/validation/calibration/overlap/123_test_overlap_internal_node_likelihood_sensitivity.py`
   verifies zero-negative versus leakage classification, default-rule summary,
   and output writing.
 - Verification passed:
-  `pytest tests/validation/123_test_overlap_internal_node_likelihood_sensitivity.py -q`
+  `pytest tests/validation/calibration/overlap/123_test_overlap_internal_node_likelihood_sensitivity.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_sensitivity.py tests/validation/123_test_overlap_internal_node_likelihood_sensitivity.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_internal_node_likelihood_sensitivity.py tests/validation/calibration/overlap/123_test_overlap_internal_node_likelihood_sensitivity.py`.
 
 ## Links
 

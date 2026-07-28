@@ -8,7 +8,6 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import pandas as pd
-from tree_break_selection import config
 from tree_break_selection.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
 from tree_break_selection.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     GateAnnotationBundle,
@@ -21,7 +20,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
-from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
+from benchmarks.diagnostics.calibration.sibling.nulls.sibling_inflation_diagnostic import (
     collect_sibling_inflation_inputs,
 )
 
@@ -172,8 +171,7 @@ def _compute_gate_states(
     has_descendant_split: dict[object, bool] = {}
     for node in bottom_up_nodes(tree):
         has_descendant_split[node] = any(
-            can_split[child] or has_descendant_split[child]
-            for child in children_by_node[node]
+            can_split[child] or has_descendant_split[child] for child in children_by_node[node]
         )
 
     return split_prerequisites, sibling_gate_open, can_split, has_descendant_split
@@ -280,11 +278,7 @@ def collect_sibling_inflation_trace(
     for record in inputs.records:
         inflation_factor = np.nan
         inflation_applied = False
-        if (
-            inputs.model is not None
-            and not record.is_null_like
-            and record.degrees_of_freedom > 0
-        ):
+        if inputs.model is not None and not record.is_null_like and record.degrees_of_freedom > 0:
             inflation_factor = predict_empirical_inflation_factor(inputs.model, record)
             inflation_applied = True
         trace_by_parent[record.parent] = SiblingInflationTrace(
@@ -318,7 +312,7 @@ def build_gate_path_trace_dataframe(
     tbs_ari: float,
     oracle_true_k_ari: float,
     oracle_any_k_ari: float,
-    passthrough: bool = config.PASSTHROUGH,
+    passthrough: bool = True,
 ) -> pd.DataFrame:
     """Build one row per tree node with gate evidence and oracle comparison."""
     depths = compute_node_depths(tree)
@@ -381,9 +375,7 @@ def build_gate_path_trace_dataframe(
             "sibling_bh_different": _as_bool(
                 _annotation_value(annotations_df, node, "Sibling_BH_Different")
             ),
-            "sibling_bh_same": _as_bool(
-                _annotation_value(annotations_df, node, "Sibling_BH_Same")
-            ),
+            "sibling_bh_same": _as_bool(_annotation_value(annotations_df, node, "Sibling_BH_Same")),
             "sibling_adjusted_statistic": _as_float(
                 _annotation_value(annotations_df, node, "Sibling_Test_Statistic")
             ),
@@ -410,9 +402,7 @@ def build_gate_path_trace_dataframe(
                 _annotation_value(annotations_df, node, "Sibling_Projection_Dimension")
             ),
             "raw_sibling_statistic": (
-                np.nan
-                if inflation_trace is None
-                else inflation_trace.raw_sibling_statistic
+                np.nan if inflation_trace is None else inflation_trace.raw_sibling_statistic
             ),
             "raw_reference_scale": (
                 np.nan if inflation_trace is None else inflation_trace.raw_reference_scale
@@ -421,9 +411,7 @@ def build_gate_path_trace_dataframe(
                 np.nan if inflation_trace is None else inflation_trace.raw_p_value
             ),
             "empirical_inflation_factor": (
-                np.nan
-                if inflation_trace is None
-                else inflation_trace.empirical_inflation_factor
+                np.nan if inflation_trace is None else inflation_trace.empirical_inflation_factor
             ),
             "inflation_applied": (
                 False if inflation_trace is None else inflation_trace.inflation_applied
@@ -469,9 +457,7 @@ def summarize_gate_path_trace(trace_df: pd.DataFrame) -> pd.DataFrame:
                 "oracle_any_k_ari": float(group["oracle_any_k_ari"].iloc[0]),
                 "n_nodes": int(len(group)),
                 "n_actual_boundaries": int(group["actual_boundary"].sum()),
-                "n_oracle_true_k_boundaries": int(
-                    group["oracle_true_k_boundary"].sum()
-                ),
+                "n_oracle_true_k_boundaries": int(group["oracle_true_k_boundary"].sum()),
                 "n_actual_splits_oracle_boundary": int(
                     relation_counts.get("actual_splits_oracle_boundary", 0)
                 ),

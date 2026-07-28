@@ -109,7 +109,7 @@ That is not a multiple-testing artifact. It is a failure to detect a useful root
 
 Relevant code:
 
-- [config.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/config.py)
+- [tree_decomposition.py](/Users/berksakalli/Projects/kl-te-cluster/tree_break_selection/hierarchy_analysis/tree_decomposition.py)
 - [gate_evaluator.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py)
 - [tree_decomposition.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/hierarchy_analysis/tree_decomposition.py)
 

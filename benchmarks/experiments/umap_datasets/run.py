@@ -268,9 +268,7 @@ def plot_umap_embedding(
     embedding = reducer.fit_transform(X)
 
     # Plot true labels
-    ax_true.scatter(
-        embedding[:, 0], embedding[:, 1], c=y, cmap="Spectral", s=10, alpha=0.7
-    )
+    ax_true.scatter(embedding[:, 0], embedding[:, 1], c=y, cmap="Spectral", s=10, alpha=0.7)
     ax_true.set_title(f"{title} - True Labels")
     ax_true.set_aspect("equal", "datalim")
 

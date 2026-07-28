@@ -114,7 +114,9 @@ def read_expression(adata_path: Path) -> tuple[pd.DataFrame, pd.Series]:
     matrix = raw.X[:, [raw_index[gene] for gene in MARKERS]]
     if sparse.issparse(matrix):
         matrix = matrix.tocsr().toarray()
-    expression = pd.DataFrame(np.asarray(matrix), index=adata.obs_names.astype(str), columns=MARKERS)
+    expression = pd.DataFrame(
+        np.asarray(matrix), index=adata.obs_names.astype(str), columns=MARKERS
+    )
     celltypes = adata.obs["celltype"].astype(str)
     celltypes.index = adata.obs_names.astype(str)
     return expression, celltypes
@@ -383,11 +385,15 @@ def main() -> None:
             )
         )
 
-    focus_nodes = meeting_review.loc[meeting_review["display_focus"].astype(bool), "node"].astype(str)
+    focus_nodes = meeting_review.loc[meeting_review["display_focus"].astype(bool), "node"].astype(
+        str
+    )
     node_rows: list[dict[str, object]] = []
     child_rows: list[dict[str, object]] = []
     for node in focus_nodes:
-        node_cell_ids = assignments.iloc[list(descendant_leaves(node))]["cell_id"].astype(str).tolist()
+        node_cell_ids = (
+            assignments.iloc[list(descendant_leaves(node))]["cell_id"].astype(str).tolist()
+        )
         row = summarize_cells(
             label=node,
             group_type="meeting_node",
@@ -471,7 +477,9 @@ def main() -> None:
         out / "tbs_adaptive_monophyletic_meeting_child_progenitor_signature_comparison.csv",
         index=False,
     )
-    full_celltype_df.to_csv(out / "pancreas_full_celltype_progenitor_signature_scores.csv", index=False)
+    full_celltype_df.to_csv(
+        out / "pancreas_full_celltype_progenitor_signature_scores.csv", index=False
+    )
     benchmark_celltype_df.to_csv(
         out / "pancreas_benchmark_celltype_progenitor_signature_scores.csv",
         index=False,

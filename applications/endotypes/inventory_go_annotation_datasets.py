@@ -357,7 +357,10 @@ def result_root_inventory(result_roots: Sequence[Path]) -> pd.DataFrame:
                 "has_connected_manifest": (path / "connected_results_manifest.json").exists(),
                 "has_subspaces": (path / "subspaces").exists(),
                 "has_rankings": (path / "rankings").exists(),
-                "has_method_pdfs": any("_by_method" in str(file) and file.suffix == ".pdf" for file in path.rglob("*.pdf")),
+                "has_method_pdfs": any(
+                    "_by_method" in str(file) and file.suffix == ".pdf"
+                    for file in path.rglob("*.pdf")
+                ),
             }
         )
     frame = pd.DataFrame(rows)

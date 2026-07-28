@@ -136,7 +136,9 @@ def load_banner_font(size: int) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def write_ranked_page(source_page: Path, target_page: Path, row: pd.Series, method_label: str) -> None:
+def write_ranked_page(
+    source_page: Path, target_page: Path, row: pd.Series, method_label: str
+) -> None:
     image = Image.open(source_page).convert("RGB")
     banner_h = 96
     output = Image.new("RGB", (image.width, image.height + banner_h), "white")
@@ -337,7 +339,9 @@ def main() -> None:
         if "method_run_id" not in method_ranking.columns:
             method_ranking["method_run_id"] = (
                 method_ranking["run_id"]
-                .str.replace("adaptive_diffusion_kak__", "adaptive_diffusion_cosine_subspace__", regex=False)
+                .str.replace(
+                    "adaptive_diffusion_kak__", "adaptive_diffusion_cosine_subspace__", regex=False
+                )
                 .str.replace("raw_kak__", "raw_cosine_subspace__", regex=False)
             )
         method_ranking["source_run_id"] = method_ranking["run_id"]
@@ -356,14 +360,18 @@ def main() -> None:
         method_coherence = coherence[coherence["run_id"].isin(source_run_ids)].copy()
         method_coherence["source_run_id"] = method_coherence["run_id"]
         method_coherence["run_id"] = method_coherence["run_id"].replace(
-            dict(zip(method_ranking["source_run_id"], method_ranking["method_run_id"], strict=False))
+            dict(
+                zip(method_ranking["source_run_id"], method_ranking["method_run_id"], strict=False)
+            )
         )
         method_coherence = method_coherence.drop(columns=["source_run_id"], errors="ignore")
         method_coherence.to_csv(method_coherence_path, index=False)
         method_tfidf = tfidf_quality[tfidf_quality["run_id"].isin(source_run_ids)].copy()
         method_tfidf["source_run_id"] = method_tfidf["run_id"]
         method_tfidf["run_id"] = method_tfidf["run_id"].replace(
-            dict(zip(method_ranking["source_run_id"], method_ranking["method_run_id"], strict=False))
+            dict(
+                zip(method_ranking["source_run_id"], method_ranking["method_run_id"], strict=False)
+            )
         )
         method_tfidf = method_tfidf.drop(columns=["source_run_id"], errors="ignore")
         method_tfidf.to_csv(method_tfidf_path, index=False)
@@ -371,8 +379,10 @@ def main() -> None:
         copied_pages: list[Path] = []
         for _, row in method_ranking.iterrows():
             source_candidates = [
-                pages_dir / f"{int(row['display_rank']):02d}_{safe_name(str(row['method_run_id']))}.png",
-                pages_dir / f"{int(row['display_rank']):02d}_{safe_name(str(row['source_run_id']))}.png",
+                pages_dir
+                / f"{int(row['display_rank']):02d}_{safe_name(str(row['method_run_id']))}.png",
+                pages_dir
+                / f"{int(row['display_rank']):02d}_{safe_name(str(row['source_run_id']))}.png",
             ]
             source_page = next((path for path in source_candidates if path.exists()), None)
             if source_page is None:

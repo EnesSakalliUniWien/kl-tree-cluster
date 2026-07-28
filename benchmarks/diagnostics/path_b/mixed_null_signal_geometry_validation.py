@@ -37,7 +37,6 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -193,7 +192,9 @@ def _entropy(counts: dict[object, int]) -> float:
     total = float(sum(counts.values()))
     if total <= 0.0:
         return math.nan
-    probabilities = np.asarray([count / total for count in counts.values() if count > 0], dtype=float)
+    probabilities = np.asarray(
+        [count / total for count in counts.values() if count > 0], dtype=float
+    )
     return float(-np.sum(probabilities * np.log(probabilities)))
 
 
@@ -284,8 +285,12 @@ def label_tree_sibling_contexts(
         left, right = children
         left_leaves = tuple(descendant_sets[left])
         right_leaves = tuple(descendant_sets[right])
-        left_truth = [truth_by_leaf.get(leaf, truth_by_leaf.get(str(leaf), np.nan)) for leaf in left_leaves]
-        right_truth = [truth_by_leaf.get(leaf, truth_by_leaf.get(str(leaf), np.nan)) for leaf in right_leaves]
+        left_truth = [
+            truth_by_leaf.get(leaf, truth_by_leaf.get(str(leaf), np.nan)) for leaf in left_leaves
+        ]
+        right_truth = [
+            truth_by_leaf.get(leaf, truth_by_leaf.get(str(leaf), np.nan)) for leaf in right_leaves
+        ]
         left_size = len(left_truth)
         right_size = len(right_truth)
         parent_size = left_size + right_size
@@ -317,7 +322,9 @@ def label_tree_sibling_contexts(
                     if balance > 0.0
                     else math.nan
                 ),
-                "log_sampling_variance_scale": float(math.log((1.0 / left_size) + (1.0 / right_size))),
+                "log_sampling_variance_scale": float(
+                    math.log((1.0 / left_size) + (1.0 / right_size))
+                ),
                 **context,
                 "study_role": STUDY_ROLE,
             }
@@ -408,9 +415,7 @@ def build_row_aligned_kak_geometry_panel(
         left_radius_q50 = _safe_median_norm(left_centered)
         right_radius_q50 = _safe_median_norm(right_centered)
         parent_radius_scale = (
-            max(parent_radius_q50, 1e-12)
-            if math.isfinite(parent_radius_q50)
-            else math.nan
+            max(parent_radius_q50, 1e-12) if math.isfinite(parent_radius_q50) else math.nan
         )
         child_radius_scale = (
             max(left_radius_q50 + right_radius_q50, 1e-12)
@@ -435,9 +440,7 @@ def build_row_aligned_kak_geometry_panel(
             else math.nan
         )
         action_proxy = (
-            balance * (1.0 - balance) * parent_ratio**2
-            if math.isfinite(parent_ratio)
-            else math.nan
+            balance * (1.0 - balance) * parent_ratio**2 if math.isfinite(parent_ratio) else math.nan
         )
         action_capped = min(action_proxy, 1.0) if math.isfinite(action_proxy) else math.nan
         angle = _unoriented_angle_to_leading_axis_deg(parent_centroid)
@@ -558,12 +561,12 @@ def build_mixed_null_signal_geometry_panel(
 
     table["depth_bin"] = [_depth_bin(value) for value in table["depth"]]
     table["split_rejected_at_sibling_alpha"] = table["sibling_bh_different"].astype(bool)
-    table["raw_sibling_rejected_at_alpha"] = (
-        _finite_numeric(table, "sibling_raw_p_value") <= float(sibling_alpha)
+    table["raw_sibling_rejected_at_alpha"] = _finite_numeric(table, "sibling_raw_p_value") <= float(
+        sibling_alpha
     )
-    table["selected_nonnull_leakage_risk"] = (
-        table["is_signal_context"].astype(bool) | table["is_mixed_context"].astype(bool)
-    )
+    table["selected_nonnull_leakage_risk"] = table["is_signal_context"].astype(bool) | table[
+        "is_mixed_context"
+    ].astype(bool)
     table["edge_action"] = _finite_numeric(table, "min_child_edge_raw_neglog10_p")
     table["edge_bh_action"] = _finite_numeric(table, "min_child_edge_bh_neglog10_p")
     table["log_parent_leaf_count"] = np.log(
@@ -718,8 +721,7 @@ def _binary_auc_score(scores: np.ndarray, labels: np.ndarray) -> float:
         start = end
     positive_rank_sum = float(np.sum(ranks[labels]))
     return float(
-        (positive_rank_sum - n_positive * (n_positive + 1) / 2.0)
-        / (n_positive * n_negative)
+        (positive_rank_sum - n_positive * (n_positive + 1) / 2.0) / (n_positive * n_negative)
     )
 
 
@@ -817,7 +819,11 @@ def _fit_linear_score(
             "minimum_rows": int(minimum_rows),
         }
     if finite["signal_label"].nunique() < 2:
-        return {"status": "single_class_train", "active_predictors": active, "n_train": int(finite.shape[0])}
+        return {
+            "status": "single_class_train",
+            "active_predictors": active,
+            "n_train": int(finite.shape[0]),
+        }
     x_raw = finite[list(active)].to_numpy(dtype=float)
     means = x_raw.mean(axis=0)
     stds = x_raw.std(axis=0, ddof=0)
@@ -828,7 +834,11 @@ def _fit_linear_score(
         means = means[positive_std]
         stds = stds[positive_std]
     if not active:
-        return {"status": "no_nonconstant_predictors", "active_predictors": active, "n_train": int(finite.shape[0])}
+        return {
+            "status": "no_nonconstant_predictors",
+            "active_predictors": active,
+            "n_train": int(finite.shape[0]),
+        }
     x = (x_raw - means) / stds
     design = np.column_stack([np.ones(x.shape[0]), x])
     y = finite["signal_label"].to_numpy(dtype=float)
@@ -1123,18 +1133,12 @@ def summarize_geometry_models(validation: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     baseline = valid[valid["model_id"].eq("chi_square_only")]
     baseline_auc = (
-        float(baseline["holdout_signal_auc"].median())
-        if not baseline.empty
-        else math.nan
+        float(baseline["holdout_signal_auc"].median()) if not baseline.empty else math.nan
     )
     for model_id, group in validation.groupby("model_id", sort=False):
-        model_valid = group[
-            group["model_status"].astype(str).str.startswith("diagnostic_holdout")
-        ]
+        model_valid = group[group["model_status"].astype(str).str.startswith("diagnostic_holdout")]
         median_auc = (
-            float(model_valid["holdout_signal_auc"].median())
-            if not model_valid.empty
-            else math.nan
+            float(model_valid["holdout_signal_auc"].median()) if not model_valid.empty else math.nan
         )
         rows.append(
             {
@@ -1324,7 +1328,9 @@ def _write_report(
             auc = row.median_signal_auc
             gain = row.median_auc_gain_vs_chi_square_only
             auc_text = f"{auc:.6f}" if isinstance(auc, float) and math.isfinite(auc) else str(auc)
-            gain_text = f"{gain:.6f}" if isinstance(gain, float) and math.isfinite(gain) else str(gain)
+            gain_text = (
+                f"{gain:.6f}" if isinstance(gain, float) and math.isfinite(gain) else str(gain)
+            )
             lines.append(f"- `{row.model_id}`: median AUC `{auc_text}`, gain `{gain_text}`")
         lines.append("")
     truth_rows = (
@@ -1373,7 +1379,7 @@ def run_mixed_null_signal_geometry_validation(
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
     spectral_minimum_dimension: int = 1,
-    passthrough: bool = config.PASSTHROUGH,
+    passthrough: bool = True,
     min_train_rows_per_predictor: int = 5,
     min_test_rows: int = 3,
 ) -> MixedGeometryOutputs:
@@ -1493,7 +1499,11 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
     parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
     parser.add_argument("--spectral-minimum-dimension", type=int, default=1)
-    parser.add_argument("--passthrough", action=argparse.BooleanOptionalAction, default=config.PASSTHROUGH)
+    parser.add_argument(
+        "--passthrough",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
     parser.add_argument("--min-train-rows-per-predictor", type=int, default=5)
     parser.add_argument("--min-test-rows", type=int, default=3)
     return parser.parse_args(argv)
@@ -1512,7 +1522,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         min_train_rows_per_predictor=int(args.min_train_rows_per_predictor),
         min_test_rows=int(args.min_test_rows),
     )
-    print(json.dumps({key: str(value) for key, value in outputs.__dict__.items()}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {key: str(value) for key, value in outputs.__dict__.items()}, indent=2, sort_keys=True
+        )
+    )
 
 
 if __name__ == "__main__":

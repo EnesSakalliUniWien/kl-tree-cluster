@@ -22,9 +22,7 @@ def test_child_parent_edge_metadata_preserves_tree_node_id_identity() -> None:
     )
 
     significance_by_node = extract_child_parent_edge_significance_by_node(annotations)
-    tested_by_node, blocked_by_node = extract_child_parent_edge_testing_status_by_node(
-        annotations
-    )
+    tested_by_node, blocked_by_node = extract_child_parent_edge_testing_status_by_node(annotations)
 
     assert significance_by_node == {0: False, 1: True, 2: False}
     assert tested_by_node == {0: True, 1: False, 2: True}

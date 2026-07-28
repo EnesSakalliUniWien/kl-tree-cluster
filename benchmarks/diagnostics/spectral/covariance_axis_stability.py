@@ -129,7 +129,9 @@ def sign_aligned_axis_metrics(reference: np.ndarray, candidate: np.ndarray) -> d
     }
 
 
-def procrustes_subspace_metrics(reference_axes: np.ndarray, candidate_axes: np.ndarray) -> dict[str, float]:
+def procrustes_subspace_metrics(
+    reference_axes: np.ndarray, candidate_axes: np.ndarray
+) -> dict[str, float]:
     k = min(reference_axes.shape[1], candidate_axes.shape[1])
     reference = np.asarray(reference_axes[:, :k], dtype=float)
     candidate = np.asarray(candidate_axes[:, :k], dtype=float)
@@ -217,9 +219,7 @@ def run_weighting_stability(
                 "feature_fraction": float(feature_fraction),
                 "resample_mode": resample_mode,
                 "reference_axis1_explained_ratio": float(reference["explained_ratio"][0]),
-                "replicate_axis1_explained_ratio": float(
-                    replicate_axes["explained_ratio"][0]
-                ),
+                "replicate_axis1_explained_ratio": float(replicate_axes["explained_ratio"][0]),
                 **axis_metrics,
                 **subspace_metrics,
             }

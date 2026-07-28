@@ -2,10 +2,10 @@
 title: Overlap Residual Threshold Transfer 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_residual_threshold_transfer.py
-  - tests/validation/117_test_overlap_residual_threshold_transfer.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_residual_threshold_transfer.py
+  - tests/validation/calibration/overlap/117_test_overlap_residual_threshold_transfer.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/overlap_residual_threshold_transfer_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/overlap_residual_threshold_transfer_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/manifest.json
@@ -49,13 +49,13 @@ evaluates retention and leakage on held-out families. It is diagnostic-only.
 
 ## Evidence
 
-- `tests/validation/117_test_overlap_residual_threshold_transfer.py` verifies
+- `tests/validation/calibration/overlap/117_test_overlap_residual_threshold_transfer.py` verifies
   leave-one split construction, held-out retention/leakage summaries, and
   output writing.
 - Verification passed:
-  `pytest tests/validation/117_test_overlap_residual_threshold_transfer.py -q`
+  `pytest tests/validation/calibration/overlap/117_test_overlap_residual_threshold_transfer.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_residual_threshold_transfer.py tests/validation/117_test_overlap_residual_threshold_transfer.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_residual_threshold_transfer.py tests/validation/calibration/overlap/117_test_overlap_residual_threshold_transfer.py`.
 
 ## Links
 

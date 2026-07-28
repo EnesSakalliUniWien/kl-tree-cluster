@@ -85,7 +85,4 @@ def test_marchenko_pastur_dimension_uses_explicit_effective_independent_rows() -
     assert leaf_row_estimate.effective_independent_rows == 10
     assert augmented_row_estimate.mp_threshold_rows == 100
     assert leaf_row_estimate.mp_threshold_rows == 10
-    assert (
-        augmented_row_estimate.raw_mp_signal_count
-        > leaf_row_estimate.raw_mp_signal_count
-    )
+    assert augmented_row_estimate.raw_mp_signal_count > leaf_row_estimate.raw_mp_signal_count

@@ -105,10 +105,7 @@ def _true_context_labels(
     right_child: object,
 ) -> dict[str, object]:
     descendants = tree.compute_descendant_sets(use_labels=True)
-    label_by_leaf = {
-        leaf: true_labels[position]
-        for position, leaf in enumerate(leaf_index)
-    }
+    label_by_leaf = {leaf: true_labels[position] for position, leaf in enumerate(leaf_index)}
 
     def labels_for(node: object) -> np.ndarray:
         leaves = tuple(descendants[node])
@@ -219,9 +216,7 @@ def evaluate_projection_behavior_summary(records: pd.DataFrame) -> pd.DataFrame:
                 "frequency_k1": float(np.mean(dimensions == 1)),
                 "frequency_k2": float(np.mean(dimensions == 2)),
                 "frequency_k_ge3": float(np.mean(dimensions >= 3)),
-                "differs_from_current_fraction": float(
-                    np.mean(dimensions != current_dimensions)
-                ),
+                "differs_from_current_fraction": float(np.mean(dimensions != current_dimensions)),
                 "rejection_rate": (
                     float(rejected[evaluated].mean()) if bool(evaluated.any()) else np.nan
                 ),
@@ -444,9 +439,7 @@ def run_mp_projection_dimension_behavior_sweep(
             table.insert(0, "case_id", str(case_id))
             case_summary_tables.append(table)
     case_summary = (
-        pd.concat(case_summary_tables, ignore_index=True)
-        if case_summary_tables
-        else pd.DataFrame()
+        pd.concat(case_summary_tables, ignore_index=True) if case_summary_tables else pd.DataFrame()
     )
     summary_path = output_dir / "mp_projection_dimension_behavior_summary.csv"
     case_summary_path = output_dir / "mp_projection_dimension_behavior_case_summary.csv"

@@ -111,7 +111,10 @@ def analyze_single_case(csv_path: Path) -> dict:
 
     leaf_counts = pd.to_numeric(df["leaf_count"], errors="coerce")
     if leaf_counts.notna().sum() == 0:
-        return {"mode": "ERROR", "reason": "Invalid audit contract; leaf_count has no numeric values"}
+        return {
+            "mode": "ERROR",
+            "reason": "Invalid audit contract; leaf_count has no numeric values",
+        }
 
     root_idx = leaf_counts.idxmax()
     root_id = df.loc[root_idx, "node_id"]
@@ -133,11 +136,7 @@ def analyze_single_case(csv_path: Path) -> dict:
             "reason": f"Root split rejected (P={root_p:.2e})",
         }
     elif len(sig_splits) > 30:  # Heuristic
-        min_p = (
-            sig_splits["Sibling_Divergence_P_Value"].min()
-            if not sig_splits.empty
-            else 0.0
-        )
+        min_p = sig_splits["Sibling_Divergence_P_Value"].min() if not sig_splits.empty else 0.0
         return {
             "mode": "**OVER-SPLIT**",
             "reason": f"Runaway splitting ({len(sig_splits)} nodes), Min P={min_p:.1e}",

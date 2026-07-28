@@ -2,10 +2,10 @@
 title: Overlap Residual Recovery Eligibility 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_residual_recovery_eligibility.py
-  - tests/validation/115_test_overlap_residual_recovery_eligibility.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_residual_recovery_eligibility.py
+  - tests/validation/calibration/overlap/115_test_overlap_residual_recovery_eligibility.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_eligibility_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_eligibility_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_thresholds.csv
@@ -60,13 +60,13 @@ production behavior.
 
 ## Evidence
 
-- `tests/validation/115_test_overlap_residual_recovery_eligibility.py` verifies
+- `tests/validation/calibration/overlap/115_test_overlap_residual_recovery_eligibility.py` verifies
   gate-status assignment, threshold retention/leakage summaries, and output
   writing.
 - Verification passed:
-  `pytest tests/validation/115_test_overlap_residual_recovery_eligibility.py -q`
+  `pytest tests/validation/calibration/overlap/115_test_overlap_residual_recovery_eligibility.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_residual_recovery_eligibility.py tests/validation/115_test_overlap_residual_recovery_eligibility.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_residual_recovery_eligibility.py tests/validation/calibration/overlap/115_test_overlap_residual_recovery_eligibility.py`.
 
 ## Links
 

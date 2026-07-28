@@ -30,9 +30,7 @@ from tree_break_selection.space_separation import (
 SCHEMA_VERSION = "scrna_space_decomposition/v1"
 STUDY_ROLE = "diagnostic_scrna_invariant_equivariant_axis_decomposition"
 GENERATED_BY = "applications/scrna/analyze_space_decomposition.py"
-DEFAULT_OUTPUT_DIR = Path(
-    "raw/assets/benchmark-results/scrna_space_decomposition_20260627"
-)
+DEFAULT_OUTPUT_DIR = Path("raw/assets/benchmark-results/scrna_space_decomposition_20260627")
 DEFAULT_DATASETS = (
     (
         "adult_pancreas",
@@ -40,10 +38,7 @@ DEFAULT_DATASETS = (
     ),
     (
         "goncalves_fetal_pancreas",
-        Path(
-            "raw/assets/benchmark-results/"
-            "goncalves_fetal_pancreas_progenitor_benchmark_20260624"
-        ),
+        Path("raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624"),
     ),
 )
 
@@ -106,8 +101,7 @@ def _dataset_configs(raw_specs: list[str] | None) -> list[DatasetConfig]:
     for spec in raw_specs:
         if "=" not in spec:
             raise ValueError(
-                "Dataset specs must have form dataset_id=/path/to/benchmark_dir; "
-                f"got {spec!r}."
+                f"Dataset specs must have form dataset_id=/path/to/benchmark_dir; got {spec!r}."
             )
         dataset_id, raw_path = spec.split("=", 1)
         dataset_id = dataset_id.strip()
@@ -172,9 +166,7 @@ def _between_fraction(values: pd.Series, labels: pd.Series) -> float:
     if total <= 0.0:
         return float("nan")
     grouped = data.groupby("label", dropna=False)["value"]
-    between = sum(
-        len(group) * float((group.mean() - overall) ** 2) for _, group in grouped
-    )
+    between = sum(len(group) * float((group.mean() - overall) ** 2) for _, group in grouped)
     return float(between / total)
 
 
@@ -239,13 +231,9 @@ def _celltype_summary(geometry: pd.DataFrame) -> pd.DataFrame:
                 "celltype": celltype,
                 "n_cells": int(len(group)),
                 "invariant_axis_mean": float(group["invariant_axis_score"].mean()),
-                "abs_invariant_axis_median": _safe_quantile(
-                    group["abs_invariant_axis_score"], 0.5
-                ),
+                "abs_invariant_axis_median": _safe_quantile(group["abs_invariant_axis_score"], 0.5),
                 "equivariant_radius_mean": float(group["equivariant_radius"].mean()),
-                "equivariant_radius_median": _safe_quantile(
-                    group["equivariant_radius"], 0.5
-                ),
+                "equivariant_radius_median": _safe_quantile(group["equivariant_radius"], 0.5),
                 "angle_to_invariant_axis_deg_median": _safe_quantile(
                     group["angle_to_invariant_axis_deg"], 0.5
                 ),
@@ -305,16 +293,10 @@ def _cluster_summary(
                     "dominant_celltype": dominant,
                     "dominant_celltype_purity": purity,
                     "invariant_axis_mean": float(group["invariant_axis_score"].mean()),
-                    "invariant_axis_q25": _safe_quantile(
-                        group["invariant_axis_score"], 0.25
-                    ),
-                    "invariant_axis_q75": _safe_quantile(
-                        group["invariant_axis_score"], 0.75
-                    ),
+                    "invariant_axis_q25": _safe_quantile(group["invariant_axis_score"], 0.25),
+                    "invariant_axis_q75": _safe_quantile(group["invariant_axis_score"], 0.75),
                     "equivariant_radius_mean": float(group["equivariant_radius"].mean()),
-                    "equivariant_radius_median": _safe_quantile(
-                        group["equivariant_radius"], 0.5
-                    ),
+                    "equivariant_radius_median": _safe_quantile(group["equivariant_radius"], 0.5),
                     "angle_to_invariant_axis_deg_median": _safe_quantile(
                         group["angle_to_invariant_axis_deg"], 0.5
                     ),
@@ -364,18 +346,14 @@ def _method_summary(
         )
     summary = pd.DataFrame(rows)
     if metrics is not None and not metrics.empty:
-        metric_subset = metrics[
-            ["method", "method_id", "n_clusters", "ari", "v_measure"]
-        ].copy()
+        metric_subset = metrics[["method", "method_id", "n_clusters", "ari", "v_measure"]].copy()
         metric_subset = metric_subset.rename(
             columns={
                 "method": "method_label",
                 "method_id": "benchmark_method_id",
             }
         )
-        metric_subset["method"] = metric_subset["method_label"].map(
-            _assignment_key_from_label
-        )
+        metric_subset["method"] = metric_subset["method_label"].map(_assignment_key_from_label)
         duplicate_keys = metric_subset["method"][metric_subset["method"].duplicated()]
         if not duplicate_keys.empty:
             raise ValueError(
@@ -596,11 +574,7 @@ def main() -> None:
     ]
     combined_summary = pd.DataFrame(
         [
-            {
-                key: value
-                for key, value in summary.items()
-                if key not in {"outputs", "input_dir"}
-            }
+            {key: value for key, value in summary.items() if key not in {"outputs", "input_dir"}}
             | {"input_dir": str(summary["input_dir"])}
             for summary in dataset_summaries
         ]

@@ -2,10 +2,10 @@
 title: Overlap Internal-Node Likelihood Transfer 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_transfer.py
-  - tests/validation/124_test_overlap_internal_node_likelihood_transfer.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_internal_node_likelihood_transfer.py
+  - tests/validation/calibration/overlap/124_test_overlap_internal_node_likelihood_transfer.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_transfer/overlap_internal_node_likelihood_transfer_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_transfer/overlap_internal_node_likelihood_transfer_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_transfer/manifest.json
@@ -52,13 +52,13 @@ threshold.
 
 ## Evidence
 
-- `tests/validation/124_test_overlap_internal_node_likelihood_transfer.py`
+- `tests/validation/calibration/overlap/124_test_overlap_internal_node_likelihood_transfer.py`
   verifies that relaxed context-margin rules can leak on held-out rows, that
   transfer summaries report leakage, and that outputs are written.
 - Verification passed:
-  `pytest tests/validation/124_test_overlap_internal_node_likelihood_transfer.py -q`
+  `pytest tests/validation/calibration/overlap/124_test_overlap_internal_node_likelihood_transfer.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_transfer.py tests/validation/124_test_overlap_internal_node_likelihood_transfer.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_internal_node_likelihood_transfer.py tests/validation/calibration/overlap/124_test_overlap_internal_node_likelihood_transfer.py`.
 
 ## Links
 

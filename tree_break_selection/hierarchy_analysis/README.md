@@ -10,7 +10,6 @@ clustering pipeline.
 | `tree_decomposition.py` | Public decomposition engine. Prepares or accepts explicit gate annotation bundles, evaluates gates, and emits cluster assignments. |
 | `cluster_assignments.py` | Builds cluster-root and per-sample assignment tables from explicit final tree boundaries. |
 | `bootstrap_consensus.py` | Bootstrap-based stability helpers layered on top of decomposition results. |
-| `decomposition/config.py` | Immutable traversal and gate-annotation configuration, including compact vs. full trace collection. |
 | `decomposition/gates/orchestrator.py` | Runs the edge-divergence gate then the configured sibling-divergence gate and returns a node-indexed annotation bundle. |
 | `decomposition/gates/profiles.py` | Named sibling-gate profile registry and profile-resolution contract. |
 | `decomposition/gates/guards.py` | Optional root-stability and selected-permutation guard layers used by auditable profiles. |

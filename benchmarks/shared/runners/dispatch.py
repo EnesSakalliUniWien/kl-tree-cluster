@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.decomposition.gates.spectral_transport import (
     DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
     DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
@@ -23,6 +22,7 @@ from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.
 from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
     DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
 )
+from tree_break_selection.tree.construction import DEFAULT_BINARY_TREE_DISTANCE_METRIC
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     CONTINUOUS_TREE_DISTANCE_METRIC,
@@ -230,9 +230,7 @@ def run_clustering_result(
                 kernel_symm=str(params["kernel_symm"]),
                 random_state=int(params.get("random_state", 0)),
                 adaptive_neighbor_profile=params.get("adaptive_neighbor_profile"),
-                adaptive_neighbor_grid=_optional_int_sequence(
-                    params.get("adaptive_neighbor_grid")
-                ),
+                adaptive_neighbor_grid=_optional_int_sequence(params.get("adaptive_neighbor_grid")),
                 tree_builder=str(params.get("tree_builder", "linkage")),
                 tree_rooting=str(params.get("tree_rooting", "linkage_root")),
                 tree_linkage_method=str(params.get("tree_linkage_method", "average")),
@@ -405,7 +403,8 @@ def run_clustering_result(
                 allow_linkage_ultrametric_branch_time=bool(
                     params.get("allow_linkage_ultrametric_branch_time", False)
                 ),
-                passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
+                passthrough=bool(params.get("passthrough", True)),
+                trace_level="compact",
             )
         except Exception as exc:
             return _method_failure_result(exc)
@@ -421,7 +420,7 @@ def run_clustering_result(
 
     if distance_matrix is None:
         if distance_condensed is None:
-            dm_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
+            dm_condensed = pdist(data_df.values, metric=DEFAULT_BINARY_TREE_DISTANCE_METRIC)
         else:
             dm_condensed = np.asarray(distance_condensed, dtype=float)
         dm_square = squareform(dm_condensed)

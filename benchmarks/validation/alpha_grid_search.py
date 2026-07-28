@@ -118,12 +118,7 @@ def summarize_alpha_result(
     under_split = int((ok_rows["found_clusters"] < ok_rows["true_clusters"]).sum())
     over_split = int((ok_rows["found_clusters"] > ok_rows["true_clusters"]).sum())
     skip_reasons = (
-        skip_rows["skip_reason"]
-        .fillna("")
-        .astype(str)
-        .value_counts()
-        .sort_index()
-        .to_dict()
+        skip_rows["skip_reason"].fillna("").astype(str).value_counts().sort_index().to_dict()
     )
 
     return {

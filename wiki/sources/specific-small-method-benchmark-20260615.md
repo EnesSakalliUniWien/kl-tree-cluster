@@ -2,7 +2,7 @@
 title: Specific Small Method Benchmark 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/context_negative_topology_conditioning
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight0_min2
@@ -122,9 +122,9 @@ force.
 - The benchmark artifacts are stored under
   `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/`.
 - Focused verification passed:
-  `pytest tests/validation/130_test_overlap_context_negative_topology_conditioning.py tests/validation/134_test_overlap_conditional_topology_law_panel.py tests/validation/136_test_focused_overlap_balance_product_benchmark.py -q`.
+  `pytest tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py tests/validation/calibration/overlap/134_test_overlap_conditional_topology_law_panel.py tests/validation/calibration/overlap/136_test_focused_overlap_balance_product_benchmark.py -q`.
 - Lint passed for the touched benchmark files:
-  `python -m ruff check benchmarks/diagnostics/calibration/overlap_context_negative_topology_conditioning.py benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py benchmarks/diagnostics/calibration/focused_overlap_balance_product_benchmark.py tests/validation/130_test_overlap_context_negative_topology_conditioning.py tests/validation/134_test_overlap_conditional_topology_law_panel.py tests/validation/136_test_focused_overlap_balance_product_benchmark.py`.
+  `python -m ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_topology_conditioning.py benchmarks/diagnostics/calibration/overlap/overlap_conditional_topology_law_panel.py benchmarks/diagnostics/calibration/overlap/focused_overlap_balance_product_benchmark.py tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py tests/validation/calibration/overlap/134_test_overlap_conditional_topology_law_panel.py tests/validation/calibration/overlap/136_test_focused_overlap_balance_product_benchmark.py`.
 
 ## Links
 

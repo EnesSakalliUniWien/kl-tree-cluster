@@ -312,12 +312,8 @@ def test_decompose_recomputes_when_root_selective_guard_changes(monkeypatch) -> 
         assert kwargs["root_selective_permutation_guard_replicates"] == 2
         assert kwargs["root_selective_permutation_guard_seed"] == 13
         assert kwargs["root_selective_permutation_guard_alpha"] == 0.01
-        assert kwargs["root_selective_permutation_guard_tree_distance_metric"] == (
-            "hamming"
-        )
-        assert kwargs["root_selective_permutation_guard_tree_linkage_method"] == (
-            "average"
-        )
+        assert kwargs["root_selective_permutation_guard_tree_distance_metric"] == ("hamming")
+        assert kwargs["root_selective_permutation_guard_tree_linkage_method"] == ("average")
         return run_gate_annotation_pipeline(*args, **kwargs)
 
     monkeypatch.setattr(

@@ -335,14 +335,12 @@ def main() -> None:
         parent_nodes=parents,
         descendant_leaves=descendant_leaves,
     )
-    monophyletic_review, monophyletic_child_summary = (
-        build_monophyletic_subtree_meeting_review(
-            assignments=assignments,
-            marker_frame=marker_frame,
-            children=children,
-            parent_nodes=parents,
-            descendant_leaves=descendant_leaves,
-        )
+    monophyletic_review, monophyletic_child_summary = build_monophyletic_subtree_meeting_review(
+        assignments=assignments,
+        marker_frame=marker_frame,
+        children=children,
+        parent_nodes=parents,
+        descendant_leaves=descendant_leaves,
     )
 
     summary.to_csv(output_dir / "tbs_adaptive_inner_node_lineage_summary.csv", index=False)
@@ -398,7 +396,8 @@ def build_terminal_cluster_review(
     clusters = assignments[METHOD_KEY].astype(int).to_numpy()
     cluster_ids = sorted(np.unique(clusters))
     leaf_sets_by_node = {
-        node: frozenset(descendant_leaves(node)) for node in parent_nodes  # type: ignore[operator]
+        node: frozenset(descendant_leaves(node))
+        for node in parent_nodes  # type: ignore[operator]
     }
     node_by_leaf_set = {leaf_set: node for node, leaf_set in leaf_sets_by_node.items()}
     summary_by_node = summary.set_index("node")
@@ -525,7 +524,9 @@ def build_two_three_cluster_junction_review(
                 "node": node,
                 "n_cells": int(len(leaf_indices)),
                 "n_meeting_clusters": int(len(node_cluster_set)),
-                "cluster_ids": ",".join(f"C{cluster_id}" for cluster_id in sorted(node_cluster_set)),
+                "cluster_ids": ",".join(
+                    f"C{cluster_id}" for cluster_id in sorted(node_cluster_set)
+                ),
                 "child_cluster_sets": " | ".join(
                     ",".join(f"C{cluster_id}" for cluster_id in sorted(child_set))
                     for child_set in child_cluster_sets
@@ -720,7 +721,9 @@ def build_monophyletic_subtree_meeting_review(
             )
         else:
             meeting_type = "mixed monophyletic-subtree meeting"
-            progenitor_call = "mixed descendant clade; requires marker evidence before ancestry claim"
+            progenitor_call = (
+                "mixed descendant clade; requires marker evidence before ancestry claim"
+            )
 
         display_focus = bool(
             mixed_flag
@@ -739,9 +742,7 @@ def build_monophyletic_subtree_meeting_review(
                 "child_cluster_sets": " | ".join(
                     cluster_ids_text(child_set) for child_set in child_cluster_sets
                 ),
-                "child_n_final_clusters": " | ".join(
-                    str(value) for value in child_n_clusters
-                ),
+                "child_n_final_clusters": " | ".join(str(value) for value in child_n_clusters),
                 "child_n_cells": " | ".join(str(value) for value in child_n_cells),
                 "min_child_cluster_fraction": float(min_child_cluster_fraction),
                 "min_child_cell_fraction": float(min_child_cell_fraction),

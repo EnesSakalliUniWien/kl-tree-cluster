@@ -65,9 +65,14 @@ def _lookup(term: str) -> list[str]:
         if "templates" in path.relative_to(ROOT / "wiki").parts:
             continue
         rel = path.relative_to(ROOT).as_posix()
-        haystack = f"{path.stem} {_wiki_title(path)} {path.read_text(encoding='utf-8')[:4000]}".lower()
+        haystack = (
+            f"{path.stem} {_wiki_title(path)} {path.read_text(encoding='utf-8')[:4000]}".lower()
+        )
         if all(token in haystack for token in tokens):
-            score = sum(path.stem.lower().count(token) + _wiki_title(path).lower().count(token) for token in tokens)
+            score = sum(
+                path.stem.lower().count(token) + _wiki_title(path).lower().count(token)
+                for token in tokens
+            )
             hits.append((score, rel))
     return [rel for score, rel in sorted(hits, key=lambda item: (-item[0], item[1]))]
 

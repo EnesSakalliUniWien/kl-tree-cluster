@@ -2,10 +2,10 @@
 title: Selected Tail Promotion Gate 2026-06-04
 type: source
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_tail_promotion_gate.py
-  - tests/validation/72_test_selected_tail_promotion_gate.py
+  - benchmarks/diagnostics/calibration/selected/tail/selected_tail_promotion_gate.py
+  - tests/validation/calibration/selected/tail/72_test_selected_tail_promotion_gate.py
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_contexts.csv
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_q5_promotion_gate.csv
   - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_summary.csv
@@ -55,7 +55,7 @@ No context is promoted to production external calibration in this run.
   table.
 - `selected_tail_q5_promotion_gate.csv` records the Q5 split-level gate.
 - `selected_tail_promotion_summary.csv` records the decision counts.
-- `tests/validation/72_test_selected_tail_promotion_gate.py` verifies the gate
+- `tests/validation/calibration/selected/tail/72_test_selected_tail_promotion_gate.py` verifies the gate
   blocks promotion under Q5 parent-size transfer failure and can only promote
   rows when all gates pass.
 

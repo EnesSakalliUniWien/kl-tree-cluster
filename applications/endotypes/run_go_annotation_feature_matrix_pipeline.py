@@ -118,7 +118,10 @@ def parse_args() -> argparse.Namespace:
 
 def default_output_dir(input_path: Path, dataset_label: str | None = None) -> Path:
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return Path("results/analyses") / f"{matrix_slug(input_path, dataset_label)}_go_annotation_pipeline_{stamp}"
+    return (
+        Path("results/analyses")
+        / f"{matrix_slug(input_path, dataset_label)}_go_annotation_pipeline_{stamp}"
+    )
 
 
 def _append_if_present(command: list[str], flag: str, value: object | None) -> None:
@@ -140,7 +143,9 @@ def annotation_package_dir(root: Path) -> Path:
     return current_subspace_dir(root) / "systematic_subspace_gene_annotations"
 
 
-def build_pipeline_plan(args: argparse.Namespace, output_dir: Path | None = None) -> list[PipelineStage]:
+def build_pipeline_plan(
+    args: argparse.Namespace, output_dir: Path | None = None
+) -> list[PipelineStage]:
     repo_root = Path(__file__).resolve().parents[2]
     root = output_dir or args.output_dir or default_output_dir(args.input, args.dataset_label)
     artifact_prefix = matrix_slug(args.input, args.dataset_label)
@@ -185,7 +190,10 @@ def build_pipeline_plan(args: argparse.Namespace, output_dir: Path | None = None
     if not args.skip_current_subspace:
         command = [
             args.python,
-            str(repo_root / "applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py"),
+            str(
+                repo_root
+                / "applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py"
+            ),
             "--input",
             str(args.input),
             "--output-dir",
@@ -498,7 +506,8 @@ def write_annotation_recurrence_outputs(
         all_terms = pd.DataFrame(columns=columns)
     else:
         strong = cluster_stats[
-            cluster_stats["meaningfulness_label"].eq("strong") & cluster_stats["top_term"].fillna("").astype(str).ne("")
+            cluster_stats["meaningfulness_label"].eq("strong")
+            & cluster_stats["top_term"].fillna("").astype(str).ne("")
         ].copy()
         obsolete_lookup = _quickgo_obsolete_lookup(annotation_root)
         if strong.empty:
@@ -522,7 +531,9 @@ def write_annotation_recurrence_outputs(
                 ["n_clusters", "n_subspaces", "min_q"],
                 ascending=[False, False, True],
             )
-    nonobsolete = all_terms[~all_terms["is_obsolete"]].drop(columns=["is_obsolete"], errors="ignore")
+    nonobsolete = all_terms[~all_terms["is_obsolete"]].drop(
+        columns=["is_obsolete"], errors="ignore"
+    )
     all_terms.to_csv(audit_dir / "highest_occurring_annotations_all_terms.csv", index=False)
     nonobsolete.to_csv(audit_dir / "highest_occurring_nonobsolete_annotations.csv", index=False)
 
@@ -550,7 +561,11 @@ def write_annotation_recurrence_outputs(
             "eigenband_coherence",
             "top_terms",
         ]
-        lines.append(subspace_summary[[col for col in display_columns if col in subspace_summary]].to_markdown(index=False))
+        lines.append(
+            subspace_summary[
+                [col for col in display_columns if col in subspace_summary]
+            ].to_markdown(index=False)
+        )
     lines.extend(["", "## Highest Recurring Non-Obsolete Strong Annotations", ""])
     if nonobsolete.empty:
         lines.append("No non-obsolete strong annotations were found.")
@@ -561,7 +576,9 @@ def write_annotation_recurrence_outputs(
         lines.append("No strong annotations were found.")
     else:
         lines.append(all_terms.head(25).to_markdown(index=False, floatfmt=".3g"))
-    (audit_dir / "coherence_and_top_annotations_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (audit_dir / "coherence_and_top_annotations_summary.md").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
     return all_terms, nonobsolete
 
 
@@ -589,7 +606,9 @@ def finalize_go_annotation_results(
     ]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
-        raise FileNotFoundError("Missing required GO annotation package outputs: " + ", ".join(missing))
+        raise FileNotFoundError(
+            "Missing required GO annotation package outputs: " + ", ".join(missing)
+        )
 
     input_dir = output_dir / "input"
     input_dir.mkdir(parents=True, exist_ok=True)
@@ -609,7 +628,9 @@ def finalize_go_annotation_results(
     if not radial_paths:
         raise ValueError("No radial tree files were recorded in subspace_cluster_status.csv.")
     if missing_radial:
-        raise FileNotFoundError("Missing recorded radial tree files: " + ", ".join(missing_radial[:10]))
+        raise FileNotFoundError(
+            "Missing recorded radial tree files: " + ", ".join(missing_radial[:10])
+        )
 
     rows, features = _read_matrix_shape(input_path)
     membership = pd.read_csv(annotation_root / "subspace_gene_membership_long.csv")
@@ -621,7 +642,12 @@ def finalize_go_annotation_results(
         else {}
     )
     coherence_counts = (
-        subspace_summary["eigenband_coherence"].fillna("").astype(str).value_counts().sort_index().to_dict()
+        subspace_summary["eigenband_coherence"]
+        .fillna("")
+        .astype(str)
+        .value_counts()
+        .sort_index()
+        .to_dict()
         if "eigenband_coherence" in subspace_summary
         else {}
     )
@@ -630,7 +656,9 @@ def finalize_go_annotation_results(
         if {"run_id", "gene"}.issubset(membership.columns)
         else pd.Series(dtype=int)
     )
-    all_memberships_cover_input = bool(len(per_subspace_genes) and per_subspace_genes.eq(rows).all())
+    all_memberships_cover_input = bool(
+        len(per_subspace_genes) and per_subspace_genes.eq(rows).all()
+    )
     all_terms, nonobsolete = write_annotation_recurrence_outputs(
         dataset_label=dataset_label,
         annotation_root=annotation_root,
@@ -688,7 +716,9 @@ def finalize_go_annotation_results(
             lines.append(f"{index}. {getattr(row, 'top_term')}{suffix}")
     obsolete = all_terms[all_terms["is_obsolete"]] if "is_obsolete" in all_terms else pd.DataFrame()
     if len(obsolete):
-        lines.extend(["", "Obsolete top terms excluded from the non-obsolete recurrence table:", ""])
+        lines.extend(
+            ["", "Obsolete top terms excluded from the non-obsolete recurrence table:", ""]
+        )
         for row in obsolete.head(10).itertuples(index=False):
             go_id = getattr(row, "top_go_id", "")
             suffix = f" (`{go_id}`)" if go_id else ""
@@ -704,7 +734,9 @@ def finalize_go_annotation_results(
 
 
 def _parse_internal_finalize_command(command: Sequence[str]) -> tuple[Path, Path, str]:
-    values = {str(command[index]): str(command[index + 1]) for index in range(1, len(command) - 1, 2)}
+    values = {
+        str(command[index]): str(command[index + 1]) for index in range(1, len(command) - 1, 2)
+    }
     return Path(values["--input"]), Path(values["--output-dir"]), values["--dataset-label"]
 
 
@@ -722,7 +754,9 @@ def run_stage(stage: PipelineStage, *, repo_root: Path, dry_run: bool) -> dict[s
     if stage.command and stage.command[0] == "internal:finalize_go_annotation_results":
         with log_path.open("w", encoding="utf-8") as log_file:
             try:
-                input_path, output_dir, dataset_label = _parse_internal_finalize_command(stage.command)
+                input_path, output_dir, dataset_label = _parse_internal_finalize_command(
+                    stage.command
+                )
                 result = finalize_go_annotation_results(
                     repo_root=repo_root,
                     input_path=input_path,
@@ -788,7 +822,11 @@ def main() -> None:
             raise SystemExit(int(result["returncode"]))
 
     audit_dir = output_dir / "30_analysis_level_audit"
-    audit_targets = [] if args.dry_run else [stage.output_dir for stage in stages if not _is_packaging_stage(stage)]
+    audit_targets = (
+        []
+        if args.dry_run
+        else [stage.output_dir for stage in stages if not _is_packaging_stage(stage)]
+    )
     audit_targets.extend(args.audit_paths)
     audit_frame = audit_paths(audit_targets)
     audit_outputs = write_audit_outputs(audit_frame, audit_dir)

@@ -2,13 +2,13 @@
 title: Selected Family Traversal Panel 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_family_traversal_panel.py
   - tree_break_selection/plot/multiscale_umap.py
   - tree_break_selection/hierarchy_analysis/tree_decomposition.py
-  - tests/validation/102_test_selected_family_traversal_panel.py
-  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
+  - tests/validation/calibration/selected/family/102_test_selected_family_traversal_panel.py
+  - benchmarks/diagnostics/calibration/sibling/gates/fixed_sibling_gate_profile_validation.py
 tags:
   - source
   - diagnostics
@@ -73,13 +73,13 @@ only one flat clustering.
 
 ## Evidence
 
-- `tests/validation/102_test_selected_family_traversal_panel.py` covers method
+- `tests/validation/calibration/selected/family/102_test_selected_family_traversal_panel.py` covers method
   validation, node decision classification, conservative production summaries,
   CSV-stable null role output, checkpoint resume, row timeout recording, UMAP
   overlay rendering, and a tiny binary output run.
 - `tests/localization/35_test_gates_traversal.py` continues to cover
   pass-through traversal behavior through `TreeDecomposition`.
-- `tests/validation/101_test_fixed_sibling_gate_profile_validation.py` covers
+- `tests/validation/calibration/sibling/gates/101_test_fixed_sibling_gate_profile_validation.py` covers
   the fixed-profile evidence path reused by this panel.
 
 ## Links

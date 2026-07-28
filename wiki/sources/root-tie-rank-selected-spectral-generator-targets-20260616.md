@@ -2,10 +2,10 @@
 title: Root Tie Rank Selected Spectral Generator Targets 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_selected_spectral_generator_target_panel.py
-  - tests/validation/166_test_root_tie_rank_selected_spectral_generator_target_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_selected_spectral_generator_target_panel.py
+  - tests/validation/calibration/root/tie_rank/166_test_root_tie_rank_selected_spectral_generator_target_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_selected_spectral_generator_targets_after_generated_replay
 tags:
   - source

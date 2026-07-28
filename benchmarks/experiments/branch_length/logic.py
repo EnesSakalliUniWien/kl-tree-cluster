@@ -113,12 +113,8 @@ def generate_two_group_data(
     # Symmetric divergence: Each group evolves by branch_length / 2 from root
     # Total expected distance between ancestors ≈ branch_length
     dist_to_ancestor = branch_length / 2.0
-    group0_ancestor = evolve_sequence(
-        root, dist_to_ancestor, n_categories, random_state
-    )
-    group1_ancestor = evolve_sequence(
-        root, dist_to_ancestor, n_categories, random_state
-    )
+    group0_ancestor = evolve_sequence(root, dist_to_ancestor, n_categories, random_state)
+    group1_ancestor = evolve_sequence(root, dist_to_ancestor, n_categories, random_state)
 
     # Compute expected divergence between group ancestors
     expected_div = compute_expected_divergence(branch_length, n_categories)
@@ -281,12 +277,8 @@ def plot_branch_length_results(
 
     # ARI and NMI vs branch length
     ax = axes[0, 0]
-    ax.plot(
-        df["branch_length"], df["ari"], "b-o", label="ARI", linewidth=2, markersize=8
-    )
-    ax.plot(
-        df["branch_length"], df["nmi"], "g-s", label="NMI", linewidth=2, markersize=8
-    )
+    ax.plot(df["branch_length"], df["ari"], "b-o", label="ARI", linewidth=2, markersize=8)
+    ax.plot(df["branch_length"], df["nmi"], "g-s", label="NMI", linewidth=2, markersize=8)
     ax.set_xlabel("Branch Length (evolution steps)", fontsize=11)
     ax.set_ylabel("Score", fontsize=11)
     ax.set_title("Clustering Performance vs Branch Length", fontsize=12, weight="bold")
@@ -397,9 +389,7 @@ def plot_embedding_by_branch_length(
         col = idx % n_cols
         row_true = (idx // n_cols) * 2 if show_tbs_clustering else idx // n_cols
 
-        rng = np.random.RandomState(
-            int(random_seed + bl * 10000) if random_seed else None
-        )
+        rng = np.random.RandomState(int(random_seed + bl * 10000) if random_seed else None)
 
         sample_dict, cluster_assignments, js_div = generate_two_group_data(
             n_samples_per_group=n_samples_per_group,
@@ -453,9 +443,7 @@ def plot_embedding_by_branch_length(
                 linewidth=0.5,
             )
 
-        ax_true.set_title(
-            f"True Labels (BL={bl})\nJS={js_div:.4f}", fontsize=10, weight="bold"
-        )
+        ax_true.set_title(f"True Labels (BL={bl})\nJS={js_div:.4f}", fontsize=10, weight="bold")
         ax_true.set_xlabel("Dim 1", fontsize=8)
         ax_true.set_ylabel("Dim 2", fontsize=8)
         ax_true.legend(frameon=False, fontsize=7, loc="upper right")

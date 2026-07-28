@@ -2,10 +2,10 @@
 title: Selected Neighborhood Spectral Flow Diagnostic 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_spectral_flow.py
-  - tests/validation/146_test_selected_neighborhood_spectral_flow.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_spectral_flow.py
+  - tests/validation/calibration/selected/neighborhood/146_test_selected_neighborhood_spectral_flow.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_spectral_flow_overlap_three_case
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_spectral_flow_overlap_three_case_conditional_topology
 tags:
@@ -79,13 +79,13 @@ production p-values.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_neighborhood_spectral_flow.py`
+- `benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_spectral_flow.py`
   implements row-level node and edge panels, MP support status separation,
   sign-invariant subspace comparison, spectral-barrier scores, multiplicity
   block construction, normalized characteristic-polynomial fingerprints,
   optimal mode matching, connection-residual summaries, and
   signal-vs-selected-null AUC summaries.
-- `tests/validation/146_test_selected_neighborhood_spectral_flow.py` validates
+- `tests/validation/calibration/selected/neighborhood/146_test_selected_neighborhood_spectral_flow.py` validates
   sign invariance, top-eigenvector rotation detection, coherent-mode barrier
   ordering, MP-supported versus floor-only edge labeling, repeated-eigenvalue
   block construction, within-block rotation invariance, multiplicity/polynomial

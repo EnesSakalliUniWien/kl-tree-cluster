@@ -16,8 +16,7 @@ def get_env_bool(name: str, default: bool = False) -> bool:
     if normalized in {"0", "false", "no", "off"}:
         return False
     raise ValueError(
-        f"{name} must be a boolean flag "
-        "(1/true/yes/on or 0/false/no/off), got {raw!r}."
+        f"{name} must be a boolean flag (1/true/yes/on or 0/false/no/off), got {{raw!r}}."
     )
 
 

@@ -44,8 +44,7 @@ def compute_child_depths(tree: nx.DiGraph, child_ids: list[str]) -> np.ndarray:
     missing_child_ids = [child_id for child_id in child_ids if child_id not in node_depths]
     if missing_child_ids:
         raise ValueError(
-            "Tree-BH child_ids must all be present in the tree; "
-            f"missing {missing_child_ids}."
+            f"Tree-BH child_ids must all be present in the tree; missing {missing_child_ids}."
         )
     return np.array([node_depths[child_id] for child_id in child_ids])
 
@@ -114,12 +113,14 @@ def run_bh_within_sibling_group(
     if len(sibling_group_p_values) == 0 or sibling_group_alpha <= 0:
         return None
 
-    child_hypotheses_rejected_by_bh, child_hypothesis_corrected_p_values_by_bh, _, _ = multipletests(
-        sibling_group_p_values,
-        alpha=sibling_group_alpha,
-        method="fdr_bh",
-        is_sorted=False,
-        returnsorted=False,
+    child_hypotheses_rejected_by_bh, child_hypothesis_corrected_p_values_by_bh, _, _ = (
+        multipletests(
+            sibling_group_p_values,
+            alpha=sibling_group_alpha,
+            method="fdr_bh",
+            is_sorted=False,
+            returnsorted=False,
+        )
     )
     return child_hypotheses_rejected_by_bh, child_hypothesis_corrected_p_values_by_bh
 

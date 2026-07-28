@@ -2,9 +2,9 @@
 title: Discrete Within-Covariance Guard Check 2026-06-23
 type: source
 status: reviewed
-updated: 2026-06-24
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/discrete_covariance_guard.py
+  - benchmarks/diagnostics/calibration/statistics/discrete_covariance_guard.py
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/manifest.json
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/node_covariance_comparison.csv
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/case_context_summary.csv
@@ -65,7 +65,7 @@ pooled null covariance with a Jeffreys-smoothed within-child analogue and a
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/discrete_covariance_guard.py` defines the replay.
+- `benchmarks/diagnostics/calibration/statistics/discrete_covariance_guard.py` defines the replay.
 - `raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/manifest.json`
   records generation metadata for the representative selected-node panel,
   including `generated_at = 2026-06-24T20:10:31+02:00`.

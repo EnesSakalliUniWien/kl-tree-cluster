@@ -3,6 +3,7 @@
 Quick subset benchmark — picks ~15 representative cases across categories
 and runs them with plots.
 """
+
 import os
 from pathlib import Path
 
@@ -72,9 +73,7 @@ for _, row in tbs.iterrows():
     nmi_str = f"{nmi_val:.3f}" if not (nmi_val != nmi_val) else "  N/A"
     true_str = f"{row['true_clusters']:>4.0f}" if row["true_clusters"] > 0 else " N/A"
     marker = (
-        " ✓"
-        if row["true_clusters"] > 0 and row["found_clusters"] == row["true_clusters"]
-        else ""
+        " ✓" if row["true_clusters"] > 0 and row["found_clusters"] == row["true_clusters"] else ""
     )
     print(
         f"{row['case_id']:<36s} {true_str} {row['found_clusters']:>5.0f} {ari_str:>7s} {nmi_str:>7s} {row['status']}{marker}"

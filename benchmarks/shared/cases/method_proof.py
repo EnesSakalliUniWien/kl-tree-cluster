@@ -61,9 +61,7 @@ def _method_case(
         "mathematical_target": mathematical_target,
         "expected_failure_modes": expected_failure_modes,
         "required_trace_columns": TRACE_COLUMNS,
-        "admissibility_rule": (
-            "fail_closed_until_trace_support_and_heldout_precision_pass"
-        ),
+        "admissibility_rule": ("fail_closed_until_trace_support_and_heldout_precision_pass"),
         "success_criterion": success_criterion,
     }
     case.update(kwargs)

@@ -34,22 +34,16 @@ class FeatureBlock:
         if not self.column_indices:
             raise ValueError(f"Feature block {self.name!r} must contain columns.")
         if len(set(self.column_indices)) != len(self.column_indices):
-            raise ValueError(
-                f"Feature block {self.name!r} contains duplicate column indices."
-            )
+            raise ValueError(f"Feature block {self.name!r} contains duplicate column indices.")
         if min(self.column_indices) < 0:
-            raise ValueError(
-                f"Feature block {self.name!r} contains a negative column index."
-            )
+            raise ValueError(f"Feature block {self.name!r} contains a negative column index.")
 
         expected_chart: FeatureChart
         expected_covariance: CovarianceModel
         expected_contrast_dimension: int
         if self.family == "bernoulli":
             if len(self.column_indices) != 1:
-                raise ValueError(
-                    f"Bernoulli block {self.name!r} must contain exactly one column."
-                )
+                raise ValueError(f"Bernoulli block {self.name!r} must contain exactly one column.")
             expected_chart = "identity"
             expected_covariance = "bernoulli"
             expected_contrast_dimension = 1
@@ -89,7 +83,9 @@ class FeatureBlock:
         return len(self.column_indices)
 
     @property
-    def signature(self) -> tuple[str, FeatureFamily, tuple[int, ...], FeatureChart, CovarianceModel, int]:
+    def signature(
+        self,
+    ) -> tuple[str, FeatureFamily, tuple[int, ...], FeatureChart, CovarianceModel, int]:
         return (
             self.name,
             self.family,
@@ -160,7 +156,10 @@ class FeatureSpace:
     @property
     def signature(
         self,
-    ) -> tuple[tuple[str, ...], tuple[tuple[str, FeatureFamily, tuple[int, ...], FeatureChart, CovarianceModel, int], ...]]:
+    ) -> tuple[
+        tuple[str, ...],
+        tuple[tuple[str, FeatureFamily, tuple[int, ...], FeatureChart, CovarianceModel, int], ...],
+    ]:
         return self.column_names, tuple(block.signature for block in self.blocks)
 
 
@@ -318,8 +317,7 @@ def validate_feature_vector(
     array = np.asarray(row, dtype=np.float64).reshape(-1)
     if array.shape != (feature_space.raw_dimension,):
         raise ValueError(
-            f"{value_name} has shape {array.shape}; expected "
-            f"{(feature_space.raw_dimension,)}."
+            f"{value_name} has shape {array.shape}; expected {(feature_space.raw_dimension,)}."
         )
     validate_feature_matrix(array[None, :], feature_space, value_name=value_name)
     return array
@@ -351,9 +349,7 @@ def _validate_bernoulli_blocks(
     array: npt.NDArray[np.float64],
     feature_space: FeatureSpace,
 ) -> None:
-    bernoulli_blocks = [
-        block for block in feature_space.blocks if block.family == "bernoulli"
-    ]
+    bernoulli_blocks = [block for block in feature_space.blocks if block.family == "bernoulli"]
     if not bernoulli_blocks:
         return
 

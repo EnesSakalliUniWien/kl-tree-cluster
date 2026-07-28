@@ -2,10 +2,10 @@
 title: Selected Sibling LRT Diagnostic 2026-06-12
 type: source
 status: reviewed
-updated: 2026-06-12
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_sibling_lrt_diagnostic.py
-  - tests/validation/87_test_selected_sibling_lrt_diagnostic.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/selected_sibling_lrt_diagnostic.py
+  - tests/validation/calibration/sibling/nulls/87_test_selected_sibling_lrt_diagnostic.py
   - benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/29_selected_sibling_lrt_diagnostic_20260612/selected_sibling_lrt_node_panel.csv
   - benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/29_selected_sibling_lrt_diagnostic_20260612/selected_sibling_lrt_summary.csv
   - benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/29_selected_sibling_lrt_diagnostic_20260612/selected_sibling_lrt_run_summary.png
@@ -52,10 +52,10 @@ output is not a selected-tree calibration rule.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_sibling_lrt_diagnostic.py`
+- `benchmarks/diagnostics/calibration/sibling/nulls/selected_sibling_lrt_diagnostic.py`
   implements the Bernoulli sibling deviance, fixed-diffusion rerun, node-panel
   extraction, summary table, and plots.
-- `tests/validation/87_test_selected_sibling_lrt_diagnostic.py` verifies the
+- `tests/validation/calibration/sibling/nulls/87_test_selected_sibling_lrt_diagnostic.py` verifies the
   deviance calculation, support-label extraction from edge-path annotations,
   and grid parsing.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/29_selected_sibling_lrt_diagnostic_20260612/selected_sibling_lrt_summary.csv`

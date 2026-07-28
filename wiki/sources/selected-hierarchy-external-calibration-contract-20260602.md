@@ -2,10 +2,10 @@
 title: Selected Hierarchy External Calibration Contract 2026-06-02
 type: source
 status: reviewed
-updated: 2026-06-02
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py
-  - tests/validation/52_test_selected_hierarchy_external_calibration_contract.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_external_calibration_contract.py
+  - tests/validation/calibration/selected/hierarchy/52_test_selected_hierarchy_external_calibration_contract.py
   - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv
@@ -63,9 +63,9 @@ descriptive shape:
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_external_calibration_contract.py`
   implements the admissibility contract and scalar-vs-tail summary.
-- `tests/validation/52_test_selected_hierarchy_external_calibration_contract.py`
+- `tests/validation/calibration/selected/hierarchy/52_test_selected_hierarchy_external_calibration_contract.py`
   verifies under-supported rows fail closed, scalar-\(c\) can be accepted when
   the synthetic shape is compatible, and heavy selected tails require a tail
   law.

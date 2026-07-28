@@ -41,7 +41,9 @@ def test_audit_distinguishes_go_annotation_analysis_levels(tmp_path: Path) -> No
         ]
     ).to_csv(method_matrix / "method_tree_matrix_summary.csv", index=False)
     (method_matrix / "assignments").mkdir()
-    (method_matrix / "assignments/current.csv").write_text("gene,cluster_id\nA,0\n", encoding="utf-8")
+    (method_matrix / "assignments/current.csv").write_text(
+        "gene,cluster_id\nA,0\n", encoding="utf-8"
+    )
 
     mixed = tmp_path / "mixed_go_ic"
     mixed.mkdir()
@@ -86,7 +88,9 @@ def test_audit_distinguishes_go_annotation_analysis_levels(tmp_path: Path) -> No
     assert bool(by_path["canonical"].is_canonical) is True
 
 
-def test_pipeline_plan_uses_canonical_current_stage_and_optional_audit_matrix(tmp_path: Path) -> None:
+def test_pipeline_plan_uses_canonical_current_stage_and_optional_audit_matrix(
+    tmp_path: Path,
+) -> None:
     input_path = tmp_path / "feature_matrix_toy_go.tsv"
     input_path.write_text("gene\tGO:0000001\nA\t1\nB\t0\n", encoding="utf-8")
     args = Namespace(
@@ -182,14 +186,21 @@ def test_pipeline_plan_can_skip_subspace_upload_package(tmp_path: Path) -> None:
 
 def test_finalize_go_annotation_results_writes_upload_summary(tmp_path: Path) -> None:
     input_path = tmp_path / "feature_matrix_demo.tsv"
-    input_path.write_text("gene\tTerm A (GO:0000001)\tTerm B\nG1\t1\t0\nG2\t0\t1\n", encoding="utf-8")
+    input_path.write_text(
+        "gene\tTerm A (GO:0000001)\tTerm B\nG1\t1\t0\nG2\t0\t1\n", encoding="utf-8"
+    )
     output_dir = tmp_path / "results" / "demo_go_annotation_pipeline_20260623"
-    annotation_root = output_dir / "10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations"
+    annotation_root = (
+        output_dir
+        / "10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations"
+    )
     audit_dir = annotation_root / "cluster_meaningfulness_audit"
     subspace_dir = annotation_root / "subspaces/rank01_binary_adaptive_common_mode_01"
     subspace_dir.mkdir(parents=True)
     audit_dir.mkdir(parents=True)
-    (annotation_root / "demo_systematic_subspace_gene_annotation_report.pdf").write_bytes(b"%PDF-1.4\n")
+    (annotation_root / "demo_systematic_subspace_gene_annotation_report.pdf").write_bytes(
+        b"%PDF-1.4\n"
+    )
     (annotation_root / "demo_radial_tree_clusters.pdf").write_bytes(b"%PDF-1.4\n")
     radial = subspace_dir / "radial_tree_clusters.png"
     radial.write_bytes(b"png")

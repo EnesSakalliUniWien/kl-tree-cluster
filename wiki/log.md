@@ -5340,6 +5340,23 @@ verification, and maintenance events here in chronological order.
   1,252 purpose-ordered tests, package builds, quick start, lock resolution,
   and the clean pinned BranchArchitect submodule. The remote `origin/dev` was
   intentionally not pushed and remains at `8aaa2615`.
+- Removed the mutable root `tree_break_selection/config.py` module and the
+  redundant decomposition config dataclass/module. Tree-construction defaults
+  now live with the tree module; traversal options are explicit at method
+  boundaries, with no compatibility aliases. Root and plot imports are lazy,
+  and ordinary benchmark dispatch requests compact tracing while
+  trace-dependent diagnostics retain full traces. Batched
+  distributional-action annotation replaced per-edge DataFrame mutation while
+  preserving the diagnostic schema. Plot-package initialization now selects
+  the file-safe Matplotlib backend before any plotting engine imports
+  `pyplot`, preventing the documented macOS AppKit abort in headless runs.
+- Reorganized the flat calibration-diagnostic namespace into responsibility
+  categories for edges, overlap, roots, selected structures, sibling models,
+  spectral transport, statistics, and traversal. Mirrored the same categories
+  under `tests/validation/calibration/`, migrated active imports and evidence
+  paths without aliases, removed the unreferenced edge diagnostic, and
+  consolidated multiscale UMAP rendering on the maintained plotting engine and
+  selected-family runner.
 
 ## Evidence
 

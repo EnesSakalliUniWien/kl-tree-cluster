@@ -32,7 +32,6 @@ import pandas as pd
 from scipy.cluster.hierarchy import cut_tree, dendrogram, linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -51,6 +50,10 @@ from tree_break_selection.plot.cluster_tree_visualization import plot_tree_with_
 from tree_break_selection.space_separation import (
     adaptive_diffusion_distance,
     hamming_knn_diffusion_distance,
+)
+from tree_break_selection.tree.construction import (
+    DEFAULT_BINARY_TREE_DISTANCE_METRIC,
+    DEFAULT_TREE_LINKAGE_METHOD,
 )
 from tree_break_selection.tree.io import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
@@ -120,13 +123,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--tree-distance-metric",
         choices=("hamming", "rogerstanimoto", "jaccard", "dice", "euclidean", "cosine"),
-        default=config.TREE_DISTANCE_METRIC,
+        default=DEFAULT_BINARY_TREE_DISTANCE_METRIC,
         help="Pairwise distance metric for the TBS tree path.",
     )
     parser.add_argument(
         "--tree-linkage-method",
         choices=("average", "complete", "single", "ward"),
-        default=config.TREE_LINKAGE_METHOD,
+        default=DEFAULT_TREE_LINKAGE_METHOD,
         help="Hierarchical linkage method for the TBS tree path.",
     )
     parser.add_argument(
@@ -221,8 +224,7 @@ def _load_binary_matrix(path: Path) -> pd.DataFrame:
     invalid_values = [v for v in unique_values if v not in (0, 1)]
     if invalid_values:
         raise ValueError(
-            "Input contains non-binary values. "
-            f"Found values outside {{0,1}}: {invalid_values[:10]}"
+            f"Input contains non-binary values. Found values outside {{0,1}}: {invalid_values[:10]}"
         )
     return numeric.astype(int)
 
@@ -704,8 +706,7 @@ def main() -> None:
     data_df = _load_binary_matrix(input_path)
     t0 = time.perf_counter()
     print(
-        f"Loaded input: {data_df.shape[0]} samples x {data_df.shape[1]} features "
-        f"from {input_path}"
+        f"Loaded input: {data_df.shape[0]} samples x {data_df.shape[1]} features from {input_path}"
     )
     print(f"Tree method: {args.tree_method}")
     reference_metrics: dict[str, object] | None = None
@@ -970,8 +971,7 @@ def main() -> None:
             linkage_matrix,
             tree_png_path,
             title=(
-                f"Flat-cut tree — {args.tree_method}, "
-                f"K={decomposition.get('num_clusters', 'NA')}"
+                f"Flat-cut tree — {args.tree_method}, K={decomposition.get('num_clusters', 'NA')}"
             ),
         )
         tree_elapsed = time.perf_counter() - tree_plot_start

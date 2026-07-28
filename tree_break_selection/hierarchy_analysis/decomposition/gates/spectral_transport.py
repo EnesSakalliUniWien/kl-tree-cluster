@@ -164,9 +164,7 @@ def spectral_mode_blocks(
                 projector_rank=int(rank),
                 eigenvalues=block_values,
                 projector=projector,
-                polynomial_coefficients=normalized_characteristic_polynomial(
-                    block_values
-                ),
+                polynomial_coefficients=normalized_characteristic_polynomial(block_values),
                 log_center=float(np.mean(np.log(block_values))),
             )
         )
@@ -249,9 +247,7 @@ def match_mode_transport_edge(
     matched = len(parent_indices)
     unmatched = parent_count + child_count - 2 * matched
     denominator = max(parent_count, child_count, 1)
-    cost = (
-        matched_cost + unmatched * float(unmatched_mode_penalty)
-    ) / denominator
+    cost = (matched_cost + unmatched * float(unmatched_mode_penalty)) / denominator
     return ModeTransportEdge(
         cost=float(cost),
         affinity=float(math.exp(-cost)),
@@ -343,12 +339,8 @@ def annotate_spectral_transport_passthrough_support(
         edge_transport[(parent, child)] = transport
         finite_cost = math.isfinite(transport.cost)
         has_mp_match = transport.matched_block_count > 0
-        measured_transport = bool(
-            has_mp_match or (finite_cost and not bool(require_mp_blocks))
-        )
-        edge_path_cost[(parent, child)] = (
-            float(transport.cost) if measured_transport else 0.0
-        )
+        measured_transport = bool(has_mp_match or (finite_cost and not bool(require_mp_blocks)))
+        edge_path_cost[(parent, child)] = float(transport.cost) if measured_transport else 0.0
         edge_has_mp_evidence[(parent, child)] = measured_transport
         if require_mp_blocks:
             edge_supported[(parent, child)] = bool(
@@ -381,19 +373,17 @@ def annotate_spectral_transport_passthrough_support(
                 if pd.isna(current_best) or (
                     math.isfinite(transport.cost) and transport.cost < float(current_best)
                 ):
-                    out.loc[child, "Spectral_Transport_Child_Best_Mode_Cost"] = (
-                        transport.cost
-                    )
+                    out.loc[child, "Spectral_Transport_Child_Best_Mode_Cost"] = transport.cost
                     out.loc[child, "Spectral_Transport_Child_Best_Mode_Affinity"] = (
                         transport.affinity
                     )
-                    out.loc[child, "Spectral_Transport_Child_Best_Mode_Status"] = (
-                        transport.status
-                    )
+                    out.loc[child, "Spectral_Transport_Child_Best_Mode_Status"] = transport.status
             if not edge_supported.get((node, child), False):
                 continue
             child_best = (
-                0.0 if can_split.get(child, False) else best_descendant_path_cost.get(child, math.inf)
+                0.0
+                if can_split.get(child, False)
+                else best_descendant_path_cost.get(child, math.inf)
             )
             if not math.isfinite(child_best):
                 continue
@@ -405,8 +395,7 @@ def annotate_spectral_transport_passthrough_support(
                 False,
             )
             path_has_mp_evidence = bool(
-                edge_has_mp_evidence.get((node, child), False)
-                or child_has_mp_evidence
+                edge_has_mp_evidence.get((node, child), False) or child_has_mp_evidence
             )
             path_cost = max(float(transport_path_cost), float(child_best))
             if path_cost < best_cost:
@@ -417,9 +406,7 @@ def annotate_spectral_transport_passthrough_support(
         best_descendant_path_has_mp_evidence[node] = best_has_mp_evidence
         supported_descendant_split[node] = has_supported
         if node in out.index and has_supported:
-            out.loc[node, "Spectral_Transport_Best_Descendant_Split_Path_Cost"] = (
-                best_cost
-            )
+            out.loc[node, "Spectral_Transport_Best_Descendant_Split_Path_Cost"] = best_cost
             out.loc[
                 node,
                 "Spectral_Transport_Best_Descendant_Split_Path_Has_MP_Evidence",
@@ -431,32 +418,25 @@ def annotate_spectral_transport_passthrough_support(
         pass_through_candidate = bool(
             split_prerequisites[node]
             and not can_split[node]
-            and any(can_split.get(child, False) or supported_descendant_split.get(child, False) for child in tree.successors(node))
+            and any(
+                can_split.get(child, False) or supported_descendant_split.get(child, False)
+                for child in tree.successors(node)
+            )
         )
-        supported = bool(
-            pass_through_candidate and supported_descendant_split.get(node, False)
-        )
+        supported = bool(pass_through_candidate and supported_descendant_split.get(node, False))
         out.loc[node, "Spectral_Transport_Pass_Through_Supported"] = supported
         out.loc[node, "Spectral_Transport_Pass_Through_Blocked"] = bool(
             pass_through_candidate and not supported
         )
         if not pass_through_candidate:
-            out.loc[node, "Spectral_Transport_Bottleneck"] = (
-                "not_pass_through_candidate"
-            )
+            out.loc[node, "Spectral_Transport_Bottleneck"] = "not_pass_through_candidate"
         elif supported:
             if best_descendant_path_has_mp_evidence.get(node, False):
-                out.loc[node, "Spectral_Transport_Bottleneck"] = (
-                    "supported_mp_mode_path"
-                )
+                out.loc[node, "Spectral_Transport_Bottleneck"] = "supported_mp_mode_path"
             else:
-                out.loc[node, "Spectral_Transport_Bottleneck"] = (
-                    "unmeasured_no_matched_mp_path"
-                )
+                out.loc[node, "Spectral_Transport_Bottleneck"] = "unmeasured_no_matched_mp_path"
         else:
-            out.loc[node, "Spectral_Transport_Bottleneck"] = (
-                "spectral_transport_bottleneck"
-            )
+            out.loc[node, "Spectral_Transport_Bottleneck"] = "spectral_transport_bottleneck"
 
     return out
 

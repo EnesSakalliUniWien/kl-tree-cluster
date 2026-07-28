@@ -63,9 +63,7 @@ def extract_child_parent_edge_p_values_by_node(
     annotations_dataframe: pd.DataFrame,
 ) -> dict[object, float]:
     """Return Tree-BH child-parent edge p-values keyed by node."""
-    edge_p_values = annotations_dataframe["Child_Parent_Divergence_P_Value_BH"].astype(
-        float
-    )
+    edge_p_values = annotations_dataframe["Child_Parent_Divergence_P_Value_BH"].astype(float)
     return {node_id: float(edge_p_values[node_id]) for node_id in annotations_dataframe.index}
 
 
@@ -118,10 +116,7 @@ def determine_whether_sibling_pair_is_edge_blocked(
     )
 
     return (
-        (not left_edge_tested)
-        or (not right_edge_tested)
-        or left_edge_blocked
-        or right_edge_blocked
+        (not left_edge_tested) or (not right_edge_tested) or left_edge_blocked or right_edge_blocked
     )
 
 

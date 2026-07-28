@@ -2,7 +2,7 @@
 title: Root Selected Region Model
 type: analysis
 status: reviewed
-updated: 2026-06-03
+updated: 2026-07-28
 sources:
   - wiki/analyses/method-proof-web.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
@@ -11,8 +11,8 @@ sources:
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/sources/root-selected-region-margins-20260603.md
-  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - benchmarks/diagnostics/calibration/root_selected_region_margins.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_region_margins.py
   - benchmarks/shared/tbs_tree_context.py
 tags:
   - analysis
@@ -413,7 +413,7 @@ cones, and curvature terms.
 
 ### Observed Root Margin Diagnostic
 
-`benchmarks/diagnostics/calibration/root_selected_region_margins.py` now
+`benchmarks/diagnostics/calibration/root/selected/root_selected_region_margins.py` now
 extracts one concrete part of \(\mathcal H_\rho\): for each average-linkage
 merge step, it checks that the observed merge is a minimum active pair and
 records the nearest-competitor margin. The final root merge has no competitor,
@@ -517,7 +517,7 @@ with a declared support and precision contract.
   permutations do not.
 - `wiki/sources/selected-hierarchy-null-audit-20260601.md` records selected
   root and non-root null simulations with large selected-hierarchy ratios.
-- `benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_geometry_covariates.py`
   records the current diagnostic proxy variables.
 - [[root-selected-region-margins-20260603]] records the first concrete replay
   of root merge-selection inequalities and their margins for representative

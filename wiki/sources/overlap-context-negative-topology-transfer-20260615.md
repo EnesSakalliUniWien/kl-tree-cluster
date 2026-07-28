@@ -2,10 +2,10 @@
 title: Overlap Context-Negative Topology Transfer 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_context_negative_topology_transfer.py
-  - tests/validation/131_test_overlap_context_negative_topology_transfer.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_context_negative_topology_transfer.py
+  - tests/validation/calibration/overlap/131_test_overlap_context_negative_topology_transfer.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer/overlap_context_negative_topology_transfer_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer/overlap_context_negative_topology_transfer_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer/manifest.json
@@ -55,13 +55,13 @@ traversal law.
 
 ## Evidence
 
-- `tests/validation/131_test_overlap_context_negative_topology_transfer.py`
+- `tests/validation/calibration/overlap/131_test_overlap_context_negative_topology_transfer.py`
   verifies successful held-out validation when two truth cases exist, the
   missing-support status for a single truth case, and output writing.
 - Verification passed:
-  `pytest tests/validation/131_test_overlap_context_negative_topology_transfer.py -q`
+  `pytest tests/validation/calibration/overlap/131_test_overlap_context_negative_topology_transfer.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_context_negative_topology_transfer.py tests/validation/131_test_overlap_context_negative_topology_transfer.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_topology_transfer.py tests/validation/calibration/overlap/131_test_overlap_context_negative_topology_transfer.py`.
 
 ## Links
 

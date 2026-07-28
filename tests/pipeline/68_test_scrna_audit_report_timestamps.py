@@ -10,9 +10,7 @@ import pandas as pd
 
 
 def _load_script(name: str):
-    script_path = (
-        Path(__file__).resolve().parents[2] / "applications/scrna/analysis" / name
-    )
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/analysis" / name
     spec = importlib.util.spec_from_file_location(script_path.stem, script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -86,7 +84,9 @@ def test_branch_length_audit_manifest_records_generated_timestamp(monkeypatch, t
         "DATASETS",
         [
             module.DatasetSpec("adult_pancreas", "Adult pancreas", tmp_path / "adult"),
-            module.DatasetSpec("goncalves_fetal", "Goncalves fetal pancreas", tmp_path / "goncalves"),
+            module.DatasetSpec(
+                "goncalves_fetal", "Goncalves fetal pancreas", tmp_path / "goncalves"
+            ),
         ],
     )
 
@@ -180,7 +180,9 @@ def test_distributional_action_audit_manifest_records_generated_timestamp(
         "DATASETS",
         (
             module.DatasetSpec("adult_pancreas", "Adult pancreas", tmp_path / "adult"),
-            module.DatasetSpec("goncalves_fetal", "Goncalves fetal pancreas", tmp_path / "goncalves"),
+            module.DatasetSpec(
+                "goncalves_fetal", "Goncalves fetal pancreas", tmp_path / "goncalves"
+            ),
         ),
     )
 

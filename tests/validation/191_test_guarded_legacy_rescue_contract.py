@@ -41,9 +41,7 @@ def test_selected_signal_like_rows_do_not_calibrate_empirical_null() -> None:
     assert excluded == SupportRole.ALGORITHM_SELECTED_SIGNAL_LIKE_EXCLUDED
     assert not role_allows_empirical_null_calibration(excluded)
     assert role_allows_empirical_null_calibration(SupportRole.NULL_ANCHOR)
-    assert role_allows_empirical_null_calibration(
-        SupportRole.STOPPED_EDGE_NULL_ANCHOR
-    )
+    assert role_allows_empirical_null_calibration(SupportRole.STOPPED_EDGE_NULL_ANCHOR)
 
 
 def test_tau_region_shrinks_sparse_regions_to_parent() -> None:
@@ -136,9 +134,7 @@ def test_current_support_profiles_are_exposed_without_rescued_legacy() -> None:
 
 def test_internal_filter_hard_overlap_r1_fails_closed() -> None:
     case = next(
-        case.copy()
-        for case in get_default_test_cases()
-        if case["name"] == "overlap_extreme_4c"
+        case.copy() for case in get_default_test_cases() if case["name"] == "overlap_extreme_4c"
     )
     case["name"] = "overlap_extreme_4c__r1"
     case["seed"] = 9003

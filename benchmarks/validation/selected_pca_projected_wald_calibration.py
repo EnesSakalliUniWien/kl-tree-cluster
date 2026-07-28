@@ -351,9 +351,7 @@ def validate_selected_pca_projected_wald_report(report: Mapping[str, Any]) -> li
         if evidence.get("metrics") != {}:
             errors.append("targets[0].evidence.metrics must be empty when missing")
         if evidence.get("missing_required_fields") != list(TARGET.required_output_fields):
-            errors.append(
-                "targets[0].evidence.missing_required_fields must list all fields"
-            )
+            errors.append("targets[0].evidence.missing_required_fields must list all fields")
         return errors
 
     _validate_complete_report_context(
@@ -619,10 +617,7 @@ def _validate_complete_evidence(
     }
     missing_metric_keys = sorted(required_metric_keys.difference(metrics))
     if missing_metric_keys:
-        errors.append(
-            "targets[0].evidence.metrics missing keys: "
-            f"{missing_metric_keys!r}"
-        )
+        errors.append(f"targets[0].evidence.metrics missing keys: {missing_metric_keys!r}")
     if metrics.get("primary_endpoint") != PRIMARY_ENDPOINT:
         errors.append("targets[0].evidence.metrics.primary_endpoint is invalid")
     results = metrics.get("results")
@@ -631,10 +626,7 @@ def _validate_complete_evidence(
         return
     for result_index, result in enumerate(results):
         if not isinstance(result, Mapping):
-            errors.append(
-                "targets[0].evidence.metrics.results"
-                f"[{result_index}] must be an object"
-            )
+            errors.append(f"targets[0].evidence.metrics.results[{result_index}] must be an object")
             continue
         _validate_result_entry(
             result,
@@ -772,9 +764,7 @@ def _wilson_interval(
     center = (proportion + z_value**2 / (2.0 * total)) / denominator
     half_width = (
         z_value
-        * np.sqrt(
-            (proportion * (1.0 - proportion) + z_value**2 / (4.0 * total)) / total
-        )
+        * np.sqrt((proportion * (1.0 - proportion) + z_value**2 / (4.0 * total)) / total)
         / denominator
     )
     return float(max(0.0, center - half_width)), float(min(1.0, center + half_width))

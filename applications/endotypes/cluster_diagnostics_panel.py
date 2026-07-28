@@ -366,8 +366,12 @@ def feature_coherence_diagnostics(
             sub = features.loc[genes]
             values = sub.to_numpy(dtype=float)
             if values.shape[0] > 1:
-                mean_pairwise_hamming_similarity = float(1.0 - pdist(values, metric="hamming").mean())
-                mean_pairwise_jaccard_similarity = float(1.0 - pdist(values, metric="jaccard").mean())
+                mean_pairwise_hamming_similarity = float(
+                    1.0 - pdist(values, metric="hamming").mean()
+                )
+                mean_pairwise_jaccard_similarity = float(
+                    1.0 - pdist(values, metric="jaccard").mean()
+                )
             else:
                 mean_pairwise_hamming_similarity = np.nan
                 mean_pairwise_jaccard_similarity = np.nan
@@ -453,7 +457,9 @@ def plot_review_panel(
     ax.tick_params(axis="x", rotation=25)
 
     ax = axes[0, 1]
-    pivot = size_bins.pivot(index="method", columns="size_bin", values="gene_fraction").reindex(methods)
+    pivot = size_bins.pivot(index="method", columns="size_bin", values="gene_fraction").reindex(
+        methods
+    )
     bottom = np.zeros(len(methods))
     colors = {
         "singleton": "#d9d9d9",
@@ -465,7 +471,9 @@ def plot_review_panel(
     }
     for bin_name in ["singleton", "n=2", "3-5", "6-10", "11-20", ">20"]:
         values = pivot.get(bin_name, pd.Series(0.0, index=methods)).fillna(0.0).to_numpy()
-        ax.bar(methods, values, bottom=bottom, label=bin_name, color=colors[bin_name], edgecolor="none")
+        ax.bar(
+            methods, values, bottom=bottom, label=bin_name, color=colors[bin_name], edgecolor="none"
+        )
         bottom += values
     ax.set_ylim(0, 1)
     ax.set_title("Genes by cluster-size bin")

@@ -2,10 +2,10 @@
 title: Selected Edge Sibling Null Equation 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_edge_sibling_null_equation.py
-  - tests/validation/92_test_selected_edge_sibling_null_equation.py
+  - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_null_equation.py
+  - tests/validation/calibration/edge/92_test_selected_edge_sibling_null_equation.py
   - benchmarks/validation/selected_edge_type1_geometry.py
   - benchmarks/diagnostics/math_trace/barycentric_action.py
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_siblings.csv
@@ -60,10 +60,10 @@ projection dimension, \(A_u^{\mathrm{edge}}\) is an edge-action bin, and
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_edge_sibling_null_equation.py`
+- `benchmarks/diagnostics/calibration/edge/selected_edge_sibling_null_equation.py`
   defines the equation variables, matched-context summaries, per-record
   conditional p-values, CSV runner, and manifest.
-- `tests/validation/92_test_selected_edge_sibling_null_equation.py` verifies
+- `tests/validation/calibration/edge/92_test_selected_edge_sibling_null_equation.py` verifies
   barycentric variable construction, supported empirical p-values, sparse
   support fail-closed behavior, and output writing.
 - `benchmarks/diagnostics/math_trace/barycentric_action.py` records the exact

@@ -147,8 +147,7 @@ def test_selected_continuous_examples_forward_baseline_case_contracts() -> None:
     assert cases_by_name["gauss_clear_medium"]["generator"] == "blobs"
     assert cases_by_name["gauss_clear_medium_continuous"]["generator"] == "blobs_continuous"
     assert (
-        cases_by_name["gauss_clear_medium_continuous"]["baseline_case_name"]
-        == "gauss_clear_medium"
+        cases_by_name["gauss_clear_medium_continuous"]["baseline_case_name"] == "gauss_clear_medium"
     )
     assert (
         cases_by_name["gauss_clear_medium_continuous"]["representation_role"]

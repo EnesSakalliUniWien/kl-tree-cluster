@@ -260,7 +260,9 @@ def interpret_group(row: dict[str, object]) -> str:
     return "non-progenitor or broad mixed grouping"
 
 
-def build_tree_helpers(edges: pd.DataFrame) -> tuple[dict[str, list[str]], dict[str, str], str, Any]:
+def build_tree_helpers(
+    edges: pd.DataFrame,
+) -> tuple[dict[str, list[str]], dict[str, str], str, Any]:
     children: dict[str, list[str]] = {}
     parents = set(edges["parent"].astype(str))
     child_nodes = set(edges["child"].astype(str))
@@ -301,7 +303,9 @@ def add_generated_at(fig: plt.Figure, generated_at: str) -> None:
     )
 
 
-def save_timestamped_figure(fig: plt.Figure, output_path: Path, generated_at: str, *, dpi: int = 240) -> None:
+def save_timestamped_figure(
+    fig: plt.Figure, output_path: Path, generated_at: str, *, dpi: int = 240
+) -> None:
     add_generated_at(fig, generated_at)
     fig.savefig(output_path, dpi=dpi)
     fig.savefig(
@@ -390,8 +394,7 @@ def write_signature_heatmap(summary: pd.DataFrame, output_path: Path, generated_
     ax.set_xticks(range(len(score_cols)))
     ax.set_xticklabels([col.replace("_score", "") for col in score_cols], rotation=45, ha="right")
     labels = [
-        f"{row.group_type}:{row.label} n={int(row.n_cells)}"
-        for row in rows.itertuples(index=False)
+        f"{row.group_type}:{row.label} n={int(row.n_cells)}" for row in rows.itertuples(index=False)
     ]
     ax.set_yticks(range(len(labels)))
     ax.set_yticklabels(labels, fontsize=7)
@@ -405,7 +408,9 @@ def write_meeting_plot(meetings: pd.DataFrame, output_path: Path, generated_at: 
     if meetings.empty:
         return
     fig, ax = plt.subplots(figsize=(8, 6))
-    color = meetings["trunk_progenitor_score"].fillna(0) + meetings["tip_progenitor_score"].fillna(0)
+    color = meetings["trunk_progenitor_score"].fillna(0) + meetings["tip_progenitor_score"].fillna(
+        0
+    )
     scatter = ax.scatter(
         meetings["n_cells"],
         meetings["progenitor_population_fraction"],
@@ -459,7 +464,9 @@ def main() -> None:
     )
     expression = load_marker_expression(adata, mapping)
     scored, signature_defs = add_signature_scores(expression)
-    signature_defs.to_csv(output_dir / "goncalves_progenitor_signature_definitions.csv", index=False)
+    signature_defs.to_csv(
+        output_dir / "goncalves_progenitor_signature_definitions.csv", index=False
+    )
     scored.to_csv(output_dir / "goncalves_cell_marker_signature_scores.csv")
 
     populations = adata.obs["celltype"].astype(str)
@@ -478,7 +485,9 @@ def main() -> None:
         for population, group in populations.groupby(populations)
     ]
     population_df = pd.DataFrame(population_rows).sort_values("n_cells", ascending=False)
-    population_df.to_csv(output_dir / "goncalves_population_progenitor_signature_scores.csv", index=False)
+    population_df.to_csv(
+        output_dir / "goncalves_population_progenitor_signature_scores.csv", index=False
+    )
 
     cluster_rows = [
         summarize_group(
@@ -496,7 +505,9 @@ def main() -> None:
         ["progenitor_population_fraction", "n_cells"],
         ascending=[False, False],
     )
-    cluster_df.to_csv(output_dir / "goncalves_tbs_cluster_progenitor_signature_scores.csv", index=False)
+    cluster_df.to_csv(
+        output_dir / "goncalves_tbs_cluster_progenitor_signature_scores.csv", index=False
+    )
 
     edges = pd.read_csv(output_dir / f"{METHOD_KEY}_tree_edges.csv")
     children, parent_of, root, descendant_leaves = build_tree_helpers(edges)
@@ -535,7 +546,9 @@ def main() -> None:
             )
         )
     node_df = pd.DataFrame(node_rows)
-    node_df.to_csv(output_dir / "goncalves_tbs_inner_node_progenitor_signature_scores.csv", index=False)
+    node_df.to_csv(
+        output_dir / "goncalves_tbs_inner_node_progenitor_signature_scores.csv", index=False
+    )
 
     cluster_to_leaves = {
         str(cluster_id): frozenset(np.flatnonzero(clusters.to_numpy() == str(cluster_id)).tolist())
@@ -576,7 +589,9 @@ def main() -> None:
                     ",".join(f"C{cluster}" for cluster in sorted(child_set, key=int))
                     for child_set in child_cluster_sets
                 ),
-                "meeting_clusters": ",".join(f"C{cluster}" for cluster in sorted(node_clusters, key=int)),
+                "meeting_clusters": ",".join(
+                    f"C{cluster}" for cluster in sorted(node_clusters, key=int)
+                ),
             },
         )
         meeting_rows.append(row)

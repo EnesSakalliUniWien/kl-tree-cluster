@@ -105,8 +105,7 @@ def coordinate_fdr_adjusted_minimum(
         )
         return float(np.clip(np.min(adjusted_sorted), 0.0, 1.0))
     raise ValueError(
-        f"Unknown coordinate FDR method {method!r}; "
-        "allowed=('bh', 'by', 'holm', 'bonferroni')."
+        f"Unknown coordinate FDR method {method!r}; allowed=('bh', 'by', 'holm', 'bonferroni')."
     )
 
 
@@ -165,7 +164,6 @@ def fixed_block_simes_bh_p_value(
             f"covered={offset}, z_dimension={vector.shape[0]}."
         )
     return _bh_adjusted_minimum(np.asarray(block_p_values, dtype=float))
-
 
 
 def _feature_block_p_values(
@@ -262,9 +260,7 @@ def _sibling_fixed_subspace_contrast(
             parent,
             feature_space,
             continuous_covariance_policy=continuous_covariance_policy,
-            continuous_covariance_min_child_leaf_count=(
-                continuous_covariance_min_child_leaf_count
-            ),
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         ),
     )
 
@@ -318,8 +314,7 @@ def annotate_fixed_subspace_sibling_evidence_channels(
         )
     if dense_method != "fixed_global_chi_square":
         raise ValueError(
-            "dense_method must currently be 'fixed_global_chi_square'; "
-            f"got {dense_method!r}."
+            f"dense_method must currently be 'fixed_global_chi_square'; got {dense_method!r}."
         )
 
     out = annotations_df.copy()
@@ -335,41 +330,21 @@ def annotate_fixed_subspace_sibling_evidence_channels(
             left,
             right,
             continuous_covariance_policy=continuous_covariance_policy,
-            continuous_covariance_min_child_leaf_count=(
-                continuous_covariance_min_child_leaf_count
-            ),
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         )
         values = _fixed_subspace_channel_values(z, feature_space)
 
-        out.loc[parent, "Sibling_Fixed_Coordinate_BH_P_Value"] = values[
-            "fixed_coordinate_bh"
-        ]
-        out.loc[parent, "Sibling_Fixed_Block_BH_P_Value"] = values[
-            "fixed_block_bh"
-        ]
-        out.loc[parent, "Sibling_Fixed_Global_P_Value"] = values[
-            "fixed_global_chi_square"
-        ]
-        out.loc[parent, "Sibling_Sparse_Evidence_P_Value"] = values[
-            str(sparse_method)
-        ]
+        out.loc[parent, "Sibling_Fixed_Coordinate_BH_P_Value"] = values["fixed_coordinate_bh"]
+        out.loc[parent, "Sibling_Fixed_Block_BH_P_Value"] = values["fixed_block_bh"]
+        out.loc[parent, "Sibling_Fixed_Global_P_Value"] = values["fixed_global_chi_square"]
+        out.loc[parent, "Sibling_Sparse_Evidence_P_Value"] = values[str(sparse_method)]
         out.loc[parent, "Sibling_Sparse_Evidence_Method"] = str(sparse_method)
-        out.loc[parent, "Sibling_Sparse_Evidence_Calibration"] = (
-            "fixed_subspace_bh"
-        )
-        out.loc[parent, "Sibling_Dense_Evidence_P_Value"] = values[
-            str(dense_method)
-        ]
+        out.loc[parent, "Sibling_Sparse_Evidence_Calibration"] = "fixed_subspace_bh"
+        out.loc[parent, "Sibling_Dense_Evidence_P_Value"] = values[str(dense_method)]
         out.loc[parent, "Sibling_Dense_Evidence_Method"] = str(dense_method)
-        out.loc[parent, "Sibling_Dense_Evidence_Calibration"] = (
-            "fixed_subspace_chi_square"
-        )
-        out.loc[parent, "Sibling_Dense_Evidence_Test_Statistic"] = values[
-            "statistic"
-        ]
-        out.loc[parent, "Sibling_Dense_Evidence_Degrees_of_Freedom"] = values[
-            "degrees_of_freedom"
-        ]
+        out.loc[parent, "Sibling_Dense_Evidence_Calibration"] = "fixed_subspace_chi_square"
+        out.loc[parent, "Sibling_Dense_Evidence_Test_Statistic"] = values["statistic"]
+        out.loc[parent, "Sibling_Dense_Evidence_Degrees_of_Freedom"] = values["degrees_of_freedom"]
 
     return out
 
@@ -401,9 +376,7 @@ def _fixed_subspace_sibling_results(
             left,
             right,
             continuous_covariance_policy=continuous_covariance_policy,
-            continuous_covariance_min_child_leaf_count=(
-                continuous_covariance_min_child_leaf_count
-            ),
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         )
         statistic = float(np.dot(z, z))
         degrees_of_freedom = float(feature_space.contrast_dimension)
@@ -442,9 +415,7 @@ def annotate_fixed_subspace_sibling_divergence(
         feature_space,
         method=method,
         continuous_covariance_policy=continuous_covariance_policy,
-        continuous_covariance_min_child_leaf_count=(
-            continuous_covariance_min_child_leaf_count
-        ),
+        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
     )
     mark_non_binary_as_skipped(annotations_df, skipped)
     if not results:

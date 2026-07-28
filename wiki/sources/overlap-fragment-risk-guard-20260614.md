@@ -2,10 +2,10 @@
 title: Overlap Fragment Risk Guard 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_fragment_risk_guard.py
-  - tests/validation/112_test_overlap_fragment_risk_guard.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_fragment_risk_guard.py
+  - tests/validation/calibration/overlap/112_test_overlap_fragment_risk_guard.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_scan.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/manifest.json
@@ -54,13 +54,13 @@ looks like a plausible runtime guard for one-sided fragment failures.
 
 ## Evidence
 
-- `tests/validation/112_test_overlap_fragment_risk_guard.py` verifies
+- `tests/validation/calibration/overlap/112_test_overlap_fragment_risk_guard.py` verifies
   weak-zone guard row construction with selected-null and signal rows,
   candidate guard threshold scanning, and output writing.
 - Verification passed:
-  `pytest tests/validation/112_test_overlap_fragment_risk_guard.py -q`
+  `pytest tests/validation/calibration/overlap/112_test_overlap_fragment_risk_guard.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_fragment_risk_guard.py tests/validation/112_test_overlap_fragment_risk_guard.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_fragment_risk_guard.py tests/validation/calibration/overlap/112_test_overlap_fragment_risk_guard.py`.
 
 ## Links
 

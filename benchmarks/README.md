@@ -44,7 +44,7 @@ The authoritative default benchmark definition lives in code:
 
 - Cases: `benchmarks.shared.cases.get_default_test_cases()`
 - Contract suites: `benchmarks.shared.cases.get_test_cases_by_suite()`
-- Default methods: `benchmarks.shared.config.DEFAULT_METHODS`
+- Default methods: `benchmarks.shared.util.method_sets.DEFAULT_METHODS`
 
 Both `benchmarks/full/run.py` and
 `benchmarks/shared/pipeline.py::benchmark_cluster_algorithm()` should reflect
@@ -166,7 +166,7 @@ benchmark CSV preserves both fields in every result row.
 
 **Experiment setup**:
 
-- Default methods: `benchmarks.shared.config.DEFAULT_METHODS`, currently
+- Default methods: `benchmarks.shared.util.method_sets.DEFAULT_METHODS`, currently
   `tbs`, `tbs_diffusion`, `tbs_diffusion_adaptive_nnls`, `leiden`, `louvain`,
   `kmeans`, `spectral`, `dbscan`, `optics`, and `hdbscan`.
 - Additional registered methods such as `tbs_complete` and `tbs_single` are
@@ -440,7 +440,7 @@ Note: K-Means and Spectral Clustering are given the **true K** as input, making 
 
 The method registry exposes the canonical methods plus additional diagnostic
 TBS variants, while the default full benchmark uses the method subset in
-`benchmarks.shared.config.DEFAULT_METHODS`.
+`benchmarks.shared.util.method_sets.DEFAULT_METHODS`.
 
 | Key                 | Name                 | Distance          | Linkage  | Notes                               |
 | ------------------- | -------------------- | ----------------- | -------- | ----------------------------------- |
@@ -560,25 +560,23 @@ inspecting current behavior.
 
 ## Integration with Main Library
 
-The benchmark system uses the core library:
+The benchmark system uses explicit method parameters rather than mutable
+package globals:
 ```python
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
-# Tree-construction options remain runtime config values.
-config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
-
 # Benchmark runs use the canonical edge threshold and an explicit sibling
-# threshold argument. Do not mutate global config to change statistical alphas.
+# threshold argument. Tree geometry and linkage are explicit entries in each
+# registered method specification.
 df_results, _ = benchmark_cluster_algorithm(
     significance_level=DEFAULT_SIBLING_ALPHA,
 )
 
-# Lower-level method experiments can pass an explicit `edge_alpha` to the gate
-# pipeline. Production benchmark rows record the alpha values used.
+# Lower-level method experiments pass tree construction, traversal, and alpha
+# choices directly. Production benchmark rows record the values used.
 ```
 
 ## Calibration Diagnostics

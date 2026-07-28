@@ -25,9 +25,7 @@ def audit_projection_law(table: pd.DataFrame) -> pd.DataFrame:
             "median_selected_eigenvalue_mass": float(mass.median())
             if mass.notna().any()
             else np.nan,
-            "median_selected_subspace_cos2": float(cos2.median())
-            if cos2.notna().any()
-            else np.nan,
+            "median_selected_subspace_cos2": float(cos2.median()) if cos2.notna().any() else np.nan,
         }
         if group_columns:
             row["case_id"] = keys if not isinstance(keys, tuple) else keys[0]

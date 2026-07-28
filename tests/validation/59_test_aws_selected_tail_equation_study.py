@@ -60,9 +60,7 @@ def _geometry_records(case_id: str, *, replicate_offset: int = 0) -> pd.DataFram
                 "right_edge_bh_p_value": 0.02 + index / 1000.0,
                 "min_child_edge_bh_p_value": 0.01 + index / 1000.0,
                 "max_child_edge_bh_p_value": 0.02 + index / 1000.0,
-                "negative_log10_min_child_edge_bh_p_value": float(
-                    -np.log10(0.01 + index / 1000.0)
-                ),
+                "negative_log10_min_child_edge_bh_p_value": float(-np.log10(0.01 + index / 1000.0)),
                 "raw_mp_signal_count": 2 + index % 3,
                 "parent_test_projection_dimension": 2 + index % 3,
                 "sibling_projection_dimension": 2 + index % 3,

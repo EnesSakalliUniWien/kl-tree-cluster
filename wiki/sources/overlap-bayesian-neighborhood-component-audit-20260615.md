@@ -2,10 +2,10 @@
 title: Overlap Bayesian Neighborhood Component Audit 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_bayesian_neighborhood_component_audit.py
-  - tests/validation/121_test_overlap_bayesian_neighborhood_component_audit.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_bayesian_neighborhood_component_audit.py
+  - tests/validation/calibration/overlap/121_test_overlap_bayesian_neighborhood_component_audit.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_neighborhood_component_audit/overlap_bayesian_neighborhood_component_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_neighborhood_component_audit/overlap_bayesian_neighborhood_component_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_neighborhood_component_audit/manifest.json
@@ -54,13 +54,13 @@ promotion after selected-family p-value evidence is already strong.
 
 ## Evidence
 
-- `tests/validation/121_test_overlap_bayesian_neighborhood_component_audit.py`
+- `tests/validation/calibration/overlap/121_test_overlap_bayesian_neighborhood_component_audit.py`
   verifies limiting-component detection, p-value-without-neighborhood status
   counts, and output writing.
 - Verification passed:
-  `pytest tests/validation/121_test_overlap_bayesian_neighborhood_component_audit.py -q`
+  `pytest tests/validation/calibration/overlap/121_test_overlap_bayesian_neighborhood_component_audit.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_bayesian_neighborhood_component_audit.py tests/validation/121_test_overlap_bayesian_neighborhood_component_audit.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_bayesian_neighborhood_component_audit.py tests/validation/calibration/overlap/121_test_overlap_bayesian_neighborhood_component_audit.py`.
 
 ## Links
 

@@ -18,7 +18,6 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 )
 
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.config import DEFAULT_METHODS
 
 # Logging helpers extracted to a small utility module to keep the pipeline
 # focused and testable.
@@ -36,6 +35,7 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 # Small utilities (avoid circular imports by keeping them lightweight)
 from benchmarks.shared.util.case_run import run_single_case
 from benchmarks.shared.util.method_selection import resolve_selected_methods_and_param_sets
+from benchmarks.shared.util.method_sets import DEFAULT_METHODS
 from benchmarks.shared.util.pdf.session import open_pdf_pages, resolve_pdf_output_path
 
 # Configure logger (library-friendly: leave handlers/levels to callers)
@@ -87,7 +87,7 @@ def benchmark_cluster_algorithm(
 
     methods : list of str, optional
         Clustering methods to run. If omitted, uses the shared default
-        benchmark method set from ``benchmarks.shared.config.DEFAULT_METHODS``.
+        benchmark method set from ``benchmarks.shared.util.method_sets.DEFAULT_METHODS``.
     method_params : dict, optional
         Optional per-method parameter grids. Values are lists of param dicts.
     concat_plots_pdf : bool, default=False
@@ -157,7 +157,6 @@ def benchmark_cluster_algorithm(
     pdf_pages = None
 
     try:
-
         if stream_pdf:
             output_pdf, pdf_pages = open_pdf_pages(
                 output_pdf,

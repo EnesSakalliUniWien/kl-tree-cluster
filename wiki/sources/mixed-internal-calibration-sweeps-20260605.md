@@ -2,9 +2,9 @@
 title: Mixed Internal Calibration Sweeps 2026-06-05
 type: source
 status: reviewed
-updated: 2026-06-05
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/mixed_internal_calibration_sweep.py
+  - benchmarks/diagnostics/calibration/statistics/mixed_internal_calibration_sweep.py
   - benchmarks/results/diagnostics/mixed_internal_calibration_sweep_method_proof_20260605/mixed_q10_weight_rule_summary.csv
   - benchmarks/results/diagnostics/mixed_internal_calibration_sweep_method_proof_20260605/mixed_internal_support_threshold_summary.csv
   - benchmarks/results/diagnostics/mixed_internal_calibration_sweep_binary_20260605/mixed_q10_weight_rule_summary.csv

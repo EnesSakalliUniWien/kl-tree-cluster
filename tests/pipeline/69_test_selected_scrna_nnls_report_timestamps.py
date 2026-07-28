@@ -8,7 +8,9 @@ from matplotlib.figure import Figure
 
 
 def _load_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/plots/selected_nnls_report.py"
+    script_path = (
+        Path(__file__).resolve().parents[2] / "applications/scrna/plots/selected_nnls_report.py"
+    )
     spec = importlib.util.spec_from_file_location("plot_selected_scrna_nnls_report", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -54,9 +56,15 @@ def test_standalone_png_pages_have_timestamp_before_save(monkeypatch, tmp_path):
     monkeypatch.setattr(report, "build_full_tree_info", lambda *_args, **_kwargs: {})
     monkeypatch.setattr(report, "cluster_summary", lambda *_args, **_kwargs: summary.copy())
     monkeypatch.setattr(report, "plot_umap", lambda ax, *_args, **_kwargs: ax.set_title("UMAP"))
-    monkeypatch.setattr(report, "plot_compact_tree", lambda ax, *_args, **_kwargs: ax.set_title("Tree"))
-    monkeypatch.setattr(report, "plot_size_bars", lambda ax, *_args, **_kwargs: ax.set_title("Sizes"))
-    monkeypatch.setattr(report, "plot_radial_tree", lambda ax, *_args, **_kwargs: ax.set_title("Radial"))
+    monkeypatch.setattr(
+        report, "plot_compact_tree", lambda ax, *_args, **_kwargs: ax.set_title("Tree")
+    )
+    monkeypatch.setattr(
+        report, "plot_size_bars", lambda ax, *_args, **_kwargs: ax.set_title("Sizes")
+    )
+    monkeypatch.setattr(
+        report, "plot_radial_tree", lambda ax, *_args, **_kwargs: ax.set_title("Radial")
+    )
     monkeypatch.setattr(
         report,
         "plot_full_radial_tree",
@@ -72,7 +80,9 @@ def test_standalone_png_pages_have_timestamp_before_save(monkeypatch, tmp_path):
     cfg = {"dir": tmp_path, "selected": selected, "title": "Test dataset", "key": "test"}
 
     report.selected_dataset_page(cfg, save_path=tmp_path / "dataset.png", generated_at=generated_at)
-    report.selected_radial_dataset_page(cfg, save_path=tmp_path / "radial.png", generated_at=generated_at)
+    report.selected_radial_dataset_page(
+        cfg, save_path=tmp_path / "radial.png", generated_at=generated_at
+    )
     report.selected_full_radial_dataset_page(
         cfg,
         save_path=tmp_path / "full_radial.png",
@@ -81,6 +91,7 @@ def test_standalone_png_pages_have_timestamp_before_save(monkeypatch, tmp_path):
 
     assert len(saved_figure_texts) == 3
     assert all(
-        [f"Generated at: {generated_at}"] == [text for text in texts if text.startswith("Generated at:")]
+        [f"Generated at: {generated_at}"]
+        == [text for text in texts if text.startswith("Generated at:")]
         for texts in saved_figure_texts
     )

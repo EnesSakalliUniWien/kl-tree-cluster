@@ -144,9 +144,7 @@ def compute_inflation_adjusted_sibling_tests(
             external_selected_tail_context=(
                 None
                 if external_selected_tail_context_by_parent is None
-                else external_selected_tail_context_by_parent.get(
-                    sibling_test_record.parent
-                )
+                else external_selected_tail_context_by_parent.get(sibling_test_record.parent)
             ),
         )
         tested_parent_ids.append(sibling_test_record.parent)

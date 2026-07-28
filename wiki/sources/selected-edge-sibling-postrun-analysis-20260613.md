@@ -2,14 +2,14 @@
 title: Selected Edge Sibling Postrun Analysis 2026-06-13
 type: source
 status: reviewed
-updated: 2026-06-13
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_edge_sibling_postrun_analysis.py
-  - tests/validation/95_test_selected_edge_sibling_postrun_analysis.py
+  - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_postrun_analysis.py
+  - tests/validation/calibration/edge/95_test_selected_edge_sibling_postrun_analysis.py
   - benchmarks/validation/selected_edge_type1_geometry.py
-  - benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py
-  - benchmarks/diagnostics/calibration/selected_edge_sibling_null_equation.py
-  - benchmarks/diagnostics/calibration/production_admissibility_contract.py
+  - benchmarks/diagnostics/calibration/statistics/statistic_distribution_shape_panel.py
+  - benchmarks/diagnostics/calibration/edge/selected_edge_sibling_null_equation.py
+  - benchmarks/diagnostics/calibration/traversal/production_admissibility_contract.py
 tags:
   - source
   - diagnostics
@@ -52,11 +52,11 @@ summaries, plus a conservative production-admissibility summary.
 
 ## Evidence
 
-- `tests/validation/95_test_selected_edge_sibling_postrun_analysis.py` builds a
+- `tests/validation/calibration/edge/95_test_selected_edge_sibling_postrun_analysis.py` builds a
   real enriched sibling artifact through `run_selected_edge_replicate`, checks
   raw-statistic distribution records, checks selected edge+sibling equation
   records, and verifies all expected post-run output files are written.
-- `benchmarks/diagnostics/calibration/selected_edge_sibling_postrun_analysis.py`
+- `benchmarks/diagnostics/calibration/edge/selected_edge_sibling_postrun_analysis.py`
   writes `sibling_distribution_shape_rows.csv`,
   `sibling_distribution_shape_summary.csv`,
   `selected_edge_sibling_equation_rows.csv`,

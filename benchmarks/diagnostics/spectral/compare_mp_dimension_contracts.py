@@ -30,7 +30,6 @@ import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator 
 import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_context_module
 import tree_break_selection.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
 from scipy.cluster.hierarchy import linkage
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
@@ -45,6 +44,7 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.projection_di
     MarchenkoPasturDimensionEstimate,
     estimate_marchenko_pastur_dimension,
 )
+from tree_break_selection.tree.construction import DEFAULT_TREE_LINKAGE_METHOD
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
 
@@ -187,7 +187,9 @@ def _finite_null_dimension_estimate(
     quantile: float,
     seed: int,
 ) -> MarchenkoPasturDimensionEstimate:
-    row_count = int(effective_independent_rows if effective_independent_rows is not None else n_samples)
+    row_count = int(
+        effective_independent_rows if effective_independent_rows is not None else n_samples
+    )
     threshold = _finite_null_upper_edge(row_count, int(n_features), reps, quantile, seed)
     raw_signal_count = int(np.sum(np.asarray(eigenvalues, dtype=np.float64) > threshold))
     test_projection_dimension = min(
@@ -223,7 +225,9 @@ def _patched_variant(
         mp_threshold_rows: int | None = None,
         minimum_projection_dimension: int = 1,
     ) -> MarchenkoPasturDimensionEstimate:
-        row_count = int(effective_independent_rows if effective_independent_rows is not None else n_samples)
+        row_count = int(
+            effective_independent_rows if effective_independent_rows is not None else n_samples
+        )
         return estimate_marchenko_pastur_dimension(
             eigenvalues,
             n_samples=n_samples,
@@ -284,7 +288,7 @@ def _run_tbs_with_gate_bundle(
     *,
     feature_space: FeatureSpace | None,
 ) -> MethodRunResult:
-    linkage_matrix = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
+    linkage_matrix = linkage(distance_condensed, method=DEFAULT_TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
     tree.populate_node_divergences(data_df, feature_space=feature_space)
     gate_bundle = run_gate_annotation_pipeline(
@@ -434,10 +438,7 @@ def _run_comparison(
                     "median_effective_independent_rows": np.nan,
                     "median_mp_threshold_rows": np.nan,
                 }
-                print(
-                    f"[{run_index:>3d}/{total:>3d}] {case['name']} {variant.name}: "
-                    f"ERROR {exc}"
-                )
+                print(f"[{run_index:>3d}/{total:>3d}] {case['name']} {variant.name}: ERROR {exc}")
             rows.append(row)
     return pd.DataFrame(rows)
 
@@ -457,10 +458,7 @@ def _print_summary(comparison: pd.DataFrame) -> None:
             exact_k=(
                 "found_clusters",
                 lambda values: int(
-                    (
-                        values
-                        == comparison.loc[values.index, "true_clusters"].astype(float)
-                    ).sum()
+                    (values == comparison.loc[values.index, "true_clusters"].astype(float)).sum()
                 ),
             ),
             median_test_projection_dimension=(

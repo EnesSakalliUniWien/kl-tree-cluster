@@ -2,10 +2,10 @@
 title: Root Selected External Law Equation 2026-06-17
 type: source
 status: draft
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_selected_external_law_equation_panel.py
-  - tests/validation/180_test_root_selected_external_law_equation_panel.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_external_law_equation_panel.py
+  - tests/validation/calibration/root/selected/180_test_root_selected_external_law_equation_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_external_law_equation_mild_replay_v3_smoke
 tags:
   - source

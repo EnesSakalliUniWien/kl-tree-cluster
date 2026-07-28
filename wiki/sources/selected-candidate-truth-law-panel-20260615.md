@@ -2,10 +2,10 @@
 title: Selected Candidate Truth Law Panel 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_candidate_truth_law_panel.py
-  - tests/validation/141_test_selected_candidate_truth_law_panel.py
+  - benchmarks/diagnostics/calibration/selected/family/selected_candidate_truth_law_panel.py
+  - tests/validation/calibration/selected/family/141_test_selected_candidate_truth_law_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_stress
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_generated_support
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_overlap_expanded
@@ -294,9 +294,9 @@ in the selected tree before asking whether pass-through should be promoted.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_candidate_truth_law_panel.py`
+- `benchmarks/diagnostics/calibration/selected/family/selected_candidate_truth_law_panel.py`
   implements the reusable diagnostic runner and CLI.
-- `tests/validation/141_test_selected_candidate_truth_law_panel.py` verifies
+- `tests/validation/calibration/selected/family/141_test_selected_candidate_truth_law_panel.py` verifies
   branch recovery, homogeneous pass-through fragments, selected-null controls,
   directed state summaries, and output writing.
 - `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_stress/selected_candidate_truth_law_summary.csv`

@@ -2,10 +2,10 @@
 title: Selected Neighborhood Internal Spectral Flow Conditional Energy 2026-06-17
 type: source
 status: reviewed
-updated: 2026-06-17
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_internal_spectral_flow_conditional_energy.py
-  - tests/validation/189_test_selected_neighborhood_internal_spectral_flow_conditional_energy.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_internal_spectral_flow_conditional_energy.py
+  - tests/validation/calibration/selected/neighborhood/189_test_selected_neighborhood_internal_spectral_flow_conditional_energy.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_internal_spectral_flow_overlap_seven_case
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_internal_spectral_flow_conditional_energy_overlap_seven_case
 tags:

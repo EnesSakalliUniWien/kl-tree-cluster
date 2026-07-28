@@ -2,10 +2,10 @@
 title: Overlap Context-Negative Topology Conditioning 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_context_negative_topology_conditioning.py
-  - tests/validation/130_test_overlap_context_negative_topology_conditioning.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_context_negative_topology_conditioning.py
+  - tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_metric_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_category_summary.csv
@@ -72,14 +72,14 @@ structural evidence, and income/outcome junction context.
 
 ## Evidence
 
-- `tests/validation/130_test_overlap_context_negative_topology_conditioning.py`
+- `tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py`
   verifies single-truth separator detection, explicit support/signal-role
   production, selected-nonnull exclusion marking, missing projection-dimension
   tolerance, overlapping metric failure, and output writing.
 - Verification passed:
-  `pytest tests/validation/130_test_overlap_context_negative_topology_conditioning.py -q`
+  `pytest tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_context_negative_topology_conditioning.py tests/validation/130_test_overlap_context_negative_topology_conditioning.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_context_negative_topology_conditioning.py tests/validation/calibration/overlap/130_test_overlap_context_negative_topology_conditioning.py`.
 
 ## Links
 

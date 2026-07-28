@@ -2,10 +2,10 @@
 title: Overlap Diagnostic Traversal Policy 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_diagnostic_traversal_policy.py
-  - tests/validation/113_test_overlap_diagnostic_traversal_policy.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_diagnostic_traversal_policy.py
+  - tests/validation/calibration/overlap/113_test_overlap_diagnostic_traversal_policy.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/manifest.json
@@ -53,13 +53,13 @@ rows stay unstable/multi-scale pending a selected-family recovery law.
 
 ## Evidence
 
-- `tests/validation/113_test_overlap_diagnostic_traversal_policy.py` verifies
+- `tests/validation/calibration/overlap/113_test_overlap_diagnostic_traversal_policy.py` verifies
   stable accept, fragment-guard blocked, unstable weak-zone, nonaccepted action
   assignment; summary guard-role counts; and output writing.
 - Verification passed:
-  `pytest tests/validation/113_test_overlap_diagnostic_traversal_policy.py -q`
+  `pytest tests/validation/calibration/overlap/113_test_overlap_diagnostic_traversal_policy.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_diagnostic_traversal_policy.py tests/validation/113_test_overlap_diagnostic_traversal_policy.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_diagnostic_traversal_policy.py tests/validation/calibration/overlap/113_test_overlap_diagnostic_traversal_policy.py`.
 
 ## Links
 

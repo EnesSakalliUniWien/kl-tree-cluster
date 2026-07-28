@@ -2,10 +2,10 @@
 title: Overlap Income-Outcome Junction Law 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_income_outcome_junction_law.py
-  - tests/validation/126_test_overlap_income_outcome_junction_law.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_income_outcome_junction_law.py
+  - tests/validation/calibration/overlap/126_test_overlap_income_outcome_junction_law.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/income_outcome_junction_law/overlap_income_outcome_junction_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/income_outcome_junction_law/overlap_income_outcome_junction_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/income_outcome_junction_law/manifest.json
@@ -70,14 +70,14 @@ child-sibling evidence, \(I_u \to O_u\) is the transition relation, and
 
 ## Evidence
 
-- `tests/validation/126_test_overlap_income_outcome_junction_law.py` verifies
+- `tests/validation/calibration/overlap/126_test_overlap_income_outcome_junction_law.py` verifies
   that incoming and outgoing roles are kept separate, that a context-negative
   soft-supported truth row is classified as transition-law required, and that
   outputs are written.
 - Verification passed:
-  `pytest tests/validation/126_test_overlap_income_outcome_junction_law.py -q`
+  `pytest tests/validation/calibration/overlap/126_test_overlap_income_outcome_junction_law.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_income_outcome_junction_law.py tests/validation/126_test_overlap_income_outcome_junction_law.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_income_outcome_junction_law.py tests/validation/calibration/overlap/126_test_overlap_income_outcome_junction_law.py`.
 
 ## Links
 

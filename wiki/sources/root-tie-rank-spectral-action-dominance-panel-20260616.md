@@ -2,10 +2,10 @@
 title: Root Tie Rank Spectral Action Dominance Panel 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_spectral_action_dominance_panel.py
-  - tests/validation/160_test_root_tie_rank_spectral_action_dominance_panel.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_spectral_action_dominance_panel.py
+  - tests/validation/calibration/root/tie_rank/160_test_root_tie_rank_spectral_action_dominance_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_spectral_action_dominance_panel_two_case_smoke
 tags:
   - source

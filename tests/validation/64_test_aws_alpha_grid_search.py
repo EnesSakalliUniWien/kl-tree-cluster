@@ -57,9 +57,7 @@ def _write_alpha_shard(
             ]
         ).to_csv(result_path, index=False)
     pd.DataFrame.from_records(rows).to_csv(shard_dir / "alpha_grid_summary.csv", index=False)
-    (shard_dir / SHARD_MANIFEST_NAME).write_text(
-        json.dumps({"shard_index": shard_index}) + "\n"
-    )
+    (shard_dir / SHARD_MANIFEST_NAME).write_text(json.dumps({"shard_index": shard_index}) + "\n")
 
 
 def test_parse_case_names_and_resolve_shard_index_contract() -> None:

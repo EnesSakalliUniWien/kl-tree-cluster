@@ -190,13 +190,13 @@ def annotate_distributional_action_split_filter(
 
     split_action_by_parent: dict[object, float] = {}
     children_by_parent: dict[object, list[object]] = {}
+    action_rows: dict[object, dict[str, object]] = {}
     for parent in tree.nodes:
         children = list(tree.successors(parent))
         if not children:
             continue
         child_means = [
-            np.asarray(tree.nodes[child]["distribution"], dtype=float) / scale
-            for child in children
+            np.asarray(tree.nodes[child]["distribution"], dtype=float) / scale for child in children
         ]
         child_masses = [tree.nodes[child]["leaf_count"] for child in children]
         split_summary = split_distributional_action_summary(child_means, child_masses)
@@ -208,36 +208,31 @@ def annotate_distributional_action_split_filter(
                 continue
             child_edge_action = split_summary.child_edge_actions[child_index] / feature_count
             squared_delta_sq_mean = (
-                split_summary.squared_child_parent_displacements[child_index]
-                / feature_count
+                split_summary.squared_child_parent_displacements[child_index] / feature_count
             )
-            out.loc[child, "Distributional_Action_Parent_Mass"] = (
-                split_summary.parent_mass
-            )
-            out.loc[child, "Distributional_Action_Child_Mass"] = (
-                split_summary.child_masses[child_index]
-            )
-            out.loc[child, "Distributional_Action_Child_Parent_Mass_Fraction"] = (
-                split_summary.child_parent_mass_fractions[child_index]
-            )
-            out.loc[child, "Distributional_Action_Standardized_Delta_Sq_Mean"] = (
-                squared_delta_sq_mean
-            )
-            out.loc[child, "Distributional_Action"] = child_edge_action
-            out.loc[child, "Distributional_Action_Parent_Fraction_Action"] = (
-                split_summary.child_parent_mass_fractions[child_index]
-                * squared_delta_sq_mean
-            )
-            out.loc[child, "Distributional_Split_Action_Parent"] = parent
-            out.loc[child, "Distributional_Split_Action_Parent_Mass"] = (
-                split_summary.parent_mass
-            )
-            out.loc[child, "Distributional_Split_Action_Child_Count"] = len(children)
-            out.loc[child, "Distributional_Split_Action"] = split_action
-            if split_action > 0.0:
-                out.loc[child, "Distributional_Split_Action_Child_Edge_Share"] = (
-                    child_edge_action / split_action
-                )
+            action_rows[child] = {
+                "Distributional_Action_Parent_Mass": split_summary.parent_mass,
+                "Distributional_Action_Child_Mass": split_summary.child_masses[child_index],
+                "Distributional_Action_Child_Parent_Mass_Fraction": (
+                    split_summary.child_parent_mass_fractions[child_index]
+                ),
+                "Distributional_Action_Standardized_Delta_Sq_Mean": squared_delta_sq_mean,
+                "Distributional_Action": child_edge_action,
+                "Distributional_Action_Parent_Fraction_Action": (
+                    split_summary.child_parent_mass_fractions[child_index] * squared_delta_sq_mean
+                ),
+                "Distributional_Split_Action_Parent": parent,
+                "Distributional_Split_Action_Parent_Mass": split_summary.parent_mass,
+                "Distributional_Split_Action_Child_Count": len(children),
+                "Distributional_Split_Action": split_action,
+                "Distributional_Split_Action_Child_Edge_Share": (
+                    child_edge_action / split_action if split_action > 0.0 else np.nan
+                ),
+            }
+
+    if action_rows:
+        action_frame = pd.DataFrame.from_dict(action_rows, orient="index")
+        out.loc[action_frame.index, action_frame.columns] = action_frame
 
     edge_open_before = out["Child_Parent_Divergence_Significant"].fillna(False).astype(bool)
     split_open_before = {}

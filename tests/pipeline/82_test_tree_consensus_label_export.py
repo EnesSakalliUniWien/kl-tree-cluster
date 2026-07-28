@@ -23,7 +23,9 @@ def _run_id(tree: str) -> str:
         if tree == "neighbor_joining"
         else f"tree_linkage_method_{tree}"
     )
-    return f"tbs_diffusion_graphtools_adaptive_nnls::graphtools_adaptive_k_tree_strategy__{suffix}__r0"
+    return (
+        f"tbs_diffusion_graphtools_adaptive_nnls::graphtools_adaptive_k_tree_strategy__{suffix}__r0"
+    )
 
 
 def _result_rows(case_id: str, *, test_case: int) -> pd.DataFrame:
@@ -59,7 +61,9 @@ def _result_rows(case_id: str, *, test_case: int) -> pd.DataFrame:
     )
 
 
-def _write_label_files(labels_dir: Path, results: pd.DataFrame, *, skip_run_id: str | None = None) -> None:
+def _write_label_files(
+    labels_dir: Path, results: pd.DataFrame, *, skip_run_id: str | None = None
+) -> None:
     labels_dir.mkdir(parents=True, exist_ok=True)
     for row in results.itertuples(index=False):
         if row.run_id == skip_run_id:
@@ -74,7 +78,9 @@ def _write_label_files(labels_dir: Path, results: pd.DataFrame, *, skip_run_id: 
                 "cluster_label": [0, 0, 1, 1],
             }
         )
-        frame.to_csv(labels_dir / f"{row.test_case}_{row.run_id.replace(':', '_')}.csv", index=False)
+        frame.to_csv(
+            labels_dir / f"{row.test_case}_{row.run_id.replace(':', '_')}.csv", index=False
+        )
 
 
 def test_write_tree_consensus_artifacts_outputs_expected_files(tmp_path: Path) -> None:
@@ -198,7 +204,9 @@ def test_export_tree_consensus_label_files_rejects_malformed_records(tmp_path: P
         export_tree_consensus_label_files([record], tmp_path)
 
 
-def test_run_single_case_exports_tree_consensus_labels(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_run_single_case_exports_tree_consensus_labels(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     data = pd.DataFrame({"x": [0, 1, 2, 3]}, index=["S0", "S1", "S2", "S3"])
     record = ComputedResultRecord(
         test_case_num=3,

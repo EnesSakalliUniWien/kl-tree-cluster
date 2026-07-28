@@ -2,10 +2,10 @@
 title: Sibling Null Prior Interpolation Audit 2026-06-04
 type: source
 status: reviewed
-updated: 2026-06-04
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/sibling_null_prior_interpolation_audit.py
-  - tests/validation/60_test_sibling_null_prior_interpolation_audit.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_prior_interpolation_audit.py
+  - tests/validation/calibration/sibling/nulls/60_test_sibling_null_prior_interpolation_audit.py
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/manifest.json
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/record_interpolation_audit.csv
@@ -71,11 +71,11 @@ it excludes the separate high-dimensional continuous covariance-boundary skip.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/sibling_null_prior_interpolation_audit.py`
+- `benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_prior_interpolation_audit.py`
   implements the explicit edge-column diagnostic, writes `case_summary.csv`,
   `record_interpolation_audit.csv`, and a manifest, and marks production method
   changes as false.
-- `tests/validation/60_test_sibling_null_prior_interpolation_audit.py` verifies
+- `tests/validation/calibration/sibling/nulls/60_test_sibling_null_prior_interpolation_audit.py` verifies
   direct tested-edge priors, stopped-ancestor interpolation, unsupported
   missing-ancestor states, and output writing.
 - `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv`

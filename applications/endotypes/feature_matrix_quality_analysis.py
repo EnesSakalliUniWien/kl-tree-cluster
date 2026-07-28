@@ -36,7 +36,10 @@ def quantiles(values: np.ndarray, prefix: str) -> dict[str, float]:
     values = np.asarray(values, dtype=float)
     values = values[np.isfinite(values)]
     if values.size == 0:
-        return {f"{prefix}_{q}": math.nan for q in ("min", "p01", "p05", "p25", "p50", "p75", "p95", "p99", "max")}
+        return {
+            f"{prefix}_{q}": math.nan
+            for q in ("min", "p01", "p05", "p25", "p50", "p75", "p95", "p99", "max")
+        }
     return {
         f"{prefix}_min": float(np.min(values)),
         f"{prefix}_p01": float(np.quantile(values, 0.01)),
@@ -140,7 +143,11 @@ def feature_filter_grid(data: pd.DataFrame) -> pd.DataFrame:
             max_support = int(math.floor(max_prevalence * len(data)))
             keep = (supports >= min_support) & (supports <= max_support)
             filtered = data.iloc[:, keep]
-            row_sums = filtered.sum(axis=1).to_numpy(dtype=int) if filtered.shape[1] else np.zeros(len(data), dtype=int)
+            row_sums = (
+                filtered.sum(axis=1).to_numpy(dtype=int)
+                if filtered.shape[1]
+                else np.zeros(len(data), dtype=int)
+            )
             rows.append(
                 {
                     "min_support": min_support,
@@ -153,7 +160,9 @@ def feature_filter_grid(data: pd.DataFrame) -> pd.DataFrame:
                     "row_active_terms_median_after_filter": float(np.median(row_sums)),
                     "row_active_terms_p05_after_filter": float(np.quantile(row_sums, 0.05)),
                     "row_active_terms_p95_after_filter": float(np.quantile(row_sums, 0.95)),
-                    "density_after_filter": float(row_sums.sum() / max(filtered.shape[0] * filtered.shape[1], 1)),
+                    "density_after_filter": float(
+                        row_sums.sum() / max(filtered.shape[0] * filtered.shape[1], 1)
+                    ),
                 }
             )
     return pd.DataFrame(rows)
@@ -221,7 +230,15 @@ def write_report(
             "Interpretation: sparse rare terms increase GO-IC overfitting risk, while broad terms",
             "can dominate distance geometry. Use this report to decide filtering/sensitivity grids.",
         ]
-        ax.text(0.05, 0.95, "\n".join(summary_lines), va="top", ha="left", fontsize=13, family="monospace")
+        ax.text(
+            0.05,
+            0.95,
+            "\n".join(summary_lines),
+            va="top",
+            ha="left",
+            fontsize=13,
+            family="monospace",
+        )
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
 
@@ -234,7 +251,9 @@ def write_report(
         axes[0, 1].set_title("GO term support")
         axes[0, 1].set_xlabel("genes annotated")
         axes[0, 1].set_ylabel("GO terms")
-        axes[1, 0].hist(np.log10(term_stats["support"].clip(lower=1)), bins=40, color="#54a24b", alpha=0.86)
+        axes[1, 0].hist(
+            np.log10(term_stats["support"].clip(lower=1)), bins=40, color="#54a24b", alpha=0.86
+        )
         axes[1, 0].set_title("GO term support, log10")
         axes[1, 0].set_xlabel("log10 support")
         axes[1, 1].bar(
@@ -298,12 +317,19 @@ def write_report(
         plt.close(fig)
 
         fig, axes = plt.subplots(1, 2, figsize=(12, 4.8))
-        axes[0].plot(svd_df["component"], svd_df["explained_variance_ratio"], marker="o", linewidth=1)
+        axes[0].plot(
+            svd_df["component"], svd_df["explained_variance_ratio"], marker="o", linewidth=1
+        )
         axes[0].set_title("SVD explained variance ratio")
         axes[0].set_xlabel("component")
         axes[0].set_ylabel("variance ratio")
         axes[0].grid(alpha=0.25)
-        axes[1].plot(svd_df["component"], svd_df["cumulative_explained_variance_ratio"], marker="o", linewidth=1)
+        axes[1].plot(
+            svd_df["component"],
+            svd_df["cumulative_explained_variance_ratio"],
+            marker="o",
+            linewidth=1,
+        )
         axes[1].set_title("Cumulative SVD variance")
         axes[1].set_xlabel("component")
         axes[1].set_ylabel("cumulative ratio")
@@ -337,7 +363,9 @@ def write_report(
         axes[0].set_title("Pairwise gene cosine similarity")
         axes[0].set_xlabel("cosine")
         axes[0].set_ylabel("gene pairs")
-        axes[1].hist(pairwise_stats["gene_jaccard_similarity_values"], bins=50, color="#e45756", alpha=0.86)
+        axes[1].hist(
+            pairwise_stats["gene_jaccard_similarity_values"], bins=50, color="#e45756", alpha=0.86
+        )
         axes[1].set_title("Pairwise gene Jaccard similarity")
         axes[1].set_xlabel("Jaccard similarity")
         axes[1].set_ylabel("gene pairs")
@@ -346,7 +374,9 @@ def write_report(
         plt.close(fig)
 
         fig, ax = plt.subplots(figsize=(11, 6))
-        pivot = filter_grid.pivot(index="min_support", columns="max_prevalence", values="kept_terms")
+        pivot = filter_grid.pivot(
+            index="min_support", columns="max_prevalence", values="kept_terms"
+        )
         image = ax.imshow(pivot.to_numpy(), cmap="Blues", aspect="auto")
         ax.set_xticks(range(len(pivot.columns)), [str(c) for c in pivot.columns])
         ax.set_yticks(range(len(pivot.index)), [str(i) for i in pivot.index])
@@ -382,7 +412,9 @@ def main() -> None:
             "active_term_fraction": row_sums / max(n_terms, 1),
         }
     ).sort_values("active_terms", ascending=False)
-    gene_stats["row_entropy_bits"] = binary_entropy_bits(gene_stats["active_term_fraction"].to_numpy())
+    gene_stats["row_entropy_bits"] = binary_entropy_bits(
+        gene_stats["active_term_fraction"].to_numpy()
+    )
     q1, q3 = np.quantile(row_sums, [0.25, 0.75])
     iqr = q3 - q1
     gene_stats["burden_outlier_iqr"] = (gene_stats["active_terms"] < q1 - 1.5 * iqr) | (
@@ -400,8 +432,12 @@ def main() -> None:
         }
     ).sort_values(["support", "go_id"], ascending=[False, True])
     term_stats["entropy_bits"] = binary_entropy_bits(term_stats["prevalence"].to_numpy())
-    term_entropy_bins = entropy_bin_table(term_stats["entropy_bits"].to_numpy(), value_name="go_term_entropy_bits")
-    gene_entropy_bins = entropy_bin_table(gene_stats["row_entropy_bits"].to_numpy(), value_name="gene_row_entropy_bits")
+    term_entropy_bins = entropy_bin_table(
+        term_stats["entropy_bits"].to_numpy(), value_name="go_term_entropy_bits"
+    )
+    gene_entropy_bins = entropy_bin_table(
+        gene_stats["row_entropy_bits"].to_numpy(), value_name="gene_row_entropy_bits"
+    )
 
     total_go_marginal_entropy_bits = float(term_stats["entropy_bits"].sum())
     matrix_density_entropy_bits_per_cell = float(binary_entropy_bits(np.array([binary.mean()]))[0])
@@ -420,7 +456,10 @@ def main() -> None:
         ("go_terms_entropy_ge_0_50", int((term_stats["entropy_bits"] >= 0.50).sum())),
         ("go_terms_entropy_ge_0_80", int((term_stats["entropy_bits"] >= 0.80).sum())),
         ("total_go_marginal_entropy_bits", total_go_marginal_entropy_bits),
-        ("mean_go_marginal_entropy_bits_per_term", total_go_marginal_entropy_bits / max(n_terms, 1)),
+        (
+            "mean_go_marginal_entropy_bits_per_term",
+            total_go_marginal_entropy_bits / max(n_terms, 1),
+        ),
         ("matrix_density_entropy_bits_per_cell", matrix_density_entropy_bits_per_cell),
         ("gene_row_entropy_bits_mean", float(gene_stats["row_entropy_bits"].mean())),
         ("gene_row_entropy_bits_median", float(gene_stats["row_entropy_bits"].median())),
@@ -445,8 +484,12 @@ def main() -> None:
         **quantiles(gene_cosine_values, "gene_cosine"),
         **quantiles(gene_jaccard_similarity_values, "gene_jaccard_similarity"),
     }
-    top_gene_pairs = top_similarity_pairs(binary, data.index, metric_name="cosine_similarity", top_n=args.top_pairs)
-    top_term_pairs = top_similarity_pairs(binary.T, data.columns, metric_name="cosine_similarity", top_n=args.top_pairs)
+    top_gene_pairs = top_similarity_pairs(
+        binary, data.index, metric_name="cosine_similarity", top_n=args.top_pairs
+    )
+    top_term_pairs = top_similarity_pairs(
+        binary.T, data.columns, metric_name="cosine_similarity", top_n=args.top_pairs
+    )
 
     n_components = min(args.svd_components, n_genes - 1, n_terms - 1)
     svd = TruncatedSVD(n_components=n_components, random_state=1729)
@@ -496,8 +539,14 @@ def main() -> None:
         ("go_terms_entropy_ge_0_80", int((term_stats["entropy_bits"] >= 0.80).sum())),
         ("matrix_density_entropy_bits_per_cell", matrix_density_entropy_bits_per_cell),
         ("total_go_marginal_entropy_bits", total_go_marginal_entropy_bits),
-        ("svd_components_for_50pct_variance", int((svd_df["cumulative_explained_variance_ratio"] < 0.50).sum() + 1)),
-        ("svd_components_for_80pct_variance", int((svd_df["cumulative_explained_variance_ratio"] < 0.80).sum() + 1)),
+        (
+            "svd_components_for_50pct_variance",
+            int((svd_df["cumulative_explained_variance_ratio"] < 0.50).sum() + 1),
+        ),
+        (
+            "svd_components_for_80pct_variance",
+            int((svd_df["cumulative_explained_variance_ratio"] < 0.80).sum() + 1),
+        ),
         *pairwise_summary.items(),
     ]
     summary = pd.DataFrame(summary_rows, columns=["metric", "value"])
@@ -510,7 +559,9 @@ def main() -> None:
     entropy_summary.to_csv(args.output_dir / "entropy_summary.csv", index=False)
     term_entropy_bins.to_csv(args.output_dir / "go_term_entropy_bins.csv", index=False)
     gene_entropy_bins.to_csv(args.output_dir / "gene_row_entropy_bins.csv", index=False)
-    pd.DataFrame([pairwise_summary]).to_csv(args.output_dir / "pairwise_gene_similarity_summary.csv", index=False)
+    pd.DataFrame([pairwise_summary]).to_csv(
+        args.output_dir / "pairwise_gene_similarity_summary.csv", index=False
+    )
     top_gene_pairs.to_csv(args.output_dir / "top_gene_cosine_pairs.csv", index=False)
     top_term_pairs.to_csv(args.output_dir / "top_go_term_cosine_pairs.csv", index=False)
     svd_df.to_csv(args.output_dir / "svd_spectrum.csv", index=False)

@@ -103,8 +103,7 @@ class ContinuousCalibrationSetting:
     @property
     def setting_id(self) -> str:
         return (
-            f"continuous_{self.dimension}dim_{self.n_left}x{self.n_right}_"
-            f"{self.covariance_profile}"
+            f"continuous_{self.dimension}dim_{self.n_left}x{self.n_right}_{self.covariance_profile}"
         )
 
 
@@ -319,10 +318,7 @@ def run_feature_covariance_calibration(
                         {setting.dimension for setting in continuous_settings}
                     ),
                     "sample_size_grid": sorted(
-                        {
-                            (setting.n_left, setting.n_right)
-                            for setting in continuous_settings
-                        }
+                        {(setting.n_left, setting.n_right) for setting in continuous_settings}
                     ),
                     "covariance_profile_grid": sorted(
                         {setting.covariance_profile for setting in continuous_settings}
@@ -404,9 +400,7 @@ def validate_feature_covariance_report(report: Mapping[str, Any]) -> list[str]:
             if evidence.get("metrics") != {}:
                 errors.append(f"{context}.evidence.metrics must be empty when missing")
             if evidence.get("missing_required_fields") != list(target.required_output_fields):
-                errors.append(
-                    f"{context}.evidence.missing_required_fields must list all fields"
-                )
+                errors.append(f"{context}.evidence.missing_required_fields must list all fields")
             continue
         _validate_complete_evidence(evidence, target, context, errors)
     return errors
@@ -609,9 +603,7 @@ def _categorical_probabilities(
         weights = 1.0 / np.arange(1, setting.n_categories + 1, dtype=np.float64)
         probabilities = weights / float(np.sum(weights))
     else:
-        raise ValueError(
-            f"Unsupported probability_profile: {setting.probability_profile!r}."
-        )
+        raise ValueError(f"Unsupported probability_profile: {setting.probability_profile!r}.")
     return np.tile(probabilities, (setting.n_features, 1))
 
 
@@ -650,9 +642,7 @@ def _simulation_summary(
     setting: Mapping[str, Any],
 ) -> dict[str, Any]:
     if p_values.shape != (n_replicates,):
-        raise ValueError(
-            f"p_values has shape {p_values.shape}; expected {(n_replicates,)}."
-        )
+        raise ValueError(f"p_values has shape {p_values.shape}; expected {(n_replicates,)}.")
     if not np.isfinite(p_values).all() or np.any(p_values < 0.0) or np.any(p_values > 1.0):
         raise ValueError("Simulated p-values must be finite values in [0, 1].")
     rejection_count = int(np.sum(p_values < alpha))
@@ -707,19 +697,13 @@ def _validate_complete_evidence(
     }
     missing_metric_keys = sorted(required_metric_keys.difference(metrics))
     if missing_metric_keys:
-        errors.append(
-            f"{context}.evidence.metrics missing keys: {missing_metric_keys!r}"
-        )
+        errors.append(f"{context}.evidence.metrics missing keys: {missing_metric_keys!r}")
     target_specific_metric_keys = sorted(
         set(target.required_output_fields).difference(COMMON_REQUIRED_OUTPUT_FIELDS)
     )
-    missing_target_keys = [
-        key for key in target_specific_metric_keys if key not in metrics
-    ]
+    missing_target_keys = [key for key in target_specific_metric_keys if key not in metrics]
     if missing_target_keys:
-        errors.append(
-            f"{context}.evidence.metrics missing target keys: {missing_target_keys!r}"
-        )
+        errors.append(f"{context}.evidence.metrics missing target keys: {missing_target_keys!r}")
     if metrics.get("primary_endpoint") != PRIMARY_ENDPOINT:
         errors.append(f"{context}.evidence.metrics.primary_endpoint is invalid")
     results = metrics.get("results")
@@ -728,9 +712,7 @@ def _validate_complete_evidence(
         return
     for result_index, result in enumerate(results):
         if not isinstance(result, Mapping):
-            errors.append(
-                f"{context}.evidence.metrics.results[{result_index}] must be an object"
-            )
+            errors.append(f"{context}.evidence.metrics.results[{result_index}] must be an object")
             continue
         _validate_result_entry(
             result,
@@ -809,7 +791,9 @@ def _validate_continuous_setting(setting: ContinuousCalibrationSetting) -> None:
         raise ValueError("continuous sample sizes must be greater than 1.")
 
 
-def _wilson_interval(successes: int, total: int, *, z_value: float = 1.959963984540054) -> tuple[float, float]:
+def _wilson_interval(
+    successes: int, total: int, *, z_value: float = 1.959963984540054
+) -> tuple[float, float]:
     if total <= 0:
         raise ValueError("total must be positive.")
     proportion = successes / total
@@ -817,9 +801,7 @@ def _wilson_interval(successes: int, total: int, *, z_value: float = 1.959963984
     center = (proportion + z_value**2 / (2.0 * total)) / denominator
     half_width = (
         z_value
-        * np.sqrt(
-            (proportion * (1.0 - proportion) + z_value**2 / (4.0 * total)) / total
-        )
+        * np.sqrt((proportion * (1.0 - proportion) + z_value**2 / (4.0 * total)) / total)
         / denominator
     )
     return float(max(0.0, center - half_width)), float(min(1.0, center + half_width))

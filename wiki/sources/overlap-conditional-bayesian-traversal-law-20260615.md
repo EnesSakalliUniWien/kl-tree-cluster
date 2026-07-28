@@ -2,10 +2,10 @@
 title: Overlap Conditional Bayesian Traversal Law 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_conditional_bayesian_traversal_law.py
-  - tests/validation/120_test_overlap_conditional_bayesian_traversal_law.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_conditional_bayesian_traversal_law.py
+  - tests/validation/calibration/overlap/120_test_overlap_conditional_bayesian_traversal_law.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/overlap_conditional_bayesian_traversal_rows.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/overlap_conditional_bayesian_traversal_summary.csv
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/manifest.json
@@ -56,13 +56,13 @@ specification check, not a production rule.
 
 ## Evidence
 
-- `tests/validation/120_test_overlap_conditional_bayesian_traversal_law.py`
+- `tests/validation/calibration/overlap/120_test_overlap_conditional_bayesian_traversal_law.py`
   verifies monotonic p-value Bayes-factor behavior, the structural-neighborhood
   requirement, and output writing.
 - Verification passed:
-  `pytest tests/validation/120_test_overlap_conditional_bayesian_traversal_law.py -q`
+  `pytest tests/validation/calibration/overlap/120_test_overlap_conditional_bayesian_traversal_law.py -q`
   and
-  `ruff check benchmarks/diagnostics/calibration/overlap_conditional_bayesian_traversal_law.py tests/validation/120_test_overlap_conditional_bayesian_traversal_law.py`.
+  `ruff check benchmarks/diagnostics/calibration/overlap/overlap_conditional_bayesian_traversal_law.py tests/validation/calibration/overlap/120_test_overlap_conditional_bayesian_traversal_law.py`.
 
 ## Links
 

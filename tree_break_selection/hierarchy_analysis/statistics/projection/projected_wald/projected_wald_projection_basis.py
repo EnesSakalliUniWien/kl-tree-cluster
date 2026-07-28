@@ -41,9 +41,7 @@ def build_pca_projection_basis(
     if pca_projection is None:
         raise ValueError("Projected Wald tests require a PCA projection basis.")
 
-    return _resolve_pca_component(
-        pca_projection, pca_eigenvalues, target_projection_dim
-    )
+    return _resolve_pca_component(pca_projection, pca_eigenvalues, target_projection_dim)
 
 
 __all__ = [

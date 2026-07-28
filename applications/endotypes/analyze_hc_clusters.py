@@ -458,7 +458,7 @@ Dataset: {n_tot} HC-associated genes × {fm.shape[1]} Reactome pathways
 Clusters found: {n_clust}  (α = 0.05, hamming + average linkage)
 
 Structure:
-  • 1 dominant cluster ({sizes.max()} genes, {sizes.max()/n_tot*100:.0f}% of all genes)
+  • 1 dominant cluster ({sizes.max()} genes, {sizes.max() / n_tot * 100:.0f}% of all genes)
     — genes with sparse / generic pathway annotations
   • {(sizes >= 2).sum() - 1} smaller clusters (2–{sizes[sizes < sizes.max()].max()} genes)
     — genes grouped by shared specific pathway memberships

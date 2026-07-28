@@ -18,7 +18,9 @@ def same_partition_up_to_labels(left: np.ndarray, right: np.ndarray) -> bool:
     return True
 
 
-def permute_sample_order(matrix: np.ndarray, labels: np.ndarray, seed: int) -> tuple[np.ndarray, np.ndarray]:
+def permute_sample_order(
+    matrix: np.ndarray, labels: np.ndarray, seed: int
+) -> tuple[np.ndarray, np.ndarray]:
     """Permutation transform for sample-order invariance tests."""
     rng = np.random.default_rng(seed)
     order = rng.permutation(np.asarray(matrix).shape[0])

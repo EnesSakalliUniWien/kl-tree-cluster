@@ -24,7 +24,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 
-from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates import (
+from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_geometry_covariates import (
     CANDIDATE_EQUATIONS,
     EDGE_ACTION_BIN_LABELS,
     EDGE_ACTION_BINS,
@@ -42,7 +42,9 @@ from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates i
     run_selected_hierarchy_geometry_covariate_study,
     summarize_selected_geometry_by_case,
 )
-from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import DEFAULT_CASE_NAMES
+from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_null_audit import (
+    DEFAULT_CASE_NAMES,
+)
 from benchmarks.shared.env import resolve_aws_batch_shard_index as resolve_shard_index
 
 AWS_SELECTED_TAIL_STUDY_ROLE = "aws_distributed_selected_tail_equation_diagnostic"
@@ -75,11 +77,7 @@ class ShardSpec:
 
 def parse_case_names(raw_case_names: str) -> tuple[str, ...]:
     """Parse and validate the comma-separated benchmark case list."""
-    case_names = tuple(
-        item.strip()
-        for item in str(raw_case_names).split(",")
-        if item.strip()
-    )
+    case_names = tuple(item.strip() for item in str(raw_case_names).split(",") if item.strip())
     if not case_names:
         raise ValueError("At least one case name is required.")
     return case_names
@@ -92,14 +90,14 @@ def shard_seed(*, base_seed: int, shard_index: int) -> int:
     return int(base_seed) + int(shard_index) * 1_000_000_000
 
 
-def validate_shard_contract(*, shard_index: int, shard_count: int, replicates_per_shard: int) -> None:
+def validate_shard_contract(
+    *, shard_index: int, shard_count: int, replicates_per_shard: int
+) -> None:
     """Validate shard dimensions before launching compute."""
     if shard_count <= 0:
         raise ValueError(f"shard_count must be positive; got {shard_count!r}.")
     if replicates_per_shard <= 0:
-        raise ValueError(
-            f"replicates_per_shard must be positive; got {replicates_per_shard!r}."
-        )
+        raise ValueError(f"replicates_per_shard must be positive; got {replicates_per_shard!r}.")
     if not 0 <= shard_index < shard_count:
         raise ValueError(
             f"shard_index must satisfy 0 <= index < shard_count; got "
@@ -200,7 +198,9 @@ def run_shard(configured: AwsSelectedTailStudyConfig, shard_index: int) -> dict[
     }
     _write_json(spec.output_dir / SHARD_MANIFEST_NAME, manifest)
     if configured.s3_uri is not None:
-        sync_path_to_s3(spec.output_dir, f"{configured.s3_uri.rstrip('/')}/shards/shard_{shard_index:04d}")
+        sync_path_to_s3(
+            spec.output_dir, f"{configured.s3_uri.rstrip('/')}/shards/shard_{shard_index:04d}"
+        )
     return outputs
 
 
@@ -226,16 +226,13 @@ def load_shard_records(shard_dir: Path) -> pd.DataFrame:
     run_id = f"shard_{shard_index:04d}"
     records = pd.read_csv(records_path)
     if SIMULATION_ID_COLUMN not in records.columns:
-        raise KeyError(
-            f"Shard records {records_path} must contain {SIMULATION_ID_COLUMN!r}."
-        )
+        raise KeyError(f"Shard records {records_path} must contain {SIMULATION_ID_COLUMN!r}.")
     records = records.copy()
     records.insert(0, "aws_shard_id", run_id)
     records.insert(1, "aws_shard_index", shard_index)
     records.insert(2, "aws_shard_seed", shard_seed_value)
     records[SIMULATION_ID_COLUMN] = [
-        f"{run_id}:{simulation_id}"
-        for simulation_id in records[SIMULATION_ID_COLUMN].astype(str)
+        f"{run_id}:{simulation_id}" for simulation_id in records[SIMULATION_ID_COLUMN].astype(str)
     ]
     return records
 
@@ -248,7 +245,9 @@ def load_combined_shard_records(shard_dirs: Iterable[Path]) -> pd.DataFrame:
         table = load_shard_records(shard_dir)
         shard_ids = set(table["aws_shard_id"].astype(str).unique())
         if len(shard_ids) != 1:
-            raise ValueError(f"Shard records {shard_dir} contain multiple shard ids: {shard_ids!r}.")
+            raise ValueError(
+                f"Shard records {shard_dir} contain multiple shard ids: {shard_ids!r}."
+            )
         shard_id = next(iter(shard_ids))
         if shard_id in seen_shard_ids:
             raise ValueError(f"Duplicate shard id in merge input: {shard_id!r}.")

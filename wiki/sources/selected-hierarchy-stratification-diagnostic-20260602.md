@@ -2,9 +2,9 @@
 title: Selected Hierarchy Stratification Diagnostic 2026-06-02
 type: source
 status: reviewed
-updated: 2026-06-02
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_hierarchy_stratification_diagnostic.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_stratification_diagnostic.py
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv
@@ -82,7 +82,7 @@ gauss_null_large k=2 small_0_0.25             57.9
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_hierarchy_stratification_diagnostic.py`
+- `benchmarks/diagnostics/calibration/selected/hierarchy/selected_hierarchy_stratification_diagnostic.py`
   implements the diagnostic-only grouping by parent depth and parent-size bin.
 - `raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/case_summary.csv`
   records selected-record rates and edge rejection rates by case.

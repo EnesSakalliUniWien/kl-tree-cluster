@@ -103,9 +103,7 @@ def _balanced_continuous_leaf_data(n_per_child: int = 8) -> pd.DataFrame:
     left = np.column_stack([centered, centered * 0.5])
     right = left + np.array([10.0, -2.0], dtype=np.float64)
     values = np.vstack([left, right])
-    index = [f"L{i}" for i in range(n_per_child)] + [
-        f"R{i}" for i in range(n_per_child)
-    ]
+    index = [f"L{i}" for i in range(n_per_child)] + [f"R{i}" for i in range(n_per_child)]
     return pd.DataFrame(values, index=index, columns=["X0", "X1"])
 
 
@@ -276,9 +274,7 @@ def test_guarded_within_child_continuous_covariance_excludes_between_child_shift
     )
     left_covariance = tree.nodes["left"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
     right_covariance = tree.nodes["right"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
-    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (
-        8 + 8 - 2
-    )
+    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (8 + 8 - 2)
 
     assert guarded is not None
     assert parent_total is not None
@@ -330,9 +326,7 @@ def test_guarded_within_child_continuous_covariance_supports_diagonal_blocks(
     )
     left_covariance = tree.nodes["left"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
     right_covariance = tree.nodes["right"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
-    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (
-        8 + 8 - 2
-    )
+    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (8 + 8 - 2)
 
     assert guarded is not None
     assert guarded["continuous"].shape == (2,)
@@ -442,9 +436,7 @@ def test_categorical_spectral_decomposition_uses_drop_last_projection_width() ->
 
     assert spectral_decomposition.test_projection_dimensions_by_node["root"] <= 4
     assert spectral_decomposition.raw_mp_signal_counts_by_node["root"] >= 0
-    assert spectral_decomposition.effective_independent_rows_by_node["root"] == len(
-        leaf_data
-    )
+    assert spectral_decomposition.effective_independent_rows_by_node["root"] == len(leaf_data)
     assert spectral_decomposition.mp_threshold_rows_by_node["root"] == len(leaf_data)
     root_projection = spectral_decomposition.principal_component_projections_by_node["root"]
     root_eigenvalues = spectral_decomposition.principal_component_eigenvalues_by_node["root"]
@@ -546,9 +538,7 @@ def test_categorical_generator_returns_explicit_feature_space_without_dataframe_
     feature_space = metadata["feature_space"]
     assert isinstance(feature_space, FeatureSpace)
     assert feature_space.raw_dimension == data_df.shape[1]
-    categorical_blocks = [
-        block for block in feature_space.blocks if block.family == "categorical"
-    ]
+    categorical_blocks = [block for block in feature_space.blocks if block.family == "categorical"]
     assert len(categorical_blocks) == metadata["n_features_original"]
     assert all(block.raw_dimension == metadata["n_categories"] for block in categorical_blocks)
     assert data_df.attrs == {}

@@ -367,7 +367,9 @@ def analyze_benchmark_relationships(
         ("over_split_flag", "binomial"),
         ("under_split_flag", "binomial"),
     ):
-        subset = frame if target == "ari" or target == "exact_k" else frame[frame["true_clusters"] > 1]
+        subset = (
+            frame if target == "ari" or target == "exact_k" else frame[frame["true_clusters"] > 1]
+        )
         table, stats = _fit_relationship_model(subset, target=target, family=family)
         if table is not None:
             regression_tables[target] = table
@@ -721,7 +723,9 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     sibling_valid &= df["Sibling_BH_Different"].notna()
     sibling_total = int(sibling_valid.sum())
     if sibling_total > 0:
-        sig_sibling_fraction = float(_coerce_bool_series(df.loc[sibling_valid, "Sibling_BH_Different"]).mean())
+        sig_sibling_fraction = float(
+            _coerce_bool_series(df.loc[sibling_valid, "Sibling_BH_Different"]).mean()
+        )
     else:
         sig_sibling_fraction = np.nan
 
@@ -738,7 +742,9 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     else:
         sig_edge_fraction = np.nan
 
-    is_leaf = _coerce_bool_series(df["is_leaf"]) if "is_leaf" in df.columns else df["leaf_count"].eq(1)
+    is_leaf = (
+        _coerce_bool_series(df["is_leaf"]) if "is_leaf" in df.columns else df["leaf_count"].eq(1)
+    )
     internal_nodes = float((~is_leaf).sum())
     if "branch_length" in df.columns:
         branch_lengths = pd.to_numeric(df["branch_length"], errors="coerce")
@@ -748,9 +754,7 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     else:
         mean_branch_length = np.nan
     neglog_root_p = (
-        float(-np.log10(max(root_p, 1e-12)))
-        if np.isfinite(root_p) and root_p > 0.0
-        else np.nan
+        float(-np.log10(max(root_p, 1e-12))) if np.isfinite(root_p) and root_p > 0.0 else np.nan
     )
 
     return {
@@ -1871,9 +1875,9 @@ def _bin_continuous(frame: pd.DataFrame, col: str, bins: int = 5) -> pd.DataFram
     frame = frame.copy()
     frame["_bin"] = labels
     frame["bin_mid"] = frame["_bin"].map(
-        lambda interval: float((interval.left + interval.right) / 2.0)
-        if pd.notna(interval)
-        else np.nan
+        lambda interval: (
+            float((interval.left + interval.right) / 2.0) if pd.notna(interval) else np.nan
+        )
     )
     return frame.drop(columns=["_bin"])
 

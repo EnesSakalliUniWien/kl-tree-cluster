@@ -132,9 +132,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert captured_kwargs["edge_alpha"] == 0.007
     assert result_row.params_raw["edge_alpha"] == 0.007
     assert result_row.params_raw["sibling_alpha"] == 0.05
-    assert "branch_length_optimization_method=linkage_ultrametric" in (
-        result_row.params_display
-    )
+    assert "branch_length_optimization_method=linkage_ultrametric" in (result_row.params_display)
     assert "edge_alpha=0.007" in result_row.params_display
     assert "sibling_alpha=0.05" in result_row.params_display
     assert result_row.tree_build_sec == 0.01
@@ -149,9 +147,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert np.isclose(computed_result.ari, 1.0)
     assert computed_result.params["tree_distance_metric"] == "hamming"
     assert computed_result.params["tree_distance_source"] == "feature_metric"
-    assert computed_result.params["branch_length_optimization_method"] == (
-        "linkage_ultrametric"
-    )
+    assert computed_result.params["branch_length_optimization_method"] == ("linkage_ultrametric")
     assert computed_result.params["edge_alpha"] == 0.007
     assert computed_result.params["sibling_alpha"] == 0.05
     assert computed_result.meta["stage_timings"]["edge_gate_sec"] == 0.03

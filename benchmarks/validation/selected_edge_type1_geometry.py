@@ -44,10 +44,10 @@ from tree_break_selection.tree.feature_space import (
 )
 from tree_break_selection.tree.poset_tree import PosetTree
 
-from benchmarks.diagnostics.calibration.covariance_laplacian_panel import (
+from benchmarks.diagnostics.calibration.statistics.covariance_laplacian_panel import (
     analyze_covariance_laplacian,
 )
-from benchmarks.diagnostics.calibration.statistic_distribution_shape_panel import (
+from benchmarks.diagnostics.calibration.statistics.statistic_distribution_shape_panel import (
     infer_satterthwaite_reference_from_eigenvalues,
 )
 from benchmarks.shared.cases import get_default_test_cases, get_test_cases_by_suite
@@ -166,11 +166,12 @@ def regenerate_null_case(
         feature_space = bernoulli_feature_space_from_columns(tuple(data.columns))
         n_features_original = int(n_features)
         categories = None
-    elif source_family == "categorical_multinomial" and feature_representation == "categorical_one_hot":
+    elif (
+        source_family == "categorical_multinomial"
+        and feature_representation == "categorical_one_hot"
+    ):
         if n_categories is None:
-            raise ValueError(
-                "Categorical selected-edge null regeneration requires n_categories."
-            )
+            raise ValueError("Categorical selected-edge null regeneration requires n_categories.")
         if int(n_categories) < 2:
             raise ValueError(f"n_categories must be at least 2; got {n_categories!r}.")
         matrix = rng.integers(
@@ -328,7 +329,13 @@ def _prepare_tree_for_mode(
             n_categories=n_categories,
             seed=data_seed,
         )
-        return _build_tree_from_data(tree_data), test_data, test_metadata["feature_space"], False, True
+        return (
+            _build_tree_from_data(tree_data),
+            test_data,
+            test_metadata["feature_space"],
+            False,
+            True,
+        )
     raise ValueError(f"Unknown selected-edge mode: {mode!r}.")
 
 
@@ -388,18 +395,14 @@ def extract_edge_geometry_rows(
             dtype=float,
         )
         leading = float(eigenvalues[0]) if eigenvalues.size else float("nan")
-        raw_mp_signal_count = int(
-            spectral_context.raw_mp_signal_counts_by_node.get(str(parent), 0)
-        )
+        raw_mp_signal_count = int(spectral_context.raw_mp_signal_counts_by_node.get(str(parent), 0))
         effective_rows = int(
             spectral_context.effective_independent_rows_by_node.get(str(parent), 0)
         )
         projection_dimension = int(
             spectral_context.test_projection_dimensions_by_node.get(str(parent), 0)
         )
-        active_dimension = int(
-            np.asarray(tree.nodes[parent]["distribution"], dtype=float).shape[0]
-        )
+        active_dimension = int(np.asarray(tree.nodes[parent]["distribution"], dtype=float).shape[0])
         mp_upper_edge = (
             float((1.0 + np.sqrt(active_dimension / effective_rows)) ** 2)
             if effective_rows > 0
@@ -481,7 +484,9 @@ def _calibration_support_status(row: pd.Series) -> str:
     return "not_tested"
 
 
-def _projection_inputs(tree: PosetTree, spectral_context: object) -> tuple[
+def _projection_inputs(
+    tree: PosetTree, spectral_context: object
+) -> tuple[
     dict[object, int],
     dict[object, np.ndarray],
     dict[object, np.ndarray],
@@ -536,14 +541,10 @@ def _select_laplacian_fields(prefix: str, row: Mapping[str, object]) -> dict[str
     return {
         f"{prefix}_laplacian_status": row["laplacian_status"],
         f"{prefix}_covariance_effective_rank": row["covariance_effective_rank"],
-        f"{prefix}_off_diagonal_abs_mass_fraction": row[
-            "off_diagonal_abs_mass_fraction"
-        ],
+        f"{prefix}_off_diagonal_abs_mass_fraction": row["off_diagonal_abs_mass_fraction"],
         f"{prefix}_n_connected_components": row["n_connected_components"],
         f"{prefix}_largest_component_fraction": row["largest_component_fraction"],
-        f"{prefix}_normalized_laplacian_lambda2": row[
-            "normalized_laplacian_lambda2"
-        ],
+        f"{prefix}_normalized_laplacian_lambda2": row["normalized_laplacian_lambda2"],
     }
 
 
@@ -771,16 +772,13 @@ def extract_sibling_geometry_rows(
             else float("nan")
         )
         sibling_bh_p = (
-            _positive_p_or_nan(
-                annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"]
-            )
+            _positive_p_or_nan(annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
             if has_sibling_annotations
             else float("nan")
         )
         sibling_projection_dimension = (
             float(raw_record.sibling_projection_dimension)
-            if raw_record is not None
-            and np.isfinite(raw_record.sibling_projection_dimension)
+            if raw_record is not None and np.isfinite(raw_record.sibling_projection_dimension)
             else (
                 _finite_or_nan(annotations_df.at[parent, "Sibling_Projection_Dimension"])
                 if has_sibling_annotations
@@ -815,9 +813,7 @@ def extract_sibling_geometry_rows(
         )
         inflation_factor = (
             float(raw_sibling_stat / adjusted_stat)
-            if np.isfinite(raw_sibling_stat)
-            and np.isfinite(adjusted_stat)
-            and adjusted_stat > 0.0
+            if np.isfinite(raw_sibling_stat) and np.isfinite(adjusted_stat) and adjusted_stat > 0.0
             else float("nan")
         )
         rows.append(
@@ -854,9 +850,7 @@ def extract_sibling_geometry_rows(
                 "inflation_factor": inflation_factor,
                 "sibling_adjusted_p": adjusted_p,
                 "sibling_bh_p": sibling_bh_p,
-                "sibling_rejected": bool(
-                    annotations_df.at[parent, "Sibling_BH_Different"]
-                )
+                "sibling_rejected": bool(annotations_df.at[parent, "Sibling_BH_Different"])
                 if has_sibling_annotations
                 else False,
                 "calibration_support_status": _calibration_support_status(

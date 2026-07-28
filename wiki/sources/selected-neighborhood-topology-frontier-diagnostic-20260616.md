@@ -2,10 +2,10 @@
 title: Selected Neighborhood Topology Frontier Diagnostic 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/selected_neighborhood_topology_frontier.py
-  - tests/validation/153_test_selected_neighborhood_topology_frontier.py
+  - benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_topology_frontier.py
+  - tests/validation/calibration/selected/neighborhood/153_test_selected_neighborhood_topology_frontier.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_topology_frontier_overlap_expanded_candidates
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_refined_candidate_audit_smoke/topology_frontier
@@ -73,9 +73,9 @@ from `root_selected_region_summary.csv`. The output is diagnostic-only.
 
 ## Evidence
 
-- `benchmarks/diagnostics/calibration/selected_neighborhood_topology_frontier.py`
+- `benchmarks/diagnostics/calibration/selected/neighborhood/selected_neighborhood_topology_frontier.py`
   implements row annotations, summary tables, threshold sweeps, and manifests.
-- `tests/validation/153_test_selected_neighborhood_topology_frontier.py`
+- `tests/validation/calibration/selected/neighborhood/153_test_selected_neighborhood_topology_frontier.py`
   checks root proxy separation from admissible root law, non-root frontier
   behavior, bandwidth direct-positive reopening, and output writing.
 - The full overlap and smoke output manifests record the input measurability

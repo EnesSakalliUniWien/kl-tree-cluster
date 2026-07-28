@@ -39,10 +39,14 @@ OUT_MANIFEST = BASE / "scrna_selected_adaptive_diffusion_nnls_matched_manifest.j
 
 def _selected_metric_row(cfg: dict[str, object]) -> pd.Series:
     metrics = pd.read_csv(Path(cfg["dir"]) / "method_metrics.csv")
-    mask = metrics["method"].astype(str).str.contains(
-        "TBS adaptive diffusion branch-time recomputed-NNLS",
-        regex=False,
-        na=False,
+    mask = (
+        metrics["method"]
+        .astype(str)
+        .str.contains(
+            "TBS adaptive diffusion branch-time recomputed-NNLS",
+            regex=False,
+            na=False,
+        )
     )
     rows = metrics.loc[mask]
     if len(rows) != 1:
@@ -64,9 +68,7 @@ def _summary_rows(
         "ari": metric["ari"],
         "v_measure": metric["v_measure"],
         "weighted_cluster_purity": metric["weighted_cluster_purity"],
-        "weighted_label_dominant_cluster_recall": metric[
-            "weighted_label_dominant_cluster_recall"
-        ],
+        "weighted_label_dominant_cluster_recall": metric["weighted_label_dominant_cluster_recall"],
         "nnls_fit_r2": diagnostic["r2"],
         "nnls_fit_correlation": diagnostic["correlation"],
         "nnls_fit_rmse": diagnostic["rmse"],
@@ -191,7 +193,9 @@ def _dataset_page(
         point_size=7,
     )
     plot_full_radial_tree(ax_tree, full_tree, palette, "real full tree")
-    _plot_clear_size_bars(ax_sizes, summary, palette, "largest clusters and dominant reference label")
+    _plot_clear_size_bars(
+        ax_sizes, summary, palette, "largest clusters and dominant reference label"
+    )
     _add_metric_box(ax_metrics, record["summary_row"])
 
     fig.suptitle(
@@ -317,7 +321,9 @@ def main() -> None:
             "Subject": f"Generated at: {generated_at}",
         },
     ) as pdf:
-        for record, save_path in zip(dataset_records, [OUT_ADULT_PAGE, OUT_GONCALVES_PAGE], strict=True):
+        for record, save_path in zip(
+            dataset_records, [OUT_ADULT_PAGE, OUT_GONCALVES_PAGE], strict=True
+        ):
             page = _dataset_page(generated_at=generated_at, record=record, save_path=save_path)
             pdf.savefig(page, bbox_inches="tight")
             plt.close(page)

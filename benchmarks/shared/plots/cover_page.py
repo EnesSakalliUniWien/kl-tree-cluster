@@ -12,10 +12,13 @@ from pathlib import Path
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
-from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
+)
+from tree_break_selection.tree.construction import (
+    DEFAULT_BINARY_TREE_DISTANCE_METRIC,
+    DEFAULT_TREE_LINKAGE_METHOD,
 )
 
 from benchmarks.shared.cases.geometry import case_recipe_cluster_count, case_recipe_geometry
@@ -490,13 +493,16 @@ def generate_overview_page(
     if timestamp is None:
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    overview = _OVERVIEW_TEXT.format(
-        n_cases=n_cases,
-        distance_metric=config.TREE_DISTANCE_METRIC,
-        linkage_method=config.TREE_LINKAGE_METHOD,
-        edge_alpha=DEFAULT_EDGE_ALPHA,
-        sibling_alpha=DEFAULT_SIBLING_ALPHA,
-    ) + f"\n    Report generated: {timestamp}\n"
+    overview = (
+        _OVERVIEW_TEXT.format(
+            n_cases=n_cases,
+            distance_metric=DEFAULT_BINARY_TREE_DISTANCE_METRIC,
+            linkage_method=DEFAULT_TREE_LINKAGE_METHOD,
+            edge_alpha=DEFAULT_EDGE_ALPHA,
+            sibling_alpha=DEFAULT_SIBLING_ALPHA,
+        )
+        + f"\n    Report generated: {timestamp}\n"
+    )
     return _text_page(overview, fontsize=10.5, title_fontsize=16.0)
 
 

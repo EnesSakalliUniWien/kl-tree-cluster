@@ -145,7 +145,9 @@ def heatmap_figure(summary: pd.DataFrame, linkage: str, value: str, title: str) 
             texttemplate="%{text}",
             colorscale="Viridis" if value != "n_clusters" else "Magma",
             colorbar={"title": value},
-            hovertemplate="edge alpha=%{x}<br>sibling alpha=%{y}<br>" + value + "=%{z}<extra></extra>",
+            hovertemplate="edge alpha=%{x}<br>sibling alpha=%{y}<br>"
+            + value
+            + "=%{z}<extra></extra>",
         )
     )
     fig.update_xaxes(title_text="edge alpha")
@@ -178,7 +180,9 @@ def composition_figure(composition: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def baseline_figure(binary: pd.DataFrame, continuous: pd.DataFrame, summary: pd.DataFrame) -> go.Figure:
+def baseline_figure(
+    binary: pd.DataFrame, continuous: pd.DataFrame, summary: pd.DataFrame
+) -> go.Figure:
     best_sweep = summary.sort_values("ARI", ascending=False).iloc[0]
     best_continuous = continuous.loc[continuous["ARI"].idxmax()]
     best_binary = binary.loc[binary["ARI"].idxmax()]
@@ -206,8 +210,22 @@ def baseline_figure(binary: pd.DataFrame, continuous: pd.DataFrame, summary: pd.
     )
     labels = [f"{row.run}<br>{row.clusters} clusters" for row in rows.itertuples()]
     fig = go.Figure()
-    fig.add_bar(x=labels, y=rows["ARI"], name="ARI", marker_color="#2563eb", text=[f"{v:.3f}" for v in rows["ARI"]], textposition="outside")
-    fig.add_bar(x=labels, y=rows["NMI"], name="NMI", marker_color="#059669", text=[f"{v:.3f}" for v in rows["NMI"]], textposition="outside")
+    fig.add_bar(
+        x=labels,
+        y=rows["ARI"],
+        name="ARI",
+        marker_color="#2563eb",
+        text=[f"{v:.3f}" for v in rows["ARI"]],
+        textposition="outside",
+    )
+    fig.add_bar(
+        x=labels,
+        y=rows["NMI"],
+        name="NMI",
+        marker_color="#059669",
+        text=[f"{v:.3f}" for v in rows["NMI"]],
+        textposition="outside",
+    )
     fig.update_layout(barmode="group")
     fig.update_yaxes(title_text="score", range=[0, 0.76], gridcolor="#e5e7eb")
     fig.update_xaxes(title_text="MNIST result source")
@@ -418,7 +436,9 @@ def _build_tbs_radial_tree_context(
         root_node = node_by_leaf_set.get(cluster_leaf_set)
         exact_tree_boundary = root_node is not None
         if root_node is None:
-            root_node = tree.find_lca_for_set(leaf_node_by_label[sample] for sample in cluster_samples)
+            root_node = tree.find_lca_for_set(
+                leaf_node_by_label[sample] for sample in cluster_samples
+            )
         cluster_roots[cluster_id] = root_node
 
         cluster_digits = digit_labels[is_member]
@@ -441,7 +461,9 @@ def _build_tbs_radial_tree_context(
 
     def min_sample_index(node: object) -> int:
         sample_indices = [
-            int(str(sample).split("_")[-1]) for sample in descendant_sets[node] if "_" in str(sample)
+            int(str(sample).split("_")[-1])
+            for sample in descendant_sets[node]
+            if "_" in str(sample)
         ]
         return min(sample_indices) if sample_indices else 0
 
@@ -499,10 +521,7 @@ def _build_tbs_radial_tree_context(
     for children in display_children.values():
         children.sort(key=min_sample_index)
 
-    leaf_ordinals = {
-        node: float(index)
-        for index, node in enumerate(ordered_layout_leaves)
-    }
+    leaf_ordinals = {node: float(index) for index, node in enumerate(ordered_layout_leaves)}
     depths = {root_node: 0}
     stack = [root_node]
     while stack:
@@ -947,9 +966,7 @@ def _write_umap_image_inspector(
                 ["sample", "true_digit", "best_tbs_cluster", "point_index"]
             ].to_numpy(),
             hovertext=hovertext,
-            hovertemplate=(
-                "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"
-            ),
+            hovertemplate=("%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"),
         )
     )
     fig.update_layout(
@@ -1019,12 +1036,9 @@ def _write_umap3d_image_inspector(
         f"Best TBS cluster: {int(row.best_tbs_cluster)}"
         for row in plot_frame.itertuples(index=False)
     ]
-    customdata = plot_frame[
-        ["sample", "true_digit", "best_tbs_cluster", "point_index"]
-    ].to_numpy()
+    customdata = plot_frame[["sample", "true_digit", "best_tbs_cluster", "point_index"]].to_numpy()
     hovertemplate = (
-        "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<br>"
-        "UMAP3=%{z:.3f}<extra></extra>"
+        "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<br>UMAP3=%{z:.3f}<extra></extra>"
     )
     fig = go.Figure()
     fig.add_trace(
@@ -1162,11 +1176,12 @@ def _write_umap3d_docstyle(assignments: pd.DataFrame, best_key: str) -> Path:
         ]
     )
     hovertext = [
-        f"Digit number: {int(digit)}<br>Sample: Sample_{index}<br>"
-        f"Best TBS cluster: {int(cluster)}"
+        f"Digit number: {int(digit)}<br>Sample: Sample_{index}<br>Best TBS cluster: {int(cluster)}"
         for index, (digit, cluster) in enumerate(zip(y_subset, cluster_labels, strict=True))
     ]
-    hovertemplate = "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<br>UMAP3=%{z:.3f}<extra></extra>"
+    hovertemplate = (
+        "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<br>UMAP3=%{z:.3f}<extra></extra>"
+    )
     fig = go.Figure(
         go.Scatter3d(
             x=embedding[:, 0],
@@ -1245,9 +1260,7 @@ def umap_figure(frame: pd.DataFrame) -> go.Figure:
             marker={"size": 5, "opacity": 0.78},
             customdata=group[["sample", "true_digit", "best_tbs_cluster"]].to_numpy(),
             hovertext=hovertext,
-            hovertemplate=(
-                "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"
-            ),
+            hovertemplate=("%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"),
             visible=True,
             legendgroup="true",
         )
@@ -1266,9 +1279,7 @@ def umap_figure(frame: pd.DataFrame) -> go.Figure:
             marker={"size": 5, "opacity": 0.78},
             customdata=group[["sample", "true_digit", "best_tbs_cluster"]].to_numpy(),
             hovertext=hovertext,
-            hovertemplate=(
-                "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"
-            ),
+            hovertemplate=("%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"),
             visible=False,
             legendgroup="cluster",
         )
@@ -1317,7 +1328,9 @@ def main() -> None:
     continuous = pd.read_csv(SOURCE_DIR / "mnist_continuous_pca50_summary.csv")
     assignments = pd.read_csv(SWEEP_DIR / "alpha_sweep_assignments.csv")
     best = summary.sort_values("ARI", ascending=False).iloc[0]
-    best_key = _assignment_key(str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"]))
+    best_key = _assignment_key(
+        str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"])
+    )
     composition = pd.read_csv(SWEEP_DIR / f"{best_key}_top_cluster_digit_composition.csv")
     umap_frame = _load_or_create_umap(assignments, best_key)
     umap3d_path = _write_umap3d_with_existing_writer(
@@ -1418,7 +1431,9 @@ def main() -> None:
         (
             "Ward cluster-count reaction to alpha",
             _write(
-                heatmap_figure(summary, "ward", "n_clusters", "Ward linkage: cluster-count reaction to alpha"),
+                heatmap_figure(
+                    summary, "ward", "n_clusters", "Ward linkage: cluster-count reaction to alpha"
+                ),
                 "03_ward_cluster_count_alpha_heatmap.html",
                 "Ward linkage: cluster-count reaction to alpha",
             ).name,

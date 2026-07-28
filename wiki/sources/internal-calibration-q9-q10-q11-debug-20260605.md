@@ -2,16 +2,16 @@
 title: Internal Calibration Q9 Q10 Q11 Debug 2026-06-05
 type: source
 status: reviewed
-updated: 2026-06-05
+updated: 2026-07-28
 sources:
   - benchmarks/results/diagnostics/internal_calibration_q9_q10_q11_debug_20260605/q9_q11_internal_support_debug.csv
   - benchmarks/results/diagnostics/internal_calibration_q9_q10_q11_debug_20260605/q10_weight_rule_debug.csv
   - benchmarks/results/diagnostics/internal_calibration_q9_q10_q11_debug_20260605/q9_q10_q11_root_cause_summary.csv
-  - benchmarks/diagnostics/calibration/internal_support_threshold_validation.py
-  - benchmarks/diagnostics/calibration/sibling_null_weight_rule_validation.py
+  - benchmarks/diagnostics/calibration/statistics/internal_support_threshold_validation.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/sibling_null_weight_rule_validation.py
   - wiki/sources/mixed-internal-calibration-sweeps-20260605.md
-  - tests/validation/76_test_internal_support_threshold_validation.py
-  - tests/validation/69_test_sibling_null_weight_rule_validation.py
+  - tests/validation/calibration/statistics/76_test_internal_support_threshold_validation.py
+  - tests/validation/calibration/sibling/nulls/69_test_sibling_null_weight_rule_validation.py
 tags:
   - source
   - diagnostics

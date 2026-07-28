@@ -137,9 +137,7 @@ def build_benchmark_result_row(
             "edge_gate_contrast_covariance_sec"
         ],
         edge_gate_projection_sec=normalized_stage_timings["edge_gate_projection_sec"],
-        edge_gate_wald_statistic_sec=normalized_stage_timings[
-            "edge_gate_wald_statistic_sec"
-        ],
+        edge_gate_wald_statistic_sec=normalized_stage_timings["edge_gate_wald_statistic_sec"],
         edge_gate_tree_bh_sec=normalized_stage_timings["edge_gate_tree_bh_sec"],
         spectral_context_sec=normalized_stage_timings["spectral_context_sec"],
         tangent_whitening_sec=normalized_stage_timings["tangent_whitening_sec"],

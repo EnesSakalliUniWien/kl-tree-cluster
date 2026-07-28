@@ -70,9 +70,7 @@ def run_tbs_clustering(
 
     if verbose:
         sparsity = 1 - X_binary.mean()
-        print(
-            f"  Binarized with threshold={binarize_threshold}, sparsity={sparsity:.1%}"
-        )
+        print(f"  Binarized with threshold={binarize_threshold}, sparsity={sparsity:.1%}")
 
     sample_names = [f"Sample_{j}" for j in range(X.shape[0])]
     data = pd.DataFrame(X_binary, index=sample_names)

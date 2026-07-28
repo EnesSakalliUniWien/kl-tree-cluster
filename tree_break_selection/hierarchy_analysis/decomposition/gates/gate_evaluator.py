@@ -79,9 +79,7 @@ class GateEvaluator:
             self._can_split_by_node = self._compute_can_split_by_node(
                 self._split_prerequisites_by_node
             )
-            self._has_descendant_split = self._compute_has_descendant_split(
-                self._can_split_by_node
-            )
+            self._has_descendant_split = self._compute_has_descendant_split(self._can_split_by_node)
         else:
             self._split_prerequisites_by_node = {}
             self._can_split_by_node = {}
@@ -105,15 +103,10 @@ class GateEvaluator:
                 preview = ", ".join(map(repr, missing[:5]))
                 raise ValueError(f"Missing {name} values for nodes: {preview}.")
         if self._passthrough_supported is not None:
-            missing = [
-                node for node in node_ids if node not in self._passthrough_supported
-            ]
+            missing = [node for node in node_ids if node not in self._passthrough_supported]
             if missing:
                 preview = ", ".join(map(repr, missing[:5]))
-                raise ValueError(
-                    "Missing passthrough_supported values for nodes: "
-                    f"{preview}."
-                )
+                raise ValueError(f"Missing passthrough_supported values for nodes: {preview}.")
 
     def _passes_split_prerequisites(self, parent: object) -> bool:
         """Run the binary-structure prerequisite and edge-divergence gate.
@@ -130,9 +123,7 @@ class GateEvaluator:
 
         left_child, right_child = children
 
-        return bool(
-            self._edge_divergent[left_child] or self._edge_divergent[right_child]
-        )
+        return bool(self._edge_divergent[left_child] or self._edge_divergent[right_child])
 
     def _sibling_gate_is_open(self, parent: object) -> bool:
         """Run the sibling-divergence gate.
@@ -159,9 +150,7 @@ class GateEvaluator:
     ) -> dict[object, bool]:
         """Return cached full split-gate status for every node."""
         return {
-            node: (
-                split_prerequisites_by_node[node] and self._sibling_gate_is_open(node)
-            )
+            node: (split_prerequisites_by_node[node] and self._sibling_gate_is_open(node))
             for node in self._node_ids
         }
 
@@ -173,8 +162,7 @@ class GateEvaluator:
         has_split: dict[object, bool] = {}
         for node in bottom_up_nodes(self.tree):
             has_split[node] = any(
-                can_split_by_node[child] or has_split[child]
-                for child in self._children_map[node]
+                can_split_by_node[child] or has_split[child] for child in self._children_map[node]
             )
         return has_split
 
@@ -199,9 +187,7 @@ class GateEvaluator:
             descendant_split_available = self._has_descendant_split[parent]
         else:
             split_prerequisites_open = self._passes_split_prerequisites(parent)
-            sibling_gate_open = (
-                split_prerequisites_open and self._sibling_gate_is_open(parent)
-            )
+            sibling_gate_open = split_prerequisites_open and self._sibling_gate_is_open(parent)
             descendant_split_available = False
 
         supported = self._passthrough_support_is_open(parent)
@@ -229,9 +215,7 @@ class GateEvaluator:
             "passthrough_enabled": bool(self._passthrough),
             "passthrough_split_prerequisites_open": bool(split_prerequisites_open),
             "passthrough_sibling_gate_open": bool(sibling_gate_open),
-            "passthrough_descendant_split_available": bool(
-                descendant_split_available
-            ),
+            "passthrough_descendant_split_available": bool(descendant_split_available),
             "passthrough_candidate": candidate,
             "passthrough_supported": supported,
             "passthrough_bottleneck": self._passthrough_bottleneck.get(parent, ""),

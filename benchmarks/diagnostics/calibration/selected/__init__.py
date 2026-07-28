@@ -1,0 +1,1 @@
+"""Selection-conditioned calibration diagnostics."""

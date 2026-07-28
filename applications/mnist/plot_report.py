@@ -83,7 +83,9 @@ def _plot_best_summary(ax, summary: pd.DataFrame) -> None:
         ax.text(index + width / 2, row.NMI + 0.015, f"{row.NMI:.3f}", ha="center", fontsize=8)
 
 
-def _heatmap_matrix(summary: pd.DataFrame, linkage: str, value: str) -> tuple[np.ndarray, list[float], list[float]]:
+def _heatmap_matrix(
+    summary: pd.DataFrame, linkage: str, value: str
+) -> tuple[np.ndarray, list[float], list[float]]:
     frame = summary[summary["linkage"] == linkage].copy()
     edges = sorted(frame["edge_alpha"].unique())
     siblings = sorted(frame["sibling_alpha"].unique())
@@ -95,7 +97,9 @@ def _heatmap_matrix(summary: pd.DataFrame, linkage: str, value: str) -> tuple[np
     return matrix, edges, siblings
 
 
-def _plot_heatmap(ax, summary: pd.DataFrame, linkage: str, value: str, title: str, cmap: str) -> None:
+def _plot_heatmap(
+    ax, summary: pd.DataFrame, linkage: str, value: str, title: str, cmap: str
+) -> None:
     matrix, edges, siblings = _heatmap_matrix(summary, linkage, value)
     image = ax.imshow(matrix, cmap=cmap, origin="lower", aspect="auto")
     ax.set_xticks(np.arange(len(edges)))
@@ -132,13 +136,17 @@ def _plot_best_composition(ax, composition: pd.DataFrame) -> None:
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("samples")
     ax.set_title("Best MNIST TBS run: cluster composition by true digit", weight="bold")
-    ax.legend(title="digit", ncol=10, bbox_to_anchor=(0.5, -0.11), loc="upper center", frameon=False)
+    ax.legend(
+        title="digit", ncol=10, bbox_to_anchor=(0.5, -0.11), loc="upper center", frameon=False
+    )
     ax.grid(axis="x", color="#e5e7eb", lw=0.55)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
 
-def _plot_failure_baseline(ax, binary: pd.DataFrame, continuous: pd.DataFrame, summary: pd.DataFrame) -> None:
+def _plot_failure_baseline(
+    ax, binary: pd.DataFrame, continuous: pd.DataFrame, summary: pd.DataFrame
+) -> None:
     best_sweep = summary.sort_values("ARI", ascending=False).iloc[0]
     rows = [
         {
@@ -186,7 +194,9 @@ def main() -> None:
     binary = pd.read_csv(SOURCE_DIR / "mnist_benchmark_summary.csv")
     continuous = pd.read_csv(SOURCE_DIR / "mnist_continuous_pca50_summary.csv")
     best = summary.sort_values("ARI", ascending=False).iloc[0]
-    best_key = _assignment_key(str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"]))
+    best_key = _assignment_key(
+        str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"])
+    )
     composition = pd.read_csv(SWEEP_DIR / f"{best_key}_top_cluster_digit_composition.csv")
 
     analysis_summary = best_rows(summary)
@@ -215,7 +225,9 @@ def main() -> None:
     ) as pdf:
         for plotter in [
             lambda ax: _plot_best_summary(ax, summary),
-            lambda ax: _plot_heatmap(ax, summary, "ward", "ARI", "Ward linkage: ARI reaction to alpha", "viridis"),
+            lambda ax: _plot_heatmap(
+                ax, summary, "ward", "ARI", "Ward linkage: ARI reaction to alpha", "viridis"
+            ),
             lambda ax: _plot_heatmap(
                 ax,
                 summary,

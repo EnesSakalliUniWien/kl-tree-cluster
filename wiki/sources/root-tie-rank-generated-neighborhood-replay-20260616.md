@@ -2,17 +2,17 @@
 title: Root Tie Rank Generated Neighborhood Replay 2026-06-16
 type: source
 status: reviewed
-updated: 2026-06-16
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/root_tie_rank_generated_neighborhood_replay.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_null_proposal_frontier.py
-  - benchmarks/diagnostics/calibration/root_selected_mixed_region_law.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_neighborhood_join_audit.py
-  - benchmarks/diagnostics/calibration/root_tie_rank_coupling_equation_panel.py
-  - tests/validation/163_test_root_tie_rank_generated_neighborhood_replay.py
-  - tests/validation/158_test_root_tie_rank_null_proposal_frontier.py
-  - tests/validation/155_test_root_selected_mixed_region_law.py
-  - tests/validation/162_test_root_tie_rank_neighborhood_join_audit.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_generated_neighborhood_replay.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_null_proposal_frontier.py
+  - benchmarks/diagnostics/calibration/root/selected/root_selected_mixed_region_law.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_neighborhood_join_audit.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/root_tie_rank_coupling_equation_panel.py
+  - tests/validation/calibration/root/tie_rank/163_test_root_tie_rank_generated_neighborhood_replay.py
+  - tests/validation/calibration/root/tie_rank/158_test_root_tie_rank_null_proposal_frontier.py
+  - tests/validation/calibration/root/selected/155_test_root_selected_mixed_region_law.py
+  - tests/validation/calibration/root/tie_rank/162_test_root_tie_rank_neighborhood_join_audit.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_generated_neighborhood_replay_all_generated_smoke
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_with_generated_replay
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_coupling_equation_after_generated_replay

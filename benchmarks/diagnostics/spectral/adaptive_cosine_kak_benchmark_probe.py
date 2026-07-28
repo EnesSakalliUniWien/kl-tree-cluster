@@ -102,7 +102,6 @@ def default_output_dir() -> Path:
     return Path("benchmarks/results/diagnostics") / f"adaptive_cosine_kak_probe_{stamp}"
 
 
-
 def labels_from_assignments(assignments: pd.DataFrame, sample_index: pd.Index) -> np.ndarray:
     aligned = assignments.loc[sample_index]
     return aligned["cluster_id"].astype(int).to_numpy()
@@ -194,9 +193,7 @@ def run_case(
         "n_true_clusters": int(len(np.unique(true_labels))),
         "edge_alpha": float(args.edge_alpha),
         "sibling_alpha": float(args.sibling_alpha),
-        "enforce_internal_support_thresholds": bool(
-            args.enforce_internal_support_thresholds
-        ),
+        "enforce_internal_support_thresholds": bool(args.enforce_internal_support_thresholds),
     }
 
     rows: list[dict[str, object]] = []
@@ -243,9 +240,11 @@ def run_case(
             )
 
         for block in blocks:
-            block_energy = float(
-                np.sum(eigvals[block.block_start - 1 : block.block_end]) / total_energy
-            ) if total_energy > 0 else math.nan
+            block_energy = (
+                float(np.sum(eigvals[block.block_start - 1 : block.block_end]) / total_energy)
+                if total_energy > 0
+                else math.nan
+            )
             block_record = {
                 **base,
                 "weighting": weighting,
@@ -271,9 +270,7 @@ def run_case(
                     block=block,
                     edge_alpha=args.edge_alpha,
                     sibling_alpha=args.sibling_alpha,
-                    enforce_internal_support_thresholds=(
-                        args.enforce_internal_support_thresholds
-                    ),
+                    enforce_internal_support_thresholds=(args.enforce_internal_support_thresholds),
                 )
                 elapsed = time.perf_counter() - start
                 labels = labels_from_assignments(assignments, data.index)
@@ -285,14 +282,16 @@ def run_case(
                         "status": "ok",
                         "n_clusters": n_clusters,
                         "largest_cluster_fraction": float(cluster_sizes.max() / len(labels)),
-                        "singleton_fraction": float((cluster_sizes == 1).sum() / max(n_clusters, 1)),
+                        "singleton_fraction": float(
+                            (cluster_sizes == 1).sum() / max(n_clusters, 1)
+                        ),
                         "ari": float(adjusted_rand_score(true_labels, labels)),
                         "nmi": float(normalized_mutual_info_score(true_labels, labels)),
                         "runtime_sec": float(elapsed),
-                        "decomposition_num_clusters": int(decomposition.get("num_clusters", n_clusters)),
-                        "sibling_test_method_counts": sibling_method_counts(
-                            annotations_df
+                        "decomposition_num_clusters": int(
+                            decomposition.get("num_clusters", n_clusters)
                         ),
+                        "sibling_test_method_counts": sibling_method_counts(annotations_df),
                         "error": "",
                     }
                 )
@@ -374,7 +373,9 @@ def main() -> None:
     spectrum_df.to_csv(output_dir / "kak_benchmark_probe_spectra.csv", index=False)
     write_summaries(rows_df, output_dir)
 
-    status_counts = rows_df["status"].value_counts(dropna=False).to_dict() if not rows_df.empty else {}
+    status_counts = (
+        rows_df["status"].value_counts(dropna=False).to_dict() if not rows_df.empty else {}
+    )
     ok = rows_df[rows_df["status"].eq("ok")] if "status" in rows_df else pd.DataFrame()
     readme = [
         "# Adaptive Cosine/KAK Benchmark Probe",
@@ -384,10 +385,7 @@ def main() -> None:
         f"Cases: `{len(cases)}`",
         f"Edge alpha: `{args.edge_alpha}`",
         f"Sibling alpha: `{args.sibling_alpha}`",
-        (
-            "Internal support thresholds enforced: "
-            f"`{args.enforce_internal_support_thresholds}`"
-        ),
+        (f"Internal support thresholds enforced: `{args.enforce_internal_support_thresholds}`"),
         f"Max rank: `{args.max_rank}`",
         f"Weightings: `{', '.join(args.weightings)}`",
         "",
@@ -398,9 +396,7 @@ def main() -> None:
         "## Best Rows",
         "",
         (
-            ok.sort_values(["ari", "nmi"], ascending=False)
-            .head(20)
-            .to_string(index=False)
+            ok.sort_values(["ari", "nmi"], ascending=False).head(20).to_string(index=False)
             if not ok.empty
             else "No ok rows."
         ),

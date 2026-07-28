@@ -2,10 +2,10 @@
 title: Overlap Selected Pass-Through Fixture Miner 2026-06-15
 type: source
 status: reviewed
-updated: 2026-06-15
+updated: 2026-07-28
 sources:
-  - benchmarks/diagnostics/calibration/overlap_selected_pass_through_fixture_miner.py
-  - tests/validation/139_test_overlap_selected_pass_through_fixture_miner.py
+  - benchmarks/diagnostics/calibration/overlap/overlap_selected_pass_through_fixture_miner.py
+  - tests/validation/calibration/overlap/139_test_overlap_selected_pass_through_fixture_miner.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_selected_pass_through_fixture_miner
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_selected_pass_through_expanded_traversal
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_selected_pass_through_expanded_distribution
@@ -146,7 +146,7 @@ barycentric mixture before any retained pass-through split can be promoted.
 
 ## Evidence
 
-- `tests/validation/139_test_overlap_selected_pass_through_fixture_miner.py`
+- `tests/validation/calibration/overlap/139_test_overlap_selected_pass_through_fixture_miner.py`
   verifies signal/control classification, directed traversal context, the
   structural balance formula, fail-closed support summary, and output writing.
 - The compact run used
