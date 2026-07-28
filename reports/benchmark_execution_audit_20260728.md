@@ -2,11 +2,11 @@
 
 ## Scope
 
-This audit was run from clean `dev` revision `4a502615` after the repository
-was reduced to the `main` and `dev` branches. It checks executable health,
-benchmark claim boundaries, fail-closed behavior, and the dominant runtime
-paths. It does not replace a locked full benchmark or statistical validation
-study.
+The initial audit was run from clean `dev` revision `4a502615` after the
+repository was reduced to the `main` and `dev` branches. It checks executable
+health, benchmark claim boundaries, fail-closed behavior, and the dominant
+runtime paths. A subsequent section records the canonical full-suite run at
+revision `9331319a`; neither run replaces a statistical validation study.
 
 The repository virtual environment was used directly because the managed
 execution environment could not read the global `uv` cache.
@@ -192,3 +192,78 @@ canonical TBS path is not benchmark-complete: unsupported calibration contexts
 remain visible, and the descriptive regression runner does not enforce a
 performance or quality threshold. Those are method and benchmark contract
 issues, not directory or plotting-backend failures.
+
+## Canonical full-suite run
+
+The canonical full runner was executed from clean `dev` revision `9331319a`
+with the noninteractive plotting backend and single-threaded numerical-library
+settings:
+
+```bash
+MPLBACKEND=Agg MPLCONFIGDIR=<temporary-directory> TBS_N_JOBS=1 \
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
+uv run python -m benchmarks.full.run
+```
+
+The run completed in approximately 13 minutes 56 seconds, including
+relationship analysis and PDF assembly. It generated all 121 cases for the 10
+canonical methods, producing 1,210 unique case-method rows, 1,139 `ok` rows,
+71 explicit `skip` rows, and no error-status rows. The generated result
+directory is
+`benchmarks/results/run_20260728_163153Z_full/`; it contains the canonical CSV,
+performance grids, relationship tables and report, failure diagnosis, 292
+audit files, 132 PDFs, and the consolidated report.
+
+| Method | OK / 121 | Mean ARI on OK rows | Median ARI | Exact-K rate on OK rows |
+| --- | ---: | ---: | ---: | ---: |
+| K-means | 121 | 0.8639 | 1.0000 | 1.0000 |
+| Spectral | 121 | 0.8338 | 1.0000 | 1.0000 |
+| Leiden | 121 | 0.8163 | 1.0000 | 0.7603 |
+| Louvain | 121 | 0.8125 | 1.0000 | 0.7769 |
+| Adaptive diffusion + NNLS TBS | 94 | 0.8088 | 1.0000 | 0.7447 |
+| Canonical TBS | 93 | 0.7751 | 0.9916 | 0.6452 |
+| HDBSCAN | 121 | 0.6005 | 0.8204 | 0.4545 |
+| DBSCAN | 121 | 0.5729 | 0.7806 | 0.5785 |
+| OPTICS | 121 | 0.5242 | 0.6839 | 0.5372 |
+| Fixed-neighbor diffusion TBS | 105 | 0.4971 | 0.5826 | 0.2571 |
+
+These aggregate ranks are not an apples-to-apples model-selection result.
+K-means and spectral are configured with `n_clusters=true`, so their exact-K
+rate is guaranteed by the benchmark input. TBS-family methods must infer the
+cluster count, and their available-row means exclude unsupported or
+fail-closed cases. On the 72 cases where all methods returned labels, mean ARI
+was 0.8955 for K-means, 0.8939 for Leiden, 0.8897 for Louvain, 0.8632 for
+spectral, 0.8525 for adaptive diffusion + NNLS TBS, 0.8305 for canonical TBS,
+and 0.4523 for fixed-neighbor diffusion TBS.
+
+Across the 92 cases jointly completed by both diffusion TBS variants, adaptive
+diffusion plus NNLS improved ARI in 57 cases, tied in 22, and worsened in 13,
+for a mean paired change of `+0.3594`. This is a much broader and less uniformly
+favorable result than the earlier 14-case smoke comparison. Against canonical
+TBS on 74 jointly completed cases, adaptive diffusion plus NNLS improved 29,
+tied 37, and worsened 8, for a mean paired change of `+0.0214`.
+
+The 71 skips expose three distinct contracts:
+
+- canonical TBS skipped 28 cases because the sibling-inflation model had no
+  admissible strict-null or stopped-edge empirical-null support;
+- fixed-neighbor diffusion TBS skipped 13 native-continuous cases because its
+  Hamming geometry is unsupported, plus 3 calibration-support cases;
+- adaptive diffusion + NNLS skipped the same 13 native-continuous cases because
+  its canonical preset fixes `metric=hamming`, 11 duplicate/support-degenerate
+  cases inside pydiffmap, and 3 calibration-support cases.
+
+The pydiffmap failure is therefore broader than `binary_perfect_4c`: the
+full-suite run found 11 affected duplicate-heavy or low-support cases. The
+adaptive preset's continuous skips are a benchmark-configuration scope issue,
+not evidence that adaptive Euclidean diffusion cannot process continuous data.
+
+CSV integrity checks found no duplicate case-method cells, no non-finite ARI
+among `ok` rows, no finite ARI among skipped rows, no label-count mismatch, and
+no ARI outside its valid range. Recorded top-level TBS stages exclude diffusion
+construction and NNLS fitting because those timings are not exported. On the
+92 jointly successful diffusion cases, those recorded stages averaged 0.5037
+seconds for fixed-neighbor diffusion and 0.5206 seconds for adaptive diffusion
+plus NNLS; this small difference must not be reported as end-to-end NNLS
+overhead.

@@ -33,12 +33,13 @@ method code lives under `tree_break_selection/`; applications adapt domain
 data and compose reports; benchmark runners consume the same method interfaces
 through `benchmarks/shared/`.
 
-The fresh benchmark audit confirms executable health but not full method
-coverage. The 14-case smoke completed with 11 successful rows and 3 explicit
-fail-closed skips. The 17-case descriptive regression suite completed with 11
-successful rows and 6 skips. Its filename says `run_gate.py`, but it currently
-has no acceptance threshold and must not be represented as a passing release
-gate.
+The fresh benchmark audit confirms executable health and records a complete
+canonical full-suite execution, but it also exposes method-availability and
+comparison-contract gaps. The 121-case, 10-method full run produced all 1,210
+case-method rows, with 1,139 successful rows, 71 explicit skips, and no
+error-status rows. K-means and spectral receive the true cluster count while
+TBS-family methods infer it, so the aggregate ranking is descriptive rather
+than an apples-to-apples model-selection result.
 
 ## Details
 
@@ -137,6 +138,25 @@ and seven external clustering baselines.
 
 ### Fresh benchmark check
 
+At revision `9331319a`, the canonical full runner completed 121 cases for 10
+methods in approximately 13 minutes 56 seconds, including plots and report
+assembly. It produced 1,139 `ok` rows and 71 explicit `skip` rows with no
+error-status rows. Mean ARI on available rows was `0.8639` for K-means,
+`0.8338` for spectral, `0.8163` for Leiden, `0.8125` for Louvain, `0.8088` for
+adaptive diffusion plus NNLS TBS, `0.7751` for canonical TBS, and `0.4971` for
+fixed-neighbor diffusion TBS. On the 72 cases completed by every method,
+adaptive diffusion plus NNLS TBS reached `0.8525`, canonical TBS `0.8305`, and
+fixed-neighbor diffusion TBS `0.4523`.
+
+Across the 92 cases jointly completed by the two diffusion variants, adaptive
+diffusion plus NNLS improved 57, tied 22, and worsened 13, with mean paired ARI
+change `+0.3594`. Against canonical TBS on 74 jointly completed cases, it
+improved 29, tied 37, and worsened 8, with mean paired change `+0.0214`.
+Canonical TBS had 28 missing empirical-null calibration skips; fixed-neighbor
+diffusion had 13 continuous-geometry and 3 calibration skips; adaptive
+diffusion plus NNLS had 13 continuous-preset, 11 pydiffmap duplicate/support,
+and 3 calibration skips.
+
 At revision `4a502615`:
 
 - smoke: 11 `ok`, 3 fail-closed `skip`, mean ARI `0.898`, median ARI
@@ -169,6 +189,19 @@ Both facts can lead a caller to the wrong release conclusion.
 Skipped benchmark rows contain no stage timings, so result files lose the
 runtime spent before a fail-closed exception. Successful rows show edge and
 sibling gates dominate tree construction on this small suite.
+
+The canonical full comparison also combines oracle-K and inferred-K methods:
+K-means and spectral are passed the true cluster count, while TBS, Leiden,
+Louvain, and density methods infer a partition size. Availability differs too,
+so ranking available-row means rewards methods that skip their incompatible or
+fail-closed cases. Reports must show coverage and common-case contrasts beside
+aggregate means.
+
+The adaptive diffusion + NNLS default fixes Hamming geometry for the full
+suite. Its 13 native-continuous skips therefore describe the preset's scope,
+not adaptive diffusion's general continuous-data capability. The full suite
+also expands the pydiffmap positive-neighbor failure from one representative
+case to 11 cases.
 
 Adaptive diffusion and its NNLS variant share geometry, average-linkage
 topology, and rooting. NNLS only refits edge lengths and activates normalized
@@ -204,7 +237,7 @@ strict lower layer.
 - `benchmarks/shared/README.md` and live imports agree on the case,
   generation, preparation, dispatch, execution, result, and plot sequence.
 - `reports/benchmark_execution_audit_20260728.md` records commands, outcomes,
-  skip reasons, timing coverage, and profile attribution.
+  full-suite results, skip reasons, timing coverage, and profile attribution.
 - The focused 288-test run covered the reusable core, benchmark integration,
   pipeline contracts, tree construction, and visualization surfaces.
 

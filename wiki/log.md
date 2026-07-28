@@ -5491,6 +5491,14 @@ verification, and maintenance events here in chronological order.
   and 7,259 duplicated lines (3.97%). Vulture reported no project-owned dead
   code at 90% confidence; Ruff, wiki lint over 271 pages, focused contract
   suites, and all 1,254 ordered repository tests passed.
+- Executed the canonical 121-case, 10-method full benchmark at revision
+  `9331319a`. All 1,210 case-method rows were produced: 1,139 were `ok`, 71
+  were explicit `skip`, and none had error status. Recorded method coverage,
+  common-case and paired diffusion/NNLS comparisons, oracle-K baseline
+  ambiguity, 28 canonical-TBS calibration skips, 13 continuous-preset skips,
+  and 11 pydiffmap duplicate/support failures in
+  `reports/benchmark_execution_audit_20260728.md`; corrected the stale
+  110-case count in `benchmarks/README.md`.
 
 ## Evidence
 

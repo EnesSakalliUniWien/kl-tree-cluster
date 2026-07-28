@@ -155,7 +155,7 @@ case suite and compares the default benchmark methods.
 
 **Data generation**: By default the runner uses the `full` suite from
 `benchmarks.shared.cases.get_test_cases_by_suite()`, which currently resolves to
-110 cases. Each case specifies a generator, sample count, feature count,
+121 cases. Each case specifies a generator, sample count, feature count,
 cluster count, and noise level. The dispatcher (`generate_case_data`) routes to
 the appropriate generator, binarizes, one-hot-encodes, or keeps continuous
 coordinates under an explicit `FeatureSpace`, and feeds the resulting matrix to
@@ -248,7 +248,7 @@ For a focused diagnosis of the current TBS gap on categorical and overlapping fa
 **Purpose**: Fast iteration benchmark — runs ~15 representative cases from the full suite for quick validation during development.
 
 **Data generation**: Draws from the same default case pool used by the full
-suite (`get_default_test_cases()`), which currently contains 110 cases.
+suite (`get_default_test_cases()`), which currently contains 121 cases.
 Hand-picked subset covers Gaussian, Binary, Categorical, SBM, and Overlapping
 families.
 
@@ -318,7 +318,7 @@ families.
 
 ## Test Case Categories
 
-The full suite currently resolves to 110 cases from the shared case registry.
+The full suite currently resolves to 121 cases from the shared case registry.
 The major families represented in that registry are summarized below.
 
 ### Contract Suites
@@ -333,7 +333,7 @@ contracts instead of mixing every historical stress case into one score.
 | `continuous` | 9 | Selected raw Gaussian-coordinate examples with explicit continuous `FeatureSpace` and Euclidean tree distances. | Experimental empirical-Gaussian path; report separately from binary and discretized Gaussian results. |
 | `discretized_gaussian` | 32 | Gaussian sources transformed to binary or quantile one-hot features. | Discretization stress tests, not evidence for native continuous performance. |
 | `graph` | 3 | SBM adjacency features with precomputed modularity distance. | Graph-distance/recoverability stress tests. |
-| `full` | 110 | Union of the registry. | Broad smoke/reporting suite; avoid using its aggregate as a single method claim. |
+| `full` | 121 | Union of the registry. | Broad smoke/reporting suite; avoid using its aggregate as a single method claim. |
 
 ### Gaussian
 
