@@ -25,8 +25,12 @@ sources:
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/tbs_tree_context.py
+  - benchmarks/diagnostics/runner_support.py
+  - benchmarks/diagnostics/oracle/gate_path_trace.py
+  - benchmarks/diagnostics/calibration/sibling/nulls/runner_support.py
   - benchmarks/validation/statistics/feature_covariance_calibration.py
   - benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py
+  - tests/validation/calibration/sibling/nulls/49_test_sibling_null_runner_support.py
   - tests/visualization/73_test_report_export_layout.py
 tags:
   - code-audit
@@ -47,9 +51,11 @@ duplicated lines, or 4.14% of scanned production lines. This is not a blanket
 deletion target. Diagnostic research panels accounted for 299 of the initial
 pairs and 6,287 paired lines. The plot-export, core annotation/traversal,
 endotype reference-data, and validation-calibration tranches were completed on
-2026-07-28. Under the same 10-line/70-token weak threshold, the current
-production scan reports 370 pairs and 7,175 duplicated lines, or 3.92%. Broad
-diagnostic consolidation should wait for observable output-schema tests.
+2026-07-28. The first contract-tested diagnostic-family cleanup then
+consolidated classified-case execution and sibling-null preparation. Under the
+same 10-line/70-token weak threshold, the current production scan reports 353
+pairs and 6,542 duplicated lines, or 3.58%. Broad diagnostic consolidation
+should continue one output-contract-tested family at a time.
 
 ## Details
 
@@ -101,12 +107,15 @@ matches, so they are prioritization signals rather than removable-line totals.
 
 | Surface pair | Clone pairs | Paired lines | Interpretation |
 | --- | ---: | ---: | --- |
-| diagnostics to diagnostics | 299 | 6,287 | Research-panel scaffolding dominates the total |
-| benchmark support to benchmark support | 37 | 861 | Plot export, runner forwarding, records, and validation reports |
-| applications to applications | 19 | 331 | Endotype and plotting workflows, plus small report helpers |
-| core to core | 10 | 195 | Gate configuration, permutation guards, annotations, and covariance validation |
+| diagnostics to diagnostics | 281 | 5,611 | Research-panel scaffolding still dominates the total |
+| benchmark support to benchmark support | 31 | 630 | Aligned records, generators, and validation reports |
+| applications to applications | 17 | 289 | Endotype and plotting workflows, plus small report helpers |
+| core to core | 5 | 72 | Gate arguments, covariance validation, and result fields |
 | core to diagnostics | 6 | 97 | Diagnostic copies of production spectral and gate calculations |
-| all other cross-surface pairs | 13 | 147 | Small application, script, and benchmark crossings |
+| diagnostics to benchmark support | 6 | 109 | Validation and diagnostic report scaffolding |
+| applications to diagnostics | 4 | 48 | Small cross-surface application probes |
+| scripts to scripts | 2 | 26 | Repeated provenance verification branches |
+| applications to benchmark support | 1 | 13 | One small shared workflow prefix |
 
 Tests contain 58 weak-mode clone pairs and 1,298 duplicated lines, or 2.81% of
 46,177 scanned lines. Most are fixture construction and repeated contract
@@ -154,9 +163,20 @@ The actionable clusters, in cleanup order, are:
    `benchmarks/validation/statistics/calibration_support.py`. Exact CSV header
    tests preserve their different output schemas; target-specific validation
    and CLIs were not flattened into a generic driver.
-8. Sibling-null, overlap, root-selection, and traversal diagnostic families
-   contain the largest clone groups. Each family needs one output contract and
-   one domain-owned driver before copied scripts are removed.
+8. Completed on 2026-07-28: sibling-null and gate-path runners now resolve
+   classified benchmark cases, runtime defaults, and result directories through
+   `benchmarks/diagnostics/runner_support.py`. Prepared tree, annotation,
+   traversal, and oracle context belongs to `oracle/gate_path_trace.py`;
+   sibling-null table preparation and target selection belong to the
+   sibling-null `runner_support.py`. Four copied sibling setup implementations
+   and the gate-path copy were deleted without aliases. This also corrected the
+   sibling runners' copied `repo_root` calculation, which previously pointed
+   default discovery and output under
+   `benchmarks/diagnostics/benchmarks/...` instead of the project
+   `benchmarks/results/` directory.
+9. Overlap, root-selection, and traversal diagnostic families now contain the
+   largest actionable clone groups. Each family needs one observable output
+   contract and one domain-owned driver before copied scripts are removed.
 
 Several high-ranked matches should not be mechanically consolidated:
 
@@ -203,6 +223,17 @@ Several high-ranked matches should not be mechanically consolidated:
   lines (3.92%). The copied endotype HTTP/parser blocks and validation
   covariance, p-value-summary, Wilson, Git-state, and UTC helpers no longer
   appear.
+- After the classified diagnostic runner and sibling-null context
+  consolidation, the scan fell to 353 clone pairs and 6,542 duplicated lines
+  across 182,496 lines (3.58%). The former 330-line Gaussian/selection runner
+  cluster, 231-line Gaussian/inflation cluster, and gate-path preparation
+  copies no longer appear. The remaining sibling-runner matches are small
+  command and report-schema prefixes.
+- The shared-runner interface is covered by six direct tests, including a real
+  prepared regression-gate case and the corrected default result-directory
+  contract. All 45 focused oracle/sibling tests and all 1,278 ordered
+  repository tests pass; Ruff, Vulture at 90% confidence, and wiki lint over
+  271 pages also pass.
 - Vulture reported no project-owned dead code at 90% confidence after the
   deletions. Ruff, wiki lint over 271 pages, the focused interface suites, and
   all 1,254 ordered repository tests pass.

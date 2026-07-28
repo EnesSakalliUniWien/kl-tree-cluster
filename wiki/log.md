@@ -5509,6 +5509,19 @@ verification, and maintenance events here in chronological order.
   per-program CSV schemas. The production clone scan fell from 373 pairs and
   7,259 duplicated lines to 370 pairs and 7,175 lines; Ruff, Vulture, 50
   focused tests, and all 1,272 ordered repository tests passed.
+- Completed the first contract-tested diagnostic-family cleanup. Classified
+  benchmark selection, deterministic runtime defaults, and result-directory
+  creation now belong to `benchmarks/diagnostics/runner_support.py`; prepared
+  tree/gate/traversal/oracle context belongs to `oracle/gate_path_trace.py`;
+  sibling-null table preparation and target selection belong to the
+  sibling-null `runner_support.py`. Deleted the copied implementations from
+  four sibling-null runners and the gate-path runner without aliases. This
+  exposed and fixed their copied project-root bug: sibling defaults formerly
+  resolved under `benchmarks/diagnostics/benchmarks/...` instead of
+  `benchmarks/results/`. The production clone scan fell from 370 pairs and
+  7,175 duplicated lines to 353 pairs and 6,542 lines (3.58%). All 45 focused
+  oracle/sibling tests and all 1,278 repository tests passed; Ruff, Vulture,
+  wiki lint over 271 pages, and five command-interface smokes also passed.
 
 ## Evidence
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -15,14 +16,27 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.annotation_bund
 from tree_break_selection.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     TraversalDecision,
 )
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     predict_empirical_inflation_factor,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.feature_space import FeatureSpace
 
 from benchmarks.diagnostics.calibration.sibling.nulls.sibling_inflation_diagnostic import (
     collect_sibling_inflation_inputs,
 )
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
+    OracleTreeCutResult,
+    oracle_subtree_cut,
+)
+from benchmarks.shared.tbs_tree_context import TbsTreeContext, build_tbs_tree_context
 
 
 @dataclass(frozen=True)
@@ -42,6 +56,17 @@ class SiblingInflationTrace:
     branch_length_sum: float
     parent_sample_size: int
     feature_family: str
+
+
+@dataclass(frozen=True)
+class PreparedGatePathCase:
+    """Tree, annotations, traversal, and oracle cuts shared by gate-path studies."""
+
+    context: TbsTreeContext
+    gate_annotation_bundle: GateAnnotationBundle
+    decomposition: dict[str, object]
+    oracle_any: OracleTreeCutResult
+    oracle_true_k: OracleTreeCutResult
 
 
 def _as_bool(value: Any) -> bool:
@@ -439,6 +464,74 @@ def build_gate_path_trace_dataframe(
     return pd.DataFrame.from_records(rows)
 
 
+def prepare_gate_path_case(case: dict[str, object]) -> PreparedGatePathCase:
+    """Build the common tree, gate, traversal, and oracle context for one case."""
+
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
+    gate_annotation_bundle = run_gate_annotation_pipeline(
+        context.tree,
+        context.tree.annotations_df,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
+        leaf_data=context.data,
+        feature_space=context.feature_space,
+    )
+    decomposition = TreeDecomposition(
+        tree=context.tree,
+        gate_annotation_bundle=gate_annotation_bundle,
+        passthrough=True,
+        trace_level="full",
+    ).decompose_tree()
+    true_k = int(context.metadata["n_clusters"])
+    oracle_any = oracle_subtree_cut(
+        context.tree,
+        sample_index=context.data.index,
+        true_labels=context.true_labels,
+    )
+    oracle_true_k = oracle_subtree_cut(
+        context.tree,
+        sample_index=context.data.index,
+        true_labels=context.true_labels,
+        exact_k=true_k,
+    )
+    return PreparedGatePathCase(
+        context=context,
+        gate_annotation_bundle=gate_annotation_bundle,
+        decomposition=decomposition,
+        oracle_any=oracle_any,
+        oracle_true_k=oracle_true_k,
+    )
+
+
+def build_prepared_gate_path_trace(
+    prepared: PreparedGatePathCase,
+    classification: Mapping[str, object],
+    *,
+    sibling_inflation_trace_by_parent: Mapping[object, SiblingInflationTrace],
+) -> pd.DataFrame:
+    """Build and enrich the node trace for a prepared classified case."""
+
+    context = prepared.context
+    trace_df = build_gate_path_trace_dataframe(
+        tree=context.tree,
+        annotations_df=prepared.gate_annotation_bundle.annotated_df,
+        decomposition=prepared.decomposition,
+        oracle_true_k_boundary_nodes=prepared.oracle_true_k.selected_nodes,
+        oracle_any_k_boundary_nodes=prepared.oracle_any.selected_nodes,
+        sibling_inflation_trace_by_parent=sibling_inflation_trace_by_parent,
+        case_id=str(context.metadata["name"]),
+        failure_class=str(classification["failure_class"]),
+        tbs_ari=float(classification["tbs_ari"]),
+        oracle_true_k_ari=float(prepared.oracle_true_k.ari),
+        oracle_any_k_ari=float(prepared.oracle_any.ari),
+        passthrough=True,
+    )
+    trace_df.insert(2, "tree_distance_metric", context.tree_distance_metric)
+    trace_df.insert(3, "tree_distance_source", context.tree_distance_source)
+    trace_df.insert(4, "tree_linkage_method", context.tree_linkage_method)
+    return trace_df
+
+
 def summarize_gate_path_trace(trace_df: pd.DataFrame) -> pd.DataFrame:
     """Return one summary row per case from a node-level gate trace."""
     required = {"case_id", "failure_class", "trace_relation", "actual_boundary"}
@@ -473,8 +566,11 @@ def summarize_gate_path_trace(trace_df: pd.DataFrame) -> pd.DataFrame:
 
 
 __all__ = [
+    "PreparedGatePathCase",
     "SiblingInflationTrace",
     "build_gate_path_trace_dataframe",
+    "build_prepared_gate_path_trace",
     "collect_sibling_inflation_trace",
+    "prepare_gate_path_case",
     "summarize_gate_path_trace",
 ]

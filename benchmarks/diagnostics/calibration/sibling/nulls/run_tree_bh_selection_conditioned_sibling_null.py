@@ -5,15 +5,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-
-repo_root = Path(__file__).resolve().parents[3]
-
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -34,22 +29,21 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
+from benchmarks.diagnostics.calibration.sibling.nulls.runner_support import (
+    standardized_contrast_dimension,
+)
 from benchmarks.diagnostics.calibration.sibling.nulls.selection_conditioned_sibling_null import (
     SelectionConditionedSiblingNullContext,
     simulate_local_edge_selection_conditioned_null,
 )
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
-
-_THREAD_ENV_VARS = (
-    "OMP_NUM_THREADS",
-    "OPENBLAS_NUM_THREADS",
-    "MKL_NUM_THREADS",
-    "VECLIB_MAXIMUM_THREADS",
-    "NUMEXPR_NUM_THREADS",
+from benchmarks.diagnostics.runner_support import (
+    configure_serial_runtime,
+    create_result_directory,
+    parse_csv_values,
+    resolve_classified_cases,
 )
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _DEFAULT_GAUSSIAN_BLOCKERS = (
     "gauss_extreme_noise_highd",
@@ -75,96 +69,6 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=20260524)
     parser.add_argument("--output-dir", type=Path, default=None)
     return parser.parse_args()
-
-
-def _configure_runtime_defaults() -> None:
-    for env_var in _THREAD_ENV_VARS:
-        os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("TBS_N_JOBS", "1")
-
-
-def _load_cases(suite: str) -> list[dict[str, object]]:
-    if suite == "regression_gate":
-        return get_regression_gate_test_cases()
-    if suite == "full":
-        return get_default_test_cases()
-    raise ValueError(f"Unknown suite {suite!r}.")
-
-
-def _latest_classification_csv() -> Path:
-    candidates = sorted(
-        repo_root.glob(
-            "benchmarks/results/oracle_tree_recoverability_*/oracle_tree_recoverability.csv"
-        )
-    )
-    for candidate in reversed(candidates):
-        columns = pd.read_csv(candidate, nrows=0).columns
-        if "failure_class" in columns:
-            return candidate
-    raise FileNotFoundError(
-        "No oracle_tree_recoverability CSV with a failure_class column was found."
-    )
-
-
-def _parse_csv_list(raw: str) -> list[str]:
-    return [part.strip() for part in raw.split(",") if part.strip()]
-
-
-def _load_classification(path: Path | None) -> tuple[pd.DataFrame, Path]:
-    resolved = _latest_classification_csv() if path is None else path
-    df = pd.read_csv(resolved)
-    required = {"case_id", "failure_class"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"Classification CSV {resolved} is missing columns: {sorted(missing)}.")
-    return df, resolved
-
-
-def _select_cases(
-    cases: list[dict[str, object]],
-    classification_df: pd.DataFrame,
-    *,
-    failure_classes: list[str],
-    case_names: list[str],
-) -> list[dict[str, object]]:
-    case_by_name = {str(case["name"]): case for case in cases}
-    selected = classification_df[
-        classification_df["failure_class"].astype(str).isin(failure_classes)
-    ].copy()
-    if case_names:
-        requested = set(case_names)
-        selected = selected[selected["case_id"].astype(str).isin(requested)]
-    if selected.empty:
-        raise ValueError("No cases matched the requested failure class/name filters.")
-    missing = [
-        case_id for case_id in selected["case_id"].astype(str) if case_id not in case_by_name
-    ]
-    if missing:
-        raise ValueError(
-            f"Selected cases are not present in the {len(cases)}-case suite: {missing}."
-        )
-    return [case_by_name[str(row.case_id)].copy() for row in selected.itertuples()]
-
-
-def _make_output_dir(explicit_output_dir: Path | None) -> Path:
-    if explicit_output_dir is not None:
-        output_dir = explicit_output_dir
-    else:
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
-        output_dir = (
-            repo_root
-            / "benchmarks"
-            / "results"
-            / f"tree_bh_selection_conditioned_sibling_null_{stamp}"
-        )
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
-
-
-def _standardized_contrast_dimension(context) -> int:
-    if context.feature_space is None:
-        return int(context.data.shape[1])
-    return int(context.feature_space.contrast_dimension)
 
 
 def _production_calibration_status(records) -> tuple[str, str]:
@@ -229,7 +133,7 @@ def _diagnose_case(
         case_id=str(context.metadata["name"]),
         parent=target.parent,
         feature_family=target.feature_family,
-        standardized_contrast_dimension=_standardized_contrast_dimension(context),
+        standardized_contrast_dimension=standardized_contrast_dimension(context),
         edge_projection_dimension=edge_k,
         sibling_projection_dimension=int(target.sibling_projection_dimension),
         degrees_of_freedom=float(target.degrees_of_freedom),
@@ -268,22 +172,25 @@ def _diagnose_case(
 
 def main() -> None:
     args = _parse_args()
-    _configure_runtime_defaults()
-    classification_df, classification_path = _load_classification(args.classification_csv)
-    selected = _select_cases(
-        _load_cases(args.suite),
-        classification_df,
-        failure_classes=_parse_csv_list(args.failure_classes),
-        case_names=_parse_csv_list(args.case_names),
+    configure_serial_runtime()
+    selection = resolve_classified_cases(
+        suite=args.suite,
+        classification_csv=args.classification_csv,
+        failure_classes=parse_csv_values(args.failure_classes),
+        case_names=parse_csv_values(args.case_names),
     )
-    output_dir = _make_output_dir(args.output_dir)
+    output_dir = create_result_directory(
+        args.output_dir,
+        study_slug="tree_bh_selection_conditioned_sibling_null",
+    )
     targets_csv = output_dir / "tree_bh_selection_conditioned_sibling_null_targets.csv"
     metadata_json = output_dir / "tree_bh_selection_conditioned_sibling_null_metadata.json"
 
     started_at = time.perf_counter()
     rows: list[dict[str, object]] = []
-    for index, case in enumerate(selected, start=1):
-        print(f"[{index}/{len(selected)}] {case['name']}", flush=True)
+    for index, selected_case in enumerate(selection.cases, start=1):
+        case = selected_case.case
+        print(f"[{index}/{len(selection.cases)}] {case['name']}", flush=True)
         rows.append(
             _diagnose_case(
                 case,
@@ -299,10 +206,10 @@ def main() -> None:
     elapsed_sec = time.perf_counter() - started_at
     metadata = {
         "suite": args.suite,
-        "classification_csv": str(classification_path),
-        "failure_classes": _parse_csv_list(args.failure_classes),
-        "case_names": [str(case["name"]) for case in selected],
-        "n_cases": len(selected),
+        "classification_csv": str(selection.classification_path),
+        "failure_classes": list(parse_csv_values(args.failure_classes)),
+        "case_names": [str(item.case["name"]) for item in selection.cases],
+        "n_cases": len(selection.cases),
         "n_candidates": int(args.n_candidates),
         "chunk_size": int(args.chunk_size),
         "seed": int(args.seed),

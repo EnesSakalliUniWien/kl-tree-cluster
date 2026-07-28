@@ -19,6 +19,12 @@ here only when they are diagnostic entrypoints or diagnostic-only helpers.
 - `failure/`: benchmark failure-report tracing used by the full benchmark.
 - `analysis/`: post-run result analysis and durable diagnostic notes.
 
+`runner_support.py` owns classified-case selection, serial runtime defaults,
+and correctly rooted timestamped result directories shared by diagnostic
+entrypoints. `oracle/gate_path_trace.py` owns prepared tree/gate/traversal/oracle
+context. `calibration/sibling/nulls/runner_support.py` adds the sibling-null
+tables and target-mode selection to that prepared context.
+
 Maintained entrypoints:
 
 - `oracle/run_oracle_tree_recoverability.py`
