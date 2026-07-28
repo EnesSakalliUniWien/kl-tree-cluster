@@ -45,11 +45,11 @@ code in project-owned package, application, script, or benchmark Python files.
 The 2026-07-28 clone census initially found 384 weak-mode clone pairs and 7,587
 duplicated lines, or 4.14% of scanned production lines. This is not a blanket
 deletion target. Diagnostic research panels accounted for 299 of the initial
-pairs and 6,287 paired lines. The plot-export and core annotation/traversal
-tranches were completed on 2026-07-28. Under the same 10-line/70-token weak
-threshold, the current production scan reports 373 pairs and 7,259 duplicated
-lines, or 3.97%. Broad diagnostic consolidation should wait for observable
-output-schema tests.
+pairs and 6,287 paired lines. The plot-export, core annotation/traversal,
+endotype reference-data, and validation-calibration tranches were completed on
+2026-07-28. Under the same 10-line/70-token weak threshold, the current
+production scan reports 370 pairs and 7,175 duplicated lines, or 3.92%. Broad
+diagnostic consolidation should wait for observable output-schema tests.
 
 ## Details
 
@@ -88,9 +88,10 @@ does, so this pass records the seam instead of applying a bulk rewrite.
 
 The two validation programs
 `benchmarks/validation/statistics/feature_covariance_calibration.py` and
-`benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py` still share
-report-contract and interval helpers. This is the highest-value remaining
-consolidation once their output schemas are covered by focused tests.
+`benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py`
+now share report provenance, Wilson intervals, synthetic continuous covariance
+profiles, and p-value calibration summaries. Their distinct target validation,
+report fields, and command interfaces remain local to each program.
 
 ### 2026-07-28 clone census
 
@@ -141,13 +142,18 @@ The actionable clusters, in cleanup order, are:
    function and one return contract containing both the annotated frame and
    spectral context. The DataFrame-only forwarding path was deleted without
    an alias.
-6. The endotype feature-matrix pipeline and KAK UMAP/tree page duplicate a
-   31-line plotting block. This belongs behind an endotype-owned plot helper,
-   not a generic repository utility.
-7. The two covariance-calibration validation programs duplicate Wilson
-   intervals, covariance generation, git-state capture, and report emission.
-   A purpose-named calibration reporting module is appropriate after golden
-   schema tests exist.
+6. Completed on 2026-07-28: the apparent endotype plotting clone was traced to
+   reference-data plumbing, not rendering. The feature-matrix pipeline and KAK
+   page now consume one canonical reference-endotype parser and one
+   symbol-to-Entrez batch resolver from `applications/endotypes/_shared.py`.
+   Both copied implementations were deleted without aliases.
+7. Completed on 2026-07-28: the two covariance-calibration programs now consume
+   shared provenance and Wilson helpers from
+   `benchmarks/validation/contracts/report_contract.py` and shared numerical
+   primitives from
+   `benchmarks/validation/statistics/calibration_support.py`. Exact CSV header
+   tests preserve their different output schemas; target-specific validation
+   and CLIs were not flattened into a generic driver.
 8. Sibling-null, overlap, root-selection, and traversal diagnostic families
    contain the largest clone groups. Each family needs one output contract and
    one domain-owned driver before copied scripts are removed.
@@ -192,6 +198,11 @@ Several high-ranked matches should not be mechanically consolidated:
   duplicated lines across 182,914 lines (3.97%). The removed target pairs no
   longer appear; the remaining core matches are different internal or
   cross-surface seams.
+- After the endotype reference-data and validation-calibration consolidation,
+  the scan fell to 370 clone pairs and 7,175 duplicated lines across 182,862
+  lines (3.92%). The copied endotype HTTP/parser blocks and validation
+  covariance, p-value-summary, Wilson, Git-state, and UTC helpers no longer
+  appear.
 - Vulture reported no project-owned dead code at 90% confidence after the
   deletions. Ruff, wiki lint over 271 pages, the focused interface suites, and
   all 1,254 ordered repository tests pass.
@@ -206,6 +217,10 @@ Several high-ranked matches should not be mechanically consolidated:
 - Exact constructor search separated the three live registered topology
   builders from direct representation conversions and proved the two removed
   adapters had no production callers.
+- All 50 endotype and statistical-validation focused tests and all 1,272
+  ordered repository tests pass after the latest consolidation. Ruff passes
+  over every production and test surface, and Vulture again reports no
+  project-owned dead code at 90% confidence.
 
 ## Links
 
@@ -218,8 +233,6 @@ Several high-ranked matches should not be mechanically consolidated:
 
 - Which diagnostic helper contracts are stable enough to move into
   `benchmarks/shared/` without masking panel-specific validation semantics?
-- Should the two calibration validation reports first receive golden-schema
-  tests, then share one report-contract module?
 - Should the remaining internal argument overlap inside the gate orchestrator
   become a typed request object, or would that hide experimentally important
   gate inputs?

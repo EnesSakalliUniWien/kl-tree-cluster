@@ -95,8 +95,14 @@ class SelectedPcaProjectedWaldCalibrationTests(unittest.TestCase):
 
             decoded = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(validate_selected_pca_projected_wald_report(decoded), [])
-            csv_text = csv_path.read_text(encoding="utf-8")
-            self.assertIn("target_id,setting_id,n_replicates", csv_text)
+            csv_lines = csv_path.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(
+                csv_lines[0],
+                "target_id,setting_id,n_replicates,alpha,rejection_count,"
+                "rejection_rate,ci_low,ci_high,effect_estimate,ks_statistic,ks_p_value,"
+                "mean_projection_dimension,mean_raw_mp_signal_count",
+            )
+            csv_text = "\n".join(csv_lines)
             self.assertIn(TARGET_ID, csv_text)
 
 

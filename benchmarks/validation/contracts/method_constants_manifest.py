@@ -10,9 +10,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
+
+from benchmarks.validation.contracts.report_contract import utc_now
 
 SCHEMA_VERSION = "method_constant_validation_manifest/v1"
 GENERATED_BY = "benchmarks.validation.contracts.method_constants_manifest"
@@ -326,7 +327,7 @@ def create_manifest(
 
     return {
         "manifest_schema_version": SCHEMA_VERSION,
-        "created_utc": created_utc or _utc_now(),
+        "created_utc": created_utc or utc_now(),
         "generated_by": GENERATED_BY,
         "source_paths": [_describe_source_path(Path(path)) for path in source_paths],
         "required_output_fields": _copy_required_output_fields(),
@@ -445,10 +446,6 @@ def _recognized_directory_outputs(path: Path) -> list[str]:
 
 def _copy_required_output_fields() -> dict[str, list[str]]:
     return {constant_id: list(fields) for constant_id, fields in REQUIRED_OUTPUT_FIELDS.items()}
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _validate_source_paths(value: Any, errors: list[str]) -> None:

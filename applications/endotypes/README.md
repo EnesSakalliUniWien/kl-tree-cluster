@@ -20,8 +20,9 @@ Responsibilities are explicit:
 - `analysis/` owns data-quality, correctness, and biological interpretation.
 - `reports/` owns tabular and PDF artifact export.
 - `plots/` owns endotype-specific visualization commands.
-- `_shared.py` is the single internal seam for matrix naming and loading shared
-  across those command categories.
+- `_shared.py` is the single internal seam for matrix naming, loading, reference
+  endotype parsing, and symbol-to-Entrez resolution shared across those command
+  categories.
 
 Reference endotype tables belong in `data/reference/`. Canonical input feature
 matrices belong in `data/feature_matrices/`.

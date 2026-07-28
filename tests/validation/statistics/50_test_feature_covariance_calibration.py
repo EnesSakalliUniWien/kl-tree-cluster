@@ -119,8 +119,13 @@ class FeatureCovarianceCalibrationTests(unittest.TestCase):
 
             decoded = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(validate_feature_covariance_report(decoded), [])
-            csv_text = csv_path.read_text(encoding="utf-8")
-            self.assertIn("target_id,setting_id,n_replicates", csv_text)
+            csv_lines = csv_path.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(
+                csv_lines[0],
+                "target_id,setting_id,n_replicates,alpha,rejection_count,"
+                "rejection_rate,ci_low,ci_high,effect_estimate,ks_statistic,ks_p_value",
+            )
+            csv_text = "\n".join(csv_lines)
             self.assertIn("categorical_multinomial_drop_last_covariance", csv_text)
             self.assertIn("continuous_empirical_gaussian_covariance", csv_text)
 

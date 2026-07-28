@@ -19,15 +19,10 @@ It does not run clustering and does not make production calibration claims.
 from __future__ import annotations
 
 import argparse
-import csv
-import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
-from urllib.error import URLError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 import matplotlib
 
@@ -50,7 +45,12 @@ from tree_break_selection.space_separation import (
     weight_feature_matrix,
 )
 
-from applications.endotypes._shared import load_feature_matrix, safe_name
+from applications.endotypes._shared import (
+    load_feature_matrix,
+    map_symbols_to_entrez,
+    parse_reference_endotypes,
+    safe_name,
+)
 
 EmbeddingMethod = Literal["umap", "svd"]
 
@@ -207,73 +207,6 @@ def load_assignment(path: Path, data_index: pd.Index) -> pd.DataFrame:
             f"for example {missing_genes[:5].tolist()!r}."
         )
     return assignment.loc[data_index].reset_index(drop=True)
-
-
-def parse_reference_endotypes(path: Path) -> dict[str, dict[str, object]]:
-    entrez_to_endotype: dict[str, dict[str, object]] = {}
-    with path.open(encoding="utf-8") as handle:
-        reader = csv.reader(handle, delimiter="\t")
-        for row in reader:
-            if not row:
-                continue
-            first_cell = row[0].strip()
-            if first_cell.startswith("#") or first_cell in {"SUM", "AVERAGE"}:
-                continue
-            if len(row) < 10:
-                continue
-            cluster_id_text = row[4].strip()
-            if not cluster_id_text.isdigit():
-                continue
-            endotype = {
-                "reference_cluster_id": int(cluster_id_text),
-                "reference_cluster_color": row[5].strip() or "#808080",
-                "reference_cluster_rank": row[6].strip(),
-                "reference_cluster_name": row[7].strip() or f"Cluster {cluster_id_text}",
-                "reference_cluster_type": row[8].strip() or "cluster",
-            }
-            for gene_id in (cell.strip() for cell in row[9:] if cell.strip()):
-                entrez_to_endotype[str(gene_id)] = endotype
-    return entrez_to_endotype
-
-
-def map_symbols_to_entrez(symbols: list[str], *, batch_size: int = 200) -> dict[str, str | None]:
-    mapped: dict[str, str | None] = {}
-    endpoint = "https://mygene.info/v3/query"
-    for start in range(0, len(symbols), batch_size):
-        batch = symbols[start : start + batch_size]
-        body = urlencode(
-            {
-                "q": ",".join(batch),
-                "scopes": "symbol",
-                "fields": "symbol,entrezgene,taxid",
-                "species": "human",
-            }
-        ).encode("utf-8")
-        request = Request(
-            endpoint,
-            data=body,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            method="POST",
-        )
-        try:
-            with urlopen(request, timeout=60) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except URLError as exc:
-            raise RuntimeError(
-                "Failed to query mygene.info for gene symbol -> Entrez mapping."
-            ) from exc
-
-        if isinstance(payload, dict):
-            payload = [payload]
-        for record in payload:
-            query = record.get("query")
-            if not query:
-                continue
-            entrez = record.get("entrezgene") or record.get("_id")
-            mapped[str(query)] = None if entrez is None else str(entrez)
-        for symbol in batch:
-            mapped.setdefault(symbol, None)
-    return mapped
 
 
 def build_reference_labels(data_index: pd.Index, reference_endotypes_path: Path) -> pd.DataFrame:

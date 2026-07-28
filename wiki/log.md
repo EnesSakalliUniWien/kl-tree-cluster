@@ -5499,6 +5499,16 @@ verification, and maintenance events here in chronological order.
   and 11 pydiffmap duplicate/support failures in
   `reports/benchmark_execution_audit_20260728.md`; corrected the stale
   110-case count in `benchmarks/README.md`.
+- Completed the next repository-hygiene tranche. Corrected the clone map's
+  endotype diagnosis: the duplicated block was reference-table and mygene
+  mapping logic, not plotting. Moved that responsibility into
+  `applications/endotypes/_shared.py` and deleted both copies without aliases.
+  Consolidated validation provenance, Wilson intervals, synthetic covariance
+  profiles, and p-value summaries behind the existing report-contract seam and
+  the new statistics-owned `calibration_support.py`, while preserving exact
+  per-program CSV schemas. The production clone scan fell from 373 pairs and
+  7,259 duplicated lines to 370 pairs and 7,175 lines; Ruff, Vulture, 50
+  focused tests, and all 1,272 ordered repository tests passed.
 
 ## Evidence
 

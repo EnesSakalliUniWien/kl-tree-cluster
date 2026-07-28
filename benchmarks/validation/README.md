@@ -5,8 +5,10 @@ evidence that is not yet complete in the manuscript.
 
 Programs are grouped by responsibility:
 
-- `contracts/` defines report and evidence-manifest contracts.
-- `statistics/` validates covariance, selected tests, and error control.
+- `contracts/` defines report, provenance, and evidence-manifest contracts.
+- `statistics/` validates covariance, selected tests, and error control; its
+  `calibration_support.py` module owns shared synthetic covariance and p-value
+  summary primitives.
 - `sweeps/` explores alpha and method-family parameter grids.
 - `tree/` compares construction methods, topology, and literature policies.
 - `manifests/` stores the validation manifest data consumed by the contracts.

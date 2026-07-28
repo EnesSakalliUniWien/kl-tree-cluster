@@ -18,16 +18,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import subprocess
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
-from scipy.stats import chi2, kstest
+from scipy.stats import chi2
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
@@ -41,10 +39,19 @@ from benchmarks.validation.contracts.report_contract import (
     completed_target_entry as _completed_target_entry,
 )
 from benchmarks.validation.contracts.report_contract import (
+    read_git_commit,
+    read_git_worktree_status,
+    utc_now,
+)
+from benchmarks.validation.contracts.report_contract import (
     validate_common_run_inputs as _validate_run_inputs,
 )
 from benchmarks.validation.contracts.report_contract import (
     validate_complete_report_context as _validate_complete_report_context,
+)
+from benchmarks.validation.statistics.calibration_support import (
+    continuous_covariance,
+    summarize_p_value_calibration,
 )
 
 SCHEMA_VERSION = "feature_covariance_calibration/v1"
@@ -210,7 +217,7 @@ def create_missing_manifest(*, created_utc: str | None = None) -> dict[str, Any]
 
     return {
         "manifest_schema_version": SCHEMA_VERSION,
-        "created_utc": created_utc or _utc_now(),
+        "created_utc": created_utc or utc_now(),
         "generated_by": GENERATED_BY,
         "validation_design": VALIDATION_DESIGN,
         "targets": [
@@ -282,7 +289,7 @@ def run_feature_covariance_calibration(
 
     report = {
         "manifest_schema_version": SCHEMA_VERSION,
-        "created_utc": created_utc or _utc_now(),
+        "created_utc": created_utc or utc_now(),
         "generated_by": GENERATED_BY,
         "validation_design": VALIDATION_DESIGN,
         "code_commit": code_commit,
@@ -514,7 +521,10 @@ def _simulate_continuous_setting(
     _validate_continuous_setting(setting)
     columns = tuple(f"X{index}" for index in range(setting.dimension))
     feature_space = continuous_feature_space_from_columns(columns)
-    covariance = _continuous_covariance(setting)
+    covariance = continuous_covariance(
+        dimension=setting.dimension,
+        profile=setting.covariance_profile,
+    )
     mean = np.zeros(setting.dimension, dtype=np.float64)
     p_values = np.empty(n_replicates, dtype=np.float64)
 
@@ -620,18 +630,6 @@ def _sample_categorical_distribution(
     return np.concatenate(blocks, axis=0)
 
 
-def _continuous_covariance(setting: ContinuousCalibrationSetting) -> np.ndarray:
-    if setting.covariance_profile == "identity":
-        return np.eye(setting.dimension, dtype=np.float64)
-    if setting.covariance_profile == "ar1_0.6":
-        indices = np.arange(setting.dimension)
-        return 0.6 ** np.abs(indices[:, None] - indices[None, :])
-    if setting.covariance_profile == "ill_conditioned":
-        eigenvalues = np.geomspace(1.0, 1e-3, num=setting.dimension)
-        return np.diag(eigenvalues)
-    raise ValueError(f"Unsupported covariance_profile: {setting.covariance_profile!r}.")
-
-
 def _simulation_summary(
     *,
     target_id: str,
@@ -641,39 +639,15 @@ def _simulation_summary(
     p_values: np.ndarray,
     setting: Mapping[str, Any],
 ) -> dict[str, Any]:
-    if p_values.shape != (n_replicates,):
-        raise ValueError(f"p_values has shape {p_values.shape}; expected {(n_replicates,)}.")
-    if not np.isfinite(p_values).all() or np.any(p_values < 0.0) or np.any(p_values > 1.0):
-        raise ValueError("Simulated p-values must be finite values in [0, 1].")
-    rejection_count = int(np.sum(p_values < alpha))
-    rejection_rate = float(rejection_count / n_replicates)
-    ci_low, ci_high = _wilson_interval(rejection_count, n_replicates)
-    ks_result = kstest(p_values, "uniform")
     return {
         "target_id": target_id,
         "setting_id": setting_id,
         "setting": dict(setting),
-        "n_replicates": n_replicates,
-        "alpha": alpha,
-        "rejection_count": rejection_count,
-        "rejection_rate": rejection_rate,
-        "confidence_interval": {
-            "method": "wilson_95",
-            "low": ci_low,
-            "high": ci_high,
-        },
-        "effect_estimate": {
-            "name": "rejection_rate_minus_alpha",
-            "value": float(rejection_rate - alpha),
-        },
-        "p_value_uniformity_summary": {
-            "ks_statistic": float(ks_result.statistic),
-            "ks_p_value": float(ks_result.pvalue),
-            "mean": float(np.mean(p_values)),
-            "median": float(np.median(p_values)),
-            "q05": float(np.quantile(p_values, 0.05)),
-            "q95": float(np.quantile(p_values, 0.95)),
-        },
+        **summarize_p_value_calibration(
+            p_values=p_values,
+            n_replicates=n_replicates,
+            alpha=alpha,
+        ),
     }
 
 
@@ -791,49 +765,6 @@ def _validate_continuous_setting(setting: ContinuousCalibrationSetting) -> None:
         raise ValueError("continuous sample sizes must be greater than 1.")
 
 
-def _wilson_interval(
-    successes: int, total: int, *, z_value: float = 1.959963984540054
-) -> tuple[float, float]:
-    if total <= 0:
-        raise ValueError("total must be positive.")
-    proportion = successes / total
-    denominator = 1.0 + z_value**2 / total
-    center = (proportion + z_value**2 / (2.0 * total)) / denominator
-    half_width = (
-        z_value
-        * np.sqrt((proportion * (1.0 - proportion) + z_value**2 / (4.0 * total)) / total)
-        / denominator
-    )
-    return float(max(0.0, center - half_width)), float(min(1.0, center + half_width))
-
-
-def _read_git_commit() -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    commit = result.stdout.strip()
-    if not commit:
-        raise RuntimeError("git rev-parse HEAD returned an empty commit.")
-    return commit
-
-
-def _read_git_worktree_status() -> list[str]:
-    result = subprocess.run(
-        ["git", "status", "--short"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return [line for line in result.stdout.splitlines() if line]
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run or validate feature-covariance calibration evidence."
@@ -894,8 +825,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             n_replicates=args.replicates,
             alpha=args.alpha,
             base_seed=args.seed,
-            code_commit=_read_git_commit(),
-            git_worktree_status=_read_git_worktree_status(),
+            code_commit=read_git_commit(),
+            git_worktree_status=read_git_worktree_status(),
             run_command=run_command,
             ridge=args.ridge,
         )
