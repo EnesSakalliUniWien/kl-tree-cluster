@@ -1,33 +1,18 @@
 #!/usr/bin/env Rscript
 # Dataset-specific pancreas cluster-tree renderer.
 
-suppressPackageStartupMessages({
-  library(ape)
-  library(ggplot2)
-  library(ggtree)
-})
-
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 if (!length(script_arg)) {
   stop("Unable to resolve script path from Rscript command arguments.")
 }
 script_path <- normalizePath(sub("^--file=", "", script_arg[[1]]))
 source(file.path(dirname(script_path), "tree_plot_helpers.R"), local = TRUE)
-project_root <- scrna_project_root(script_path)
-default_output_dir <- file.path(
-  project_root,
-  "raw",
-  "assets",
-  "benchmark-results",
-  "pancreas_scrna_cluster_benchmark_20260623"
+context <- scrna_tree_plot_context(
+  script_path,
+  "pancreas_scrna_cluster_benchmark_20260623",
+  c("ape", "ggplot2", "ggtree")
 )
-trailing_args <- commandArgs(trailingOnly = TRUE)
-output_dir_arg <- grep("^--output-dir=", trailing_args, value = TRUE)
-output_dir <- if (length(output_dir_arg)) {
-  normalizePath(sub("^--output-dir=", "", output_dir_arg[[1]]), mustWork = FALSE)
-} else {
-  default_output_dir
-}
+output_dir <- context$output_dir
 
 assignments <- read.csv(
   file.path(output_dir, "method_assignments.csv"),
@@ -35,47 +20,13 @@ assignments <- read.csv(
   check.names = FALSE
 )
 
-method_map <- data.frame(
-  key = c(
-    "tbs_topology_projected_adaptive_k90_alpha0p01_edge0p001",
-    "tbs_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001",
-    "tbs_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001",
-    "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001",
-    "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001",
-    "tbs_adaptive_diffusion_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001"
-  ),
-  edge_csv = c(
-    "tbs_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv"
-  ),
-  title = c(
-    "TBS topology-only final clusters",
-    "TBS recomputed NNLS branch-time final clusters",
-    "TBS raw-linkage branch-time diagnostic final clusters",
-    "TBS adaptive diffusion topology final clusters",
-    "TBS adaptive diffusion recomputed NNLS branch-time final clusters",
-    "TBS adaptive diffusion raw-linkage branch-time diagnostic final clusters"
-  ),
-  stringsAsFactors = FALSE
-)
+method_map <- pancreas_tree_method_map("final_clusters")
 
 plot_one_method <- function(method_key, edge_csv, title) {
   edges <- read.csv(file.path(output_dir, edge_csv), stringsAsFactors = FALSE, check.names = FALSE)
   phy <- edge_table_to_phylo(edges)
 
-  leaf_indices <- as.integer(sub("^L", "", phy$tip.label)) + 1L
-  tip_data <- data.frame(
-    label = phy$tip.label,
-    cell_id = assignments$cell_id[leaf_indices],
-    celltype = assignments$celltype[leaf_indices],
-    cluster_id = paste0("C", assignments[[method_key]][leaf_indices]),
-    stringsAsFactors = FALSE
-  )
-
+  tip_data <- pancreas_tip_data(phy, assignments, method_key)
   cluster_sizes <- sort(table(tip_data$cluster_id), decreasing = TRUE)
   full_palette <- cluster_palette(names(cluster_sizes))
   tree_palette <- c(full_palette, "shared ancestors" = "#eeeeee")

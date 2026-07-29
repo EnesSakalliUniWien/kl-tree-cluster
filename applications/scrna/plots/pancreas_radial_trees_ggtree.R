@@ -1,53 +1,20 @@
 #!/usr/bin/env Rscript
 # Dataset-specific pancreas radial-tree renderer.
 
-suppressPackageStartupMessages({
-  library(ape)
-  library(ggplot2)
-  library(ggtree)
-})
-
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 if (!length(script_arg)) {
   stop("Unable to resolve script path from Rscript command arguments.")
 }
 script_path <- normalizePath(sub("^--file=", "", script_arg[[1]]))
 source(file.path(dirname(script_path), "tree_plot_helpers.R"), local = TRUE)
-project_root <- scrna_project_root(script_path)
-default_output_dir <- file.path(
-  project_root,
-  "raw",
-  "assets",
-  "benchmark-results",
-  "pancreas_scrna_cluster_benchmark_20260623"
+context <- scrna_tree_plot_context(
+  script_path,
+  "pancreas_scrna_cluster_benchmark_20260623",
+  c("ape", "ggplot2", "ggtree")
 )
-trailing_args <- commandArgs(trailingOnly = TRUE)
-output_dir_arg <- grep("^--output-dir=", trailing_args, value = TRUE)
-output_dir <- if (length(output_dir_arg)) {
-  normalizePath(sub("^--output-dir=", "", output_dir_arg[[1]]), mustWork = FALSE)
-} else {
-  default_output_dir
-}
+output_dir <- context$output_dir
 
-method_map <- data.frame(
-  edge_csv = c(
-    "tbs_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv",
-    "tbs_adaptive_diffusion_raw_linkage_branch_time_diagnostic_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv"
-  ),
-  title = c(
-    "TBS topology-only edge gate",
-    "TBS recomputed NNLS branch-time edge gate",
-    "TBS raw-linkage branch-time diagnostic edge gate",
-    "TBS adaptive diffusion topology edge gate",
-    "TBS adaptive diffusion recomputed NNLS branch-time edge gate",
-    "TBS adaptive diffusion raw-linkage branch-time diagnostic edge gate"
-  ),
-  stringsAsFactors = FALSE
-)
+method_map <- pancreas_tree_method_map("edge_gate")
 
 missing_edge_csvs <- method_map$edge_csv[!file.exists(file.path(output_dir, method_map$edge_csv))]
 if (length(missing_edge_csvs)) {

@@ -1,64 +1,25 @@
 #!/usr/bin/env Rscript
 # Dataset-specific Goncalves scRNA tree renderer.
 
-suppressPackageStartupMessages({
-  library(ape)
-  library(ggplot2)
-  library(ggtree)
-  library(patchwork)
-})
-
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 if (!length(script_arg)) {
   stop("Unable to resolve script path from Rscript command arguments.")
 }
 script_path <- normalizePath(sub("^--file=", "", script_arg[[1]]))
 source(file.path(dirname(script_path), "tree_plot_helpers.R"), local = TRUE)
-project_root <- scrna_project_root(script_path)
-default_output_dir <- file.path(
-  project_root,
-  "raw",
-  "assets",
-  "benchmark-results",
-  "goncalves_fetal_pancreas_progenitor_benchmark_20260624"
+context <- scrna_tree_plot_context(
+  script_path,
+  "goncalves_fetal_pancreas_progenitor_benchmark_20260624",
+  c("ape", "ggplot2", "ggtree", "patchwork")
 )
-trailing_args <- commandArgs(trailingOnly = TRUE)
-output_dir_arg <- grep("^--output-dir=", trailing_args, value = TRUE)
-output_dir <- if (length(output_dir_arg)) {
-  normalizePath(sub("^--output-dir=", "", output_dir_arg[[1]]), mustWork = FALSE)
-} else {
-  default_output_dir
-}
-pdf_width_arg <- grep("^--pdf-width=", trailing_args, value = TRUE)
-pdf_width <- if (length(pdf_width_arg)) {
-  as.numeric(sub("^--pdf-width=", "", pdf_width_arg[[1]]))
-} else {
-  30
-}
-pdf_height_arg <- grep("^--pdf-height=", trailing_args, value = TRUE)
-pdf_height <- if (length(pdf_height_arg)) {
-  as.numeric(sub("^--pdf-height=", "", pdf_height_arg[[1]]))
-} else {
-  42
-}
-page_width_arg <- grep("^--page-width=", trailing_args, value = TRUE)
-page_width <- if (length(page_width_arg)) {
-  as.numeric(sub("^--page-width=", "", page_width_arg[[1]]))
-} else {
-  30
-}
-page_height_arg <- grep("^--page-height=", trailing_args, value = TRUE)
-page_height <- if (length(page_height_arg)) {
-  as.numeric(sub("^--page-height=", "", page_height_arg[[1]]))
-} else {
-  16
-}
-png_dpi_arg <- grep("^--png-dpi=", trailing_args, value = TRUE)
-png_dpi <- if (length(png_dpi_arg)) {
-  as.numeric(sub("^--png-dpi=", "", png_dpi_arg[[1]]))
-} else {
-  180
-}
+project_root <- context$project_root
+trailing_args <- context$trailing_args
+output_dir <- context$output_dir
+pdf_width <- scrna_arg_value(trailing_args, "--pdf-width", default = 30, numeric = TRUE)
+pdf_height <- scrna_arg_value(trailing_args, "--pdf-height", default = 42, numeric = TRUE)
+page_width <- scrna_arg_value(trailing_args, "--page-width", default = 30, numeric = TRUE)
+page_height <- scrna_arg_value(trailing_args, "--page-height", default = 16, numeric = TRUE)
+png_dpi <- scrna_arg_value(trailing_args, "--png-dpi", default = 180, numeric = TRUE)
 method_key <- "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001"
 edge_csv <- paste0(method_key, "_tree_edges.csv")
 large_cluster_label_min <- 50
@@ -345,14 +306,7 @@ umap_cluster <- ggplot(umap_cluster_data, aes(umap1, umap2, color = cluster_id))
     x = NULL,
     y = NULL
   ) +
-  theme_void(base_size = 13) +
-  theme(
-    plot.title = element_text(size = 17, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = 11, hjust = 0.5),
-    legend.position = "none",
-    plot.margin = margin(4, 4, 4, 4),
-    panel.border = element_rect(color = "#d1d5db", fill = NA, linewidth = 0.26)
-  )
+  umap_panel_theme()
 
 umap_population <- ggplot(umap_data, aes(umap1, umap2, color = dominant_population)) +
   geom_point(size = umap_point_size, alpha = 0.94, stroke = 0) +
@@ -375,14 +329,7 @@ umap_population <- ggplot(umap_data, aes(umap1, umap2, color = dominant_populati
     x = NULL,
     y = NULL
   ) +
-  theme_void(base_size = 13) +
-  theme(
-    plot.title = element_text(size = 17, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = 11, hjust = 0.5),
-    legend.position = "none",
-    plot.margin = margin(4, 4, 4, 4),
-    panel.border = element_rect(color = "#d1d5db", fill = NA, linewidth = 0.26)
-  )
+  umap_panel_theme()
 
 umap_fraction <- ggplot(umap_data, aes(umap1, umap2, color = progenitor_population_fraction)) +
   geom_point(size = umap_point_size, alpha = 0.94, stroke = 0) +
@@ -398,16 +345,7 @@ umap_fraction <- ggplot(umap_data, aes(umap1, umap2, color = progenitor_populati
     x = NULL,
     y = NULL
   ) +
-  theme_void(base_size = 13) +
-  theme(
-    plot.title = element_text(size = 17, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = 11, hjust = 0.5),
-    legend.position = "bottom",
-    legend.title = element_text(size = 10),
-    legend.text = element_text(size = 9),
-    plot.margin = margin(4, 4, 4, 4),
-    panel.border = element_rect(color = "#d1d5db", fill = NA, linewidth = 0.26)
-  )
+  umap_panel_theme(legend_position = "bottom")
 
 umap_state <- ggplot(umap_data, aes(umap1, umap2, color = state_class)) +
   geom_point(size = umap_point_size, alpha = 0.94, stroke = 0) +
@@ -419,16 +357,7 @@ umap_state <- ggplot(umap_data, aes(umap1, umap2, color = state_class)) +
     x = NULL,
     y = NULL
   ) +
-  theme_void(base_size = 13) +
-  theme(
-    plot.title = element_text(size = 17, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = 11, hjust = 0.5),
-    legend.position = "bottom",
-    legend.title = element_blank(),
-    legend.text = element_text(size = 9),
-    plot.margin = margin(4, 4, 4, 4),
-    panel.border = element_rect(color = "#d1d5db", fill = NA, linewidth = 0.26)
-  )
+  umap_panel_theme(legend_position = "bottom", legend_title = FALSE)
 
 cluster_tree <- cluster_tree_base %<+% cluster_tree_metadata +
   geom_tree(aes(color = branch_cluster), linewidth = 0.35, alpha = 0.96) +

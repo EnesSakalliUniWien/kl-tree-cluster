@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.gridspec import GridSpec
 
+from applications.scrna.plots.report_helpers import artifact_record, plot_cluster_size_bars
 from applications.scrna.plots.selected_nnls_fit_summary import _fit_diagnostic, _plot_fit
 from applications.scrna.plots.selected_nnls_report import (
     BASE,
@@ -112,48 +112,14 @@ def _plot_clear_size_bars(
     *,
     max_rows: int = 24,
 ) -> None:
-    summary = summary.sort_values("n_cells_assignment", ascending=False).copy()
-    if len(summary) > max_rows:
-        head = summary.head(max_rows - 1).copy()
-        tail = summary.iloc[max_rows - 1 :]
-        other = {
-            "cluster": -1,
-            "n_cells_assignment": int(tail["n_cells_assignment"].sum()),
-            "top_celltype_assignment": f"remaining {len(tail)} clusters",
-            "top_celltype_fraction_assignment": 1.0,
-        }
-        summary = pd.concat([head, pd.DataFrame([other])], ignore_index=True)
-
-    summary = summary.sort_values("n_cells_assignment", ascending=True)
-    labels = []
-    colors = []
-    for row in summary.itertuples(index=False):
-        if int(row.cluster) < 0:
-            labels.append(str(row.top_celltype_assignment))
-            colors.append("#9ca3af")
-        else:
-            labels.append(
-                f"C{int(row.cluster)}  {str(row.top_celltype_assignment)[:22]} "
-                f"({row.top_celltype_fraction_assignment:.0%})"
-            )
-            colors.append(cluster_palette[int(row.cluster)])
-
-    y = range(len(summary))
-    ax.barh(
-        list(y),
-        summary["n_cells_assignment"],
-        color=colors,
-        edgecolor="none",
-        alpha=0.92,
+    plot_cluster_size_bars(
+        ax,
+        summary,
+        cluster_palette,
+        title,
+        max_rows=max_rows,
+        ytick_fontsize=7,
     )
-    ax.set_yticks(list(y))
-    ax.set_yticklabels(labels, fontsize=7)
-    ax.set_xlabel("cells", fontsize=8)
-    ax.set_title(title, fontsize=10, weight="bold", pad=6)
-    ax.tick_params(axis="x", labelsize=7)
-    ax.grid(axis="x", color="#e5e7eb", lw=0.45)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
 
 def _dataset_page(
@@ -238,14 +204,6 @@ def _fit_page(
     return fig
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _write_manifest(generated_at: str) -> None:
     artifacts = []
     for path, role in [
@@ -254,19 +212,9 @@ def _write_manifest(generated_at: str) -> None:
         (OUT_GONCALVES_PAGE, "matched Goncalves report page PNG"),
         (OUT_SUMMARY, "matched adult/Goncalves summary table"),
     ]:
-        record = {
-            "path": str(path.relative_to(BASE)),
-            "role": role,
-            "bytes": path.stat().st_size,
-            "sha256": _sha256(path),
-        }
-        if path.suffix == ".csv":
-            table = pd.read_csv(path)
-            record["rows"] = len(table)
-            record["columns"] = len(table.columns)
-            record["generated_at"] = generated_at
-            record["generated_at_values"] = sorted(table["generated_at"].dropna().unique().tolist())
-        artifacts.append(record)
+        artifacts.append(
+            artifact_record(path, role=role, relative_to=BASE, generated_at=generated_at)
+        )
 
     OUT_MANIFEST.write_text(
         json.dumps(

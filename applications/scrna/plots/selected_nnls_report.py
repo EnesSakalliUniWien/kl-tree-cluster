@@ -20,6 +20,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.gridspec import GridSpec
 from PIL import Image
 
+from applications.scrna.plots.report_helpers import plot_cluster_size_bars
+
 Image.MAX_IMAGE_PIXELS = None
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -145,6 +147,36 @@ def make_cluster_palette(labels):
 def make_label_palette(labels):
     labels = sorted(labels, key=lambda x: str(x))
     return {lab: CELLTYPE_PALETTE[i % len(CELLTYPE_PALETTE)] for i, lab in enumerate(labels)}
+
+
+def assign_tree_coordinates(children, root, branch_of):
+    x = {}
+    leaf_counter = [0]
+
+    def assign_x(node):
+        if not children.get(node):
+            x[node] = leaf_counter[0]
+            leaf_counter[0] += 1
+        else:
+            for child in children[node]:
+                assign_x(child)
+            x[node] = float(np.mean([x[child] for child in children[node]]))
+        return x[node]
+
+    assign_x(root)
+
+    y = {root: 0.0}
+    depth = {root: 0}
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        for child in children.get(node, []):
+            length = branch_of.get((node, child), 0.0)
+            length = 0.0 if pd.isna(length) else max(float(length), 0.0)
+            y[child] = y[node] + length
+            depth[child] = depth[node] + 1
+            stack.append(child)
+    return x, y, depth, leaf_counter[0]
 
 
 def strip_axes(ax):
@@ -289,32 +321,7 @@ def build_boundary_tree_info(cfg, assign_df):
     for node in list(children):
         children[node].sort(key=min_order)
 
-    x = {}
-    leaf_counter = [0]
-
-    def assign_x(node):
-        if not children.get(node):
-            x[node] = leaf_counter[0]
-            leaf_counter[0] += 1
-        else:
-            for child in children[node]:
-                assign_x(child)
-            x[node] = float(np.mean([x[child] for child in children[node]]))
-        return x[node]
-
-    assign_x(root)
-
-    y = {root: 0.0}
-    depth = {root: 0}
-    stack = [root]
-    while stack:
-        node = stack.pop()
-        for child in children.get(node, []):
-            length = branch_of.get((node, child), 0.0)
-            length = 0.0 if pd.isna(length) else max(float(length), 0.0)
-            y[child] = y[node] + length
-            depth[child] = depth[node] + 1
-            stack.append(child)
+    x, y, depth, _n_leaves = assign_tree_coordinates(children, root, branch_of)
 
     y_values = np.array(list(y.values()), dtype=float)
     if not np.isfinite(y_values).all() or (np.nanmax(y_values) - np.nanmin(y_values) < 1e-9):
@@ -612,27 +619,7 @@ def build_full_tree_info(cfg, assign_df):
     for node in list(children):
         children[node].sort(key=child_sort_key)
 
-    x = {}
-    leaf_counter = [0]
-
-    def assign_x(node):
-        if not children.get(node):
-            x[node] = leaf_counter[0]
-            leaf_counter[0] += 1
-        else:
-            for child in children[node]:
-                assign_x(child)
-            x[node] = float(np.mean([x[child] for child in children[node]]))
-
-    assign_x(root)
-
-    y = {root: 0.0}
-    stack = [root]
-    while stack:
-        node = stack.pop()
-        for child in children.get(node, []):
-            y[child] = y[node] + branch_of.get((node, child), 0.0)
-            stack.append(child)
+    x, y, _depth, n_leaves = assign_tree_coordinates(children, root, branch_of)
 
     return {
         "root": root,
@@ -641,7 +628,7 @@ def build_full_tree_info(cfg, assign_df):
         "y": y,
         "leaf_cluster": leaf_cluster,
         "cluster_counts": cluster_counts,
-        "n_leaves": leaf_counter[0],
+        "n_leaves": n_leaves,
     }
 
 
@@ -733,27 +720,7 @@ def cluster_summary(assign_df, selected):
 
 
 def plot_size_bars(ax, summary, cluster_palette, title):
-    summary = summary.sort_values("n_cells_assignment", ascending=True).copy()
-    labels = [
-        f"C{int(row.cluster)}  {row.top_celltype_assignment[:22]} ({row.top_celltype_fraction_assignment:.0%})"
-        for row in summary.itertuples()
-    ]
-    y = np.arange(len(summary))
-    ax.barh(
-        y,
-        summary["n_cells_assignment"],
-        color=[cluster_palette[int(cluster)] for cluster in summary["cluster"]],
-        edgecolor="none",
-        alpha=0.92,
-    )
-    ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=5.6 if len(summary) > 30 else 7)
-    ax.set_xlabel("cells", fontsize=8)
-    ax.set_title(title, fontsize=10, weight="bold", pad=6)
-    ax.tick_params(axis="x", labelsize=7)
-    ax.grid(axis="x", color="#e5e7eb", lw=0.45)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    plot_cluster_size_bars(ax, summary, cluster_palette, title)
 
 
 def selected_dataset_page(cfg, save_path=None, generated_at=None):
@@ -816,11 +783,20 @@ def selected_dataset_page(cfg, save_path=None, generated_at=None):
     return fig, combined_summary
 
 
-def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
+def _selected_radial_tree_page(
+    cfg,
+    *,
+    tree_info_builder,
+    tree_plotter,
+    tree_title,
+    page_title,
+    save_path=None,
+    generated_at=None,
+):
     assign = pd.read_csv(cfg["dir"] / "method_assignments.csv")
     selected = cfg["selected"]
     cluster_palette = make_cluster_palette(assign[selected].unique())
-    tree_info = build_boundary_tree_info(cfg, assign)
+    tree_info = tree_info_builder(cfg, assign)
 
     fig = plt.figure(figsize=(16, 9.2), facecolor="white")
     gs = GridSpec(1, 2, figure=fig, width_ratios=[0.92, 1.38], wspace=0.12)
@@ -830,11 +806,9 @@ def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
     plot_umap(
         ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5
     )
-    plot_radial_tree(
-        ax_radial, tree_info, cluster_palette, "Selected-boundary radial tree, same colors"
-    )
+    tree_plotter(ax_radial, tree_info, cluster_palette, tree_title)
     fig.suptitle(
-        f"{cfg['title']} radial tree\n{METHOD_TITLE}",
+        f"{cfg['title']} {page_title}\n{METHOD_TITLE}",
         fontsize=14,
         weight="bold",
         y=0.985,
@@ -844,36 +818,30 @@ def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
     if save_path is not None:
         fig.savefig(save_path, dpi=230, bbox_inches="tight")
     return fig
+
+
+def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
+    return _selected_radial_tree_page(
+        cfg,
+        tree_info_builder=build_boundary_tree_info,
+        tree_plotter=plot_radial_tree,
+        tree_title="Selected-boundary radial tree, same colors",
+        page_title="radial tree",
+        save_path=save_path,
+        generated_at=generated_at,
+    )
 
 
 def selected_full_radial_dataset_page(cfg, save_path=None, generated_at=None):
-    assign = pd.read_csv(cfg["dir"] / "method_assignments.csv")
-    selected = cfg["selected"]
-    cluster_palette = make_cluster_palette(assign[selected].unique())
-    full_info = build_full_tree_info(cfg, assign)
-
-    fig = plt.figure(figsize=(16, 9.2), facecolor="white")
-    gs = GridSpec(1, 2, figure=fig, width_ratios=[0.92, 1.38], wspace=0.12)
-    ax_umap = fig.add_subplot(gs[0, 0])
-    ax_radial = fig.add_subplot(gs[0, 1])
-
-    plot_umap(
-        ax_umap, assign, selected, cluster_palette, "Selected NNLS-TBS clusters on UMAP", True, 5
+    return _selected_radial_tree_page(
+        cfg,
+        tree_info_builder=build_full_tree_info,
+        tree_plotter=plot_full_radial_tree,
+        tree_title="Real full radial tree, same leaf colors",
+        page_title="full selected tree",
+        save_path=save_path,
+        generated_at=generated_at,
     )
-    plot_full_radial_tree(
-        ax_radial, full_info, cluster_palette, "Real full radial tree, same leaf colors"
-    )
-    fig.suptitle(
-        f"{cfg['title']} full selected tree\n{METHOD_TITLE}",
-        fontsize=14,
-        weight="bold",
-        y=0.985,
-    )
-    if generated_at is not None:
-        add_generated_at(fig, generated_at)
-    if save_path is not None:
-        fig.savefig(save_path, dpi=230, bbox_inches="tight")
-    return fig
 
 
 def add_image_grid_page(pdf, title, items, ncols=2, generated_at=None):

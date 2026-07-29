@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +11,8 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+from applications.scrna.plots.report_helpers import artifact_record
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT_DIR = (
@@ -37,14 +38,6 @@ SELECTED = [
     ("C22", "cluster", "broad mixed neighborhood"),
     ("N2907", "meeting_node", "broad mixed neighborhood"),
 ]
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _load_rows(generated_at: str) -> pd.DataFrame:
@@ -177,19 +170,9 @@ def _write_manifest(generated_at: str) -> None:
         (OUT_PDF, "Goncalves progenitor coherence score PDF"),
         (OUT_CSV, "Goncalves progenitor coherence score table"),
     ]:
-        record = {
-            "path": str(path.relative_to(ROOT)),
-            "role": role,
-            "bytes": path.stat().st_size,
-            "sha256": _sha256(path),
-        }
-        if path.suffix == ".csv":
-            table = pd.read_csv(path)
-            record["rows"] = len(table)
-            record["columns"] = len(table.columns)
-            record["generated_at"] = generated_at
-            record["generated_at_values"] = sorted(table["generated_at"].dropna().unique().tolist())
-        artifacts.append(record)
+        artifacts.append(
+            artifact_record(path, role=role, relative_to=ROOT, generated_at=generated_at)
+        )
     OUT_MANIFEST.write_text(
         json.dumps(
             {

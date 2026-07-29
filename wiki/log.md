@@ -5767,6 +5767,14 @@ verification, and maintenance events here in chronological order.
   KAK candidate-summary loading. The focused `applications` clone scan dropped
   to 17 exact groups / 246 duplicated lines / 0.95%, with remaining groups in
   `mnist/` and `scrna/` application code rather than `endotypes/`.
+- Removed high-confidence scRNA plotting/report duplicate groups. Shared scRNA
+  plotting helpers now cover static artifact provenance records, cluster-size
+  bars, selected NNLS radial page construction, selected-tree coordinate
+  assignment, R tree-renderer setup, pancreas method/edge maps, pancreas
+  tip-data construction, cluster MRCA lookup, and repeated Goncalves UMAP panel
+  styling. The focused `applications/scrna` clone scan dropped to 8 exact
+  groups / 90 duplicated lines / 0.83%; the full `applications` scan dropped to
+  9 exact groups / 112 duplicated lines / 0.43%.
 
 ## Evidence
 
