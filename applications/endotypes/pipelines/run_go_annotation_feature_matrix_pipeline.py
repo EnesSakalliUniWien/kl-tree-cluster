@@ -28,6 +28,7 @@ from applications.endotypes.analysis.audit_go_annotation_analysis_levels import 
     audit_paths,
     write_audit_outputs,
 )
+from applications.endotypes.pipelines.tree_analysis_args import add_tree_analysis_arguments
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -77,24 +78,11 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Additional existing result directories to include in the level audit.",
     )
-    parser.add_argument("--edge-alpha", type=float, default=None)
-    parser.add_argument("--sibling-alpha", type=float, default=None)
-    parser.add_argument("--max-rank", type=int, default=80)
-    parser.add_argument("--min-segment-length", type=int, default=4)
-    parser.add_argument("--max-segments", type=int, default=8)
-    parser.add_argument("--diffusion-k-neighbors", type=int, default=15)
-    parser.add_argument("--diffusion-time", type=int, default=3)
-    parser.add_argument("--diffusion-components", type=int, default=30)
-    parser.add_argument("--adaptive-bandwidth-type", default="-1/(d+2)")
-    parser.add_argument("--adaptive-epsilon", default="median")
-    parser.add_argument("--adaptive-metric", default="euclidean")
-    parser.add_argument(
-        "--weightings",
-        nargs="+",
-        default=["binary", "tfidf"],
-        choices=["binary", "tfidf"],
+    add_tree_analysis_arguments(
+        parser,
+        edge_alpha_default=None,
+        sibling_alpha_default=None,
     )
-    parser.add_argument("--block-names", nargs="*", default=None)
     parser.add_argument(
         "--method-versions",
         nargs="+",
@@ -135,6 +123,47 @@ def _append_many(command: list[str], flag: str, values: Sequence[object] | None)
     if values:
         command.append(flag)
         command.extend(str(value) for value in values)
+
+
+def _tree_analysis_command(
+    args: argparse.Namespace,
+    *,
+    script: Path,
+    output_dir: Path,
+    dataset_label: str | None = None,
+) -> list[str]:
+    command = [
+        args.python,
+        str(script),
+        "--input",
+        str(args.input),
+        "--output-dir",
+        str(output_dir),
+        "--max-rank",
+        str(args.max_rank),
+        "--min-segment-length",
+        str(args.min_segment_length),
+        "--max-segments",
+        str(args.max_segments),
+        "--diffusion-k-neighbors",
+        str(args.diffusion_k_neighbors),
+        "--diffusion-time",
+        str(args.diffusion_time),
+        "--diffusion-components",
+        str(args.diffusion_components),
+        f"--adaptive-bandwidth-type={args.adaptive_bandwidth_type}",
+        "--adaptive-epsilon",
+        str(args.adaptive_epsilon),
+        "--adaptive-metric",
+        str(args.adaptive_metric),
+    ]
+    if dataset_label is not None:
+        command.extend(["--dataset-label", dataset_label])
+    _append_if_present(command, "--edge-alpha", args.edge_alpha)
+    _append_if_present(command, "--sibling-alpha", args.sibling_alpha)
+    _append_many(command, "--weightings", args.weightings)
+    _append_many(command, "--block-names", args.block_names)
+    return command
 
 
 def current_subspace_dir(root: Path) -> Path:
@@ -189,40 +218,15 @@ def build_pipeline_plan(
         )
 
     if not args.skip_current_subspace:
-        command = [
-            args.python,
-            str(
+        command = _tree_analysis_command(
+            args,
+            script=(
                 REPO_ROOT
                 / "applications/endotypes/pipelines/run_current_adaptive_diffusion_subspace_tree_experiment.py"
             ),
-            "--input",
-            str(args.input),
-            "--output-dir",
-            str(root / "10_current_adaptive_diffusion_subspace_tree"),
-            "--dataset-label",
-            artifact_prefix,
-            "--max-rank",
-            str(args.max_rank),
-            "--min-segment-length",
-            str(args.min_segment_length),
-            "--max-segments",
-            str(args.max_segments),
-            "--diffusion-k-neighbors",
-            str(args.diffusion_k_neighbors),
-            "--diffusion-time",
-            str(args.diffusion_time),
-            "--diffusion-components",
-            str(args.diffusion_components),
-            f"--adaptive-bandwidth-type={args.adaptive_bandwidth_type}",
-            "--adaptive-epsilon",
-            str(args.adaptive_epsilon),
-            "--adaptive-metric",
-            str(args.adaptive_metric),
-        ]
-        _append_if_present(command, "--edge-alpha", args.edge_alpha)
-        _append_if_present(command, "--sibling-alpha", args.sibling_alpha)
-        _append_many(command, "--weightings", args.weightings)
-        _append_many(command, "--block-names", args.block_names)
+            output_dir=root / "10_current_adaptive_diffusion_subspace_tree",
+            dataset_label=artifact_prefix,
+        )
         stages.append(
             PipelineStage(
                 stage_id="10_current_adaptive_diffusion_subspace_tree",
@@ -237,35 +241,11 @@ def build_pipeline_plan(
         )
 
     if args.include_method_matrix:
-        command = [
-            args.python,
-            str(REPO_ROOT / "applications/endotypes/pipelines/run_allgo_method_version_tree_matrix.py"),
-            "--input",
-            str(args.input),
-            "--output-dir",
-            str(root / "20_method_tree_matrix_audit"),
-            "--max-rank",
-            str(args.max_rank),
-            "--min-segment-length",
-            str(args.min_segment_length),
-            "--max-segments",
-            str(args.max_segments),
-            "--diffusion-k-neighbors",
-            str(args.diffusion_k_neighbors),
-            "--diffusion-time",
-            str(args.diffusion_time),
-            "--diffusion-components",
-            str(args.diffusion_components),
-            f"--adaptive-bandwidth-type={args.adaptive_bandwidth_type}",
-            "--adaptive-epsilon",
-            str(args.adaptive_epsilon),
-            "--adaptive-metric",
-            str(args.adaptive_metric),
-        ]
-        _append_if_present(command, "--edge-alpha", args.edge_alpha)
-        _append_if_present(command, "--sibling-alpha", args.sibling_alpha)
-        _append_many(command, "--weightings", args.weightings)
-        _append_many(command, "--block-names", args.block_names)
+        command = _tree_analysis_command(
+            args,
+            script=REPO_ROOT / "applications/endotypes/pipelines/run_allgo_method_version_tree_matrix.py",
+            output_dir=root / "20_method_tree_matrix_audit",
+        )
         _append_many(command, "--method-versions", args.method_versions)
         _append_many(command, "--tree-geometries", args.tree_geometries)
         stages.append(

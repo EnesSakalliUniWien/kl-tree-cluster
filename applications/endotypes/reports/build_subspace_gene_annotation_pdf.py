@@ -24,7 +24,8 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 from tree_break_selection.plot import draw_image_panel
 
-from applications.endotypes._shared import safe_name
+from applications.endotypes._shared import load_binary_feature_matrix, safe_name
+from applications.endotypes.reports.artifact_index import load_artifact_index
 
 GO_ID_RE = re.compile(r"(GO:\d{7})")
 
@@ -176,14 +177,7 @@ def wrap(value: object, width: int = 90) -> str:
 
 
 def load_binary_matrix(path: Path) -> pd.DataFrame:
-    data = pd.read_csv(path, sep="\t", index_col=0)
-    data.index = data.index.astype(str)
-    data.columns = data.columns.astype(str)
-    data = data.apply(pd.to_numeric, errors="raise")
-    values = data.to_numpy()
-    if not np.isin(values, (0, 1)).all():
-        raise ValueError(f"{path} contains non-binary values.")
-    return data.astype(int)
+    return load_binary_feature_matrix(path)
 
 
 def resolve_path(value: object, experiment_dir: Path) -> Path:
@@ -191,30 +185,6 @@ def resolve_path(value: object, experiment_dir: Path) -> Path:
     if path.exists() or path.is_absolute():
         return path
     return experiment_dir / path
-
-
-def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
-    path = experiment_dir / "artifact_index.csv"
-    if not path.exists():
-        raise FileNotFoundError(path)
-    frame = pd.read_csv(path)
-    rank_col = (
-        "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
-    )
-    frame["_rank"] = pd.to_numeric(frame[rank_col], errors="coerce")
-    if "run_id" not in frame.columns:
-        if "method_run_id" in frame.columns:
-            frame["run_id"] = frame["method_run_id"].astype(str)
-        else:
-            frame["run_id"] = (
-                "current__adaptive_diffusion_cosine_subspace__"
-                + frame["weighting"].astype(str)
-                + "__"
-                + frame["block_name"].astype(str)
-            )
-    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(
-        drop=True
-    )
 
 
 def local_top_terms_for_cluster(

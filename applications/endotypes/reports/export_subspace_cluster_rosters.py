@@ -30,6 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from applications.endotypes.reports.artifact_index import load_artifact_index  # noqa: E402
 from applications.endotypes.reports.build_subspace_gene_annotation_pdf import (  # noqa: E402
     gene_annotation_blurbs,
     load_binary_matrix,
@@ -135,30 +136,6 @@ def subspace_dir_name(row: dict[str, object] | pd.Series) -> str:
     else:
         prefix = "rankNA"
     return f"{prefix}_{safe_name(row.get('weighting', ''))}_{safe_name(row.get('block_name', ''))}"
-
-
-def load_artifact_index(experiment_dir: Path) -> pd.DataFrame:
-    path = experiment_dir / "artifact_index.csv"
-    if not path.exists():
-        raise FileNotFoundError(path)
-    frame = pd.read_csv(path)
-    rank_col = (
-        "specificity_aware_rank" if "specificity_aware_rank" in frame.columns else "display_rank"
-    )
-    frame["_rank"] = pd.to_numeric(frame.get(rank_col), errors="coerce")
-    if "run_id" not in frame.columns:
-        if "method_run_id" in frame.columns:
-            frame["run_id"] = frame["method_run_id"].astype(str)
-        else:
-            frame["run_id"] = (
-                "current__adaptive_diffusion_cosine_subspace__"
-                + frame["weighting"].astype(str)
-                + "__"
-                + frame["block_name"].astype(str)
-            )
-    return frame.sort_values(["_rank", "weighting", "block_name"], na_position="last").reset_index(
-        drop=True
-    )
 
 
 def load_optional_table(path: Path | None) -> pd.DataFrame:
@@ -697,25 +674,11 @@ def build_rosters(
                 tree_distance_frame.to_csv(tree_distance_embedding_coordinates_path, index=False)
                 tree_distance_embedding_rendered = True
 
-        status_record = {
-            "run_id": run_id,
-            "specificity_aware_rank": rank if rank else math.nan,
-            "display_rank": safe_int(row.get("display_rank")) or math.nan,
-            "weighting": weighting,
-            "block_name": block_name,
-            "status": status,
-            "assignment_source": assignment_source,
-            "has_cluster_assignments": bool(has_assignments),
-            "n_genes": len(assignments) if has_assignments else 0,
-            "n_unique_genes": assignments["gene"].nunique() if has_assignments else 0,
-            "linkage_leaves": int(linkage_matrix.shape[0] + 1) if linkage_matrix is not None else 0,
-            "n_clusters": assignments["cluster_id"].nunique()
-            if has_assignments
-            else safe_int(row.get("n_clusters")),
-            "coherent_cluster_count": safe_int(row.get("coherent_cluster_count")),
-            "organized_subspace_dir": str(organized_subspace_dir),
+        rendered_artifact_paths = {
             "radial_tree_clusters_png": str(radial_path) if radial_rendered else "",
-            "radial_tree_clusters_compact_png": str(radial_compact_path) if radial_rendered else "",
+            "radial_tree_clusters_compact_png": str(radial_compact_path)
+            if radial_rendered
+            else "",
             "full_space_embedding_clusters_png": str(full_space_path)
             if full_space_rendered
             else "",
@@ -736,6 +699,25 @@ def build_rosters(
             )
             if tree_distance_embedding_rendered
             else "",
+        }
+        status_record = {
+            "run_id": run_id,
+            "specificity_aware_rank": rank if rank else math.nan,
+            "display_rank": safe_int(row.get("display_rank")) or math.nan,
+            "weighting": weighting,
+            "block_name": block_name,
+            "status": status,
+            "assignment_source": assignment_source,
+            "has_cluster_assignments": bool(has_assignments),
+            "n_genes": len(assignments) if has_assignments else 0,
+            "n_unique_genes": assignments["gene"].nunique() if has_assignments else 0,
+            "linkage_leaves": int(linkage_matrix.shape[0] + 1) if linkage_matrix is not None else 0,
+            "n_clusters": assignments["cluster_id"].nunique()
+            if has_assignments
+            else safe_int(row.get("n_clusters")),
+            "coherent_cluster_count": safe_int(row.get("coherent_cluster_count")),
+            "organized_subspace_dir": str(organized_subspace_dir),
+            **rendered_artifact_paths,
             "diagnostic_linkage_cluster_assignments": str(diagnostic_assignment_path)
             if assignment_source == "diagnostic_linkage_cut"
             else "",
@@ -790,30 +772,7 @@ def build_rosters(
                 "status": status,
                 "assignment_source": assignment_source,
                 "organized_subspace_dir": str(organized_subspace_dir),
-                "radial_tree_clusters_png": str(radial_path) if radial_rendered else "",
-                "radial_tree_clusters_compact_png": str(radial_compact_path)
-                if radial_rendered
-                else "",
-                "full_space_embedding_clusters_png": str(full_space_path)
-                if full_space_rendered
-                else "",
-                "full_space_embedding_cluster_coordinates": str(full_space_coordinates_path)
-                if full_space_rendered
-                else "",
-                "subspace_embedding_clusters_png": str(subspace_embedding_path)
-                if subspace_embedding_rendered
-                else "",
-                "subspace_embedding_cluster_coordinates": str(subspace_embedding_coordinates_path)
-                if subspace_embedding_rendered
-                else "",
-                "tree_distance_embedding_clusters_png": str(tree_distance_embedding_path)
-                if tree_distance_embedding_rendered
-                else "",
-                "tree_distance_embedding_cluster_coordinates": str(
-                    tree_distance_embedding_coordinates_path
-                )
-                if tree_distance_embedding_rendered
-                else "",
+                **rendered_artifact_paths,
                 "cluster_id": safe_int(cluster_id),
                 "cluster_size": cluster_size,
                 "recorded_cluster_size": recorded_size,

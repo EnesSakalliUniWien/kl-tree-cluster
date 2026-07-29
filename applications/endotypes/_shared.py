@@ -7,6 +7,7 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+import numpy as np
 import pandas as pd
 
 _MYGENE_QUERY_ENDPOINT = "https://mygene.info/v3/query"
@@ -40,6 +41,48 @@ def load_feature_matrix(path: Path) -> pd.DataFrame:
             f"Rows with zero feature mass cannot enter cosine analysis: {list(zero_rows[:10])!r}"
         )
     return data.astype(float)
+
+
+def load_binary_feature_matrix(
+    path: Path,
+    *,
+    drop_zero_columns: bool = False,
+    require_nonzero_rows: bool = False,
+    non_binary_message: str = "contains non-binary values.",
+    zero_rows_message: str = "Rows with no active GO terms",
+) -> pd.DataFrame:
+    """Load a tab-separated binary feature matrix."""
+
+    data = pd.read_csv(path, sep="\t", index_col=0)
+    data.index = data.index.astype(str)
+    data.columns = data.columns.astype(str)
+    data = data.apply(pd.to_numeric, errors="raise")
+    values = data.to_numpy()
+    if not np.isin(values, (0, 1)).all():
+        raise ValueError(f"{path} {non_binary_message}")
+    if drop_zero_columns:
+        zero_columns = data.columns[(data.sum(axis=0) == 0).to_numpy()]
+        if len(zero_columns):
+            data = data.drop(columns=zero_columns)
+    if require_nonzero_rows:
+        zero_rows = data.index[(data.sum(axis=1) == 0).to_numpy()]
+        if len(zero_rows):
+            raise ValueError(f"{zero_rows_message}: {list(zero_rows[:10])!r}.")
+    return data.astype(int)
+
+
+def benjamini_hochberg(pvals: np.ndarray) -> np.ndarray:
+    """Benjamini-Hochberg FDR correction."""
+
+    n = len(pvals)
+    if n == 0:
+        return pvals
+    order = np.argsort(pvals)
+    ranked = np.empty(n)
+    ranked[order] = np.arange(1, n + 1)
+    adjusted = pvals * n / ranked
+    adjusted = np.minimum.accumulate(adjusted[np.argsort(ranked)[::-1]])[::-1]
+    return np.clip(adjusted, 0, 1)[np.argsort(np.argsort(ranked))]
 
 
 def parse_reference_endotypes(path: Path) -> dict[str, dict[str, object]]:

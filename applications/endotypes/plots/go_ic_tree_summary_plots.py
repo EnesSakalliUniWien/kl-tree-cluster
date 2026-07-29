@@ -36,7 +36,7 @@ from tree_break_selection.space_separation import (
     weight_feature_matrix,
 )
 
-from applications.endotypes._shared import safe_name
+from applications.endotypes._shared import load_binary_feature_matrix, safe_name
 
 RESULT_PREFIX = "allgo_new_quality_aware_go_ic"
 
@@ -134,18 +134,13 @@ def tier_color(label: str) -> str:
 
 
 def load_binary_matrix(path: Path) -> pd.DataFrame:
-    data = pd.read_csv(path, sep="\t", index_col=0)
-    data = data.apply(pd.to_numeric, errors="raise")
-    values = data.to_numpy()
-    if not np.isin(values, (0, 1)).all():
-        raise ValueError(f"{path} contains values outside {{0,1}}.")
-    zero_columns = data.columns[(data.sum(axis=0) == 0).to_numpy()]
-    if len(zero_columns):
-        data = data.drop(columns=zero_columns)
-    zero_rows = data.index[(data.sum(axis=1) == 0).to_numpy()]
-    if len(zero_rows):
-        raise ValueError(f"Rows with no active GO terms: {list(zero_rows[:10])!r}")
-    return data.astype(int)
+    return load_binary_feature_matrix(
+        path,
+        drop_zero_columns=True,
+        require_nonzero_rows=True,
+        non_binary_message="contains values outside {0,1}.",
+        zero_rows_message="Rows with no active GO terms",
+    )
 
 
 def load_global_embedding(path: Path | None, data: pd.DataFrame) -> tuple[pd.DataFrame, str, str]:
@@ -213,19 +208,24 @@ def load_assignment(path: Path, data_index: pd.Index) -> pd.DataFrame:
     return out
 
 
-def add_candidates_from_raw_kak(path: Path | None) -> list[Candidate]:
+def add_candidates_from_kak_summary(
+    path: Path | None,
+    *,
+    summary_file: str,
+    family: str,
+) -> list[Candidate]:
     if path is None:
         return []
-    summary_path = path / "matrix_kak_probe_summary.csv"
+    summary_path = path / summary_file
     if not summary_path.exists():
         return []
     summary = pd.read_csv(summary_path)
     rows: list[Candidate] = []
     for _, row in summary[summary["status"].eq("ok")].iterrows():
-        run_id = f"raw_kak__{row['weighting']}__{row['block_name']}"
+        run_id = f"{family}__{row['weighting']}__{row['block_name']}"
         rows.append(
             Candidate(
-                family="raw_kak",
+                family=family,
                 run_id=run_id,
                 weighting=str(row["weighting"]),
                 block_name=str(row["block_name"]),
@@ -236,31 +236,22 @@ def add_candidates_from_raw_kak(path: Path | None) -> list[Candidate]:
             )
         )
     return rows
+
+
+def add_candidates_from_raw_kak(path: Path | None) -> list[Candidate]:
+    return add_candidates_from_kak_summary(
+        path,
+        summary_file="matrix_kak_probe_summary.csv",
+        family="raw_kak",
+    )
 
 
 def add_candidates_from_diffusion_kak(path: Path | None) -> list[Candidate]:
-    if path is None:
-        return []
-    summary_path = path / "matrix_kak_diffusion_probe_summary.csv"
-    if not summary_path.exists():
-        return []
-    summary = pd.read_csv(summary_path)
-    rows: list[Candidate] = []
-    for _, row in summary[summary["status"].eq("ok")].iterrows():
-        run_id = f"adaptive_diffusion_kak__{row['weighting']}__{row['block_name']}"
-        rows.append(
-            Candidate(
-                family="adaptive_diffusion_kak",
-                run_id=run_id,
-                weighting=str(row["weighting"]),
-                block_name=str(row["block_name"]),
-                block_start=int(row["block_start"]),
-                block_end=int(row["block_end"]),
-                assignments_path=Path(str(row["assignments_path"])),
-                summary=row.to_dict(),
-            )
-        )
-    return rows
+    return add_candidates_from_kak_summary(
+        path,
+        summary_file="matrix_kak_diffusion_probe_summary.csv",
+        family="adaptive_diffusion_kak",
+    )
 
 
 def add_whole_adaptive_candidate(path: Path | None) -> list[Candidate]:

@@ -33,6 +33,8 @@ from tree_break_selection.space_separation import (
 )
 
 from applications.endotypes._shared import load_feature_matrix, safe_name
+from applications.endotypes.pipelines.spectral_records import spectral_block_record
+from applications.endotypes.pipelines.tree_analysis_args import add_tree_analysis_arguments
 
 METHOD_VERSIONS = ("current",)
 TREE_GEOMETRIES = (
@@ -46,28 +48,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
-    parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
-    parser.add_argument("--max-rank", type=int, default=80)
-    parser.add_argument("--min-segment-length", type=int, default=4)
-    parser.add_argument("--max-segments", type=int, default=8)
-    parser.add_argument(
-        "--weightings",
-        nargs="+",
-        default=["binary", "tfidf"],
-        choices=["binary", "tfidf"],
-    )
-    parser.add_argument("--diffusion-k-neighbors", type=int, default=15)
-    parser.add_argument("--diffusion-time", type=int, default=3)
-    parser.add_argument("--diffusion-components", type=int, default=30)
-    parser.add_argument("--adaptive-bandwidth-type", default="-1/(d+2)")
-    parser.add_argument("--adaptive-epsilon", default="median")
-    parser.add_argument("--adaptive-metric", default="euclidean")
-    parser.add_argument(
-        "--block-names",
-        nargs="*",
-        default=None,
-        help="Optional block-name allowlist for cosine-subspace geometries.",
+    add_tree_analysis_arguments(
+        parser,
+        edge_alpha_default=DEFAULT_EDGE_ALPHA,
+        sibling_alpha_default=DEFAULT_SIBLING_ALPHA,
     )
     parser.add_argument(
         "--method-versions",
@@ -162,6 +146,59 @@ def append_failure(
     )
 
 
+def append_method_tree_run(
+    *,
+    rows: list[dict[str, object]],
+    cluster_size_rows: list[dict[str, object]],
+    base: dict[str, object],
+    run_id: str,
+    method_version: str,
+    data: pd.DataFrame,
+    distances: np.ndarray,
+    assignments_dir: Path,
+    edge_alpha: float,
+    sibling_alpha: float,
+    summary_path: Path | None = None,
+) -> None:
+    """Run one TBS method/tree cell and append summary plus cluster-size rows."""
+    print(f"[{run_id}] gates", flush=True)
+    start_sec = time.perf_counter()
+    try:
+        result = run_method(
+            method_version=method_version,
+            data=data,
+            distances=distances,
+            edge_alpha=edge_alpha,
+            sibling_alpha=sibling_alpha,
+        )
+        if result.labels is None:
+            raise RuntimeError("Method returned no labels.")
+        path = assignments_dir / f"{safe_name(run_id)}__assignments.csv"
+        cluster_sizes = write_assignments(
+            labels=result.labels,
+            index=data.index,
+            output_path=path,
+        )
+        rows.append(
+            row_from_result(
+                base=base,
+                result=result,
+                assignments_path=path,
+                elapsed_sec=time.perf_counter() - start_sec,
+                cluster_sizes=cluster_sizes,
+            )
+        )
+        for cluster_id, size in cluster_sizes.items():
+            cluster_size_rows.append(
+                {**base, "cluster_id": int(cluster_id), "cluster_size": int(size)}
+            )
+    except Exception as exc:  # noqa: BLE001 - diagnostic matrix records failures.
+        append_failure(rows, base=base, start_sec=start_sec, exc=exc)
+
+    if summary_path is not None:
+        pd.DataFrame(rows).to_csv(summary_path, index=False)
+
+
 def main() -> None:
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -218,39 +255,18 @@ def main() -> None:
                 "diffusion_mode": "adaptive",
                 "diffusion_metadata": repr(whole_metadata),
             }
-            print(f"[{run_id}] gates", flush=True)
-            start_sec = time.perf_counter()
-            try:
-                result = run_method(
-                    method_version=method_version,
-                    data=data,
-                    distances=whole_distances,
-                    edge_alpha=args.edge_alpha,
-                    sibling_alpha=args.sibling_alpha,
-                )
-                if result.labels is None:
-                    raise RuntimeError("Method returned no labels.")
-                path = assignments_dir / f"{safe_name(run_id)}__assignments.csv"
-                cluster_sizes = write_assignments(
-                    labels=result.labels,
-                    index=data.index,
-                    output_path=path,
-                )
-                rows.append(
-                    row_from_result(
-                        base=base,
-                        result=result,
-                        assignments_path=path,
-                        elapsed_sec=time.perf_counter() - start_sec,
-                        cluster_sizes=cluster_sizes,
-                    )
-                )
-                for cluster_id, size in cluster_sizes.items():
-                    cluster_size_rows.append(
-                        {**base, "cluster_id": int(cluster_id), "cluster_size": int(size)}
-                    )
-            except Exception as exc:  # noqa: BLE001 - diagnostic matrix records failures.
-                append_failure(rows, base=base, start_sec=start_sec, exc=exc)
+            append_method_tree_run(
+                rows=rows,
+                cluster_size_rows=cluster_size_rows,
+                base=base,
+                run_id=run_id,
+                method_version=method_version,
+                data=data,
+                distances=whole_distances,
+                assignments_dir=assignments_dir,
+                edge_alpha=args.edge_alpha,
+                sibling_alpha=args.sibling_alpha,
+            )
 
     for weighting in args.weightings:
         if not set(args.tree_geometries).intersection(
@@ -311,58 +327,26 @@ def main() -> None:
                         "method_family": family,
                         "run_id": run_id,
                         "weighting": weighting,
-                        "block_id": int(block.block_id),
-                        "block_name": block.block_name,
-                        "block_type": block.block_type,
-                        "block_start": int(block.block_start),
-                        "block_end": int(block.block_end),
-                        "subspace_dimensions": int(block.block_end - block.block_start + 1),
-                        "block_energy_fraction": block_energy,
-                        "segmentation_bic": diagnostics.get("bic", math.nan),
-                        "common_mode_isolated": diagnostics.get("common_mode_isolated", False),
+                        **spectral_block_record(
+                            block,
+                            block_energy=block_energy,
+                            diagnostics=diagnostics,
+                        ),
                         "diffusion_mode": metadata.get("diffusion_mode", "none"),
                         "diffusion_metadata": repr(metadata),
                     }
-                    print(f"[{run_id}] gates", flush=True)
-                    start_sec = time.perf_counter()
-                    try:
-                        result = run_method(
-                            method_version=method_version,
-                            data=data,
-                            distances=distances,
-                            edge_alpha=args.edge_alpha,
-                            sibling_alpha=args.sibling_alpha,
-                        )
-                        if result.labels is None:
-                            raise RuntimeError("Method returned no labels.")
-                        path = assignments_dir / f"{safe_name(run_id)}__assignments.csv"
-                        cluster_sizes = write_assignments(
-                            labels=result.labels,
-                            index=data.index,
-                            output_path=path,
-                        )
-                        rows.append(
-                            row_from_result(
-                                base=base,
-                                result=result,
-                                assignments_path=path,
-                                elapsed_sec=time.perf_counter() - start_sec,
-                                cluster_sizes=cluster_sizes,
-                            )
-                        )
-                        for cluster_id, size in cluster_sizes.items():
-                            cluster_size_rows.append(
-                                {
-                                    **base,
-                                    "cluster_id": int(cluster_id),
-                                    "cluster_size": int(size),
-                                }
-                            )
-                    except Exception as exc:  # noqa: BLE001 - diagnostic matrix records failures.
-                        append_failure(rows, base=base, start_sec=start_sec, exc=exc)
-                    pd.DataFrame(rows).to_csv(
-                        args.output_dir / "method_tree_matrix_summary.csv",
-                        index=False,
+                    append_method_tree_run(
+                        rows=rows,
+                        cluster_size_rows=cluster_size_rows,
+                        base=base,
+                        run_id=run_id,
+                        method_version=method_version,
+                        data=data,
+                        distances=distances,
+                        assignments_dir=assignments_dir,
+                        edge_alpha=args.edge_alpha,
+                        sibling_alpha=args.sibling_alpha,
+                        summary_path=args.output_dir / "method_tree_matrix_summary.csv",
                     )
 
     summary = pd.DataFrame(rows)

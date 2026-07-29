@@ -42,6 +42,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import fisher_exact
 
+from applications.endotypes._shared import benjamini_hochberg as _bh_correct
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
 # ═══════════════════════════════════════════════════════════════════════════
@@ -141,19 +143,6 @@ def _pairwise_jaccard(vectors: np.ndarray) -> float:
         total += inter / union if union > 0 else 0.0
         count += 1
     return total / count
-
-
-def _bh_correct(pvals: np.ndarray) -> np.ndarray:
-    """Benjamini-Hochberg FDR correction."""
-    n = len(pvals)
-    if n == 0:
-        return pvals
-    order = np.argsort(pvals)
-    ranked = np.empty(n)
-    ranked[order] = np.arange(1, n + 1)
-    adjusted = pvals * n / ranked
-    adjusted = np.minimum.accumulate(adjusted[np.argsort(ranked)[::-1]])[::-1]
-    return np.clip(adjusted, 0, 1)[np.argsort(np.argsort(ranked))]
 
 
 def _cluster_has_enrichment(

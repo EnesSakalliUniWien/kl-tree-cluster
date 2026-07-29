@@ -5759,6 +5759,14 @@ verification, and maintenance events here in chronological order.
   share `benchmarks/shared/benchmark_runs/regression_gate_cli.py`, keeping both
   command adapters thin while preserving their distinct help text and completion
   labels.
+- Removed production endotype duplicate groups. Shared endotype helpers now
+  cover binary feature-matrix loading, Benjamini-Hochberg correction,
+  subspace/tree CLI arguments, spectral-block record fields, report artifact
+  index loading, method/tree run summary recording, tree-analysis command
+  construction, embedding figure layout, rendered artifact path metadata, and
+  KAK candidate-summary loading. The focused `applications` clone scan dropped
+  to 17 exact groups / 246 duplicated lines / 0.95%, with remaining groups in
+  `mnist/` and `scrna/` application code rather than `endotypes/`.
 
 ## Evidence
 

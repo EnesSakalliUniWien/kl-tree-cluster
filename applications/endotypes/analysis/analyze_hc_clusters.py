@@ -45,6 +45,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import fisher_exact
 
+from applications.endotypes._shared import benjamini_hochberg as _bh_correct
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -198,21 +200,6 @@ def gene_lists_per_cluster(
 # ═══════════════════════════════════════════════════════════════════════════
 # 3. Pathway enrichment (Fisher exact, BH-corrected)
 # ═══════════════════════════════════════════════════════════════════════════
-
-
-def _bh_correct(pvals: np.ndarray) -> np.ndarray:
-    """Benjamini-Hochberg FDR correction."""
-    n = len(pvals)
-    if n == 0:
-        return pvals
-    order = np.argsort(pvals)
-    ranked = np.empty(n)
-    ranked[order] = np.arange(1, n + 1)
-    adjusted = pvals * n / ranked
-    # Enforce monotonicity (step-up)
-    adjusted = np.minimum.accumulate(adjusted[np.argsort(ranked)[::-1]])[::-1]
-    adjusted = np.clip(adjusted, 0, 1)
-    return adjusted[np.argsort(np.argsort(ranked))]
 
 
 def pathway_enrichment(

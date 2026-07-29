@@ -51,7 +51,9 @@ from tree_break_selection.space_separation import (
     weight_feature_matrix,
 )
 
-from applications.endotypes._shared import matrix_slug, safe_name
+from applications.endotypes._shared import load_binary_feature_matrix, matrix_slug, safe_name
+from applications.endotypes.pipelines.spectral_records import spectral_block_record
+from applications.endotypes.pipelines.tree_analysis_args import add_tree_analysis_arguments
 from applications.endotypes.plots.go_ic_tree_summary_plots import (
     cluster_coherence,
     cluster_size_metrics,
@@ -71,24 +73,11 @@ def parse_args() -> argparse.Namespace:
         default=Path("data/feature_matrices/feature_matrix_julia_allGO_new.tsv"),
     )
     parser.add_argument("--output-dir", type=Path, default=None)
-    parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
-    parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
-    parser.add_argument("--max-rank", type=int, default=80)
-    parser.add_argument("--min-segment-length", type=int, default=4)
-    parser.add_argument("--max-segments", type=int, default=8)
-    parser.add_argument("--diffusion-k-neighbors", type=int, default=15)
-    parser.add_argument("--diffusion-time", type=int, default=3)
-    parser.add_argument("--diffusion-components", type=int, default=30)
-    parser.add_argument("--adaptive-bandwidth-type", default="-1/(d+2)")
-    parser.add_argument("--adaptive-epsilon", default="median")
-    parser.add_argument("--adaptive-metric", default="euclidean")
-    parser.add_argument(
-        "--weightings",
-        nargs="+",
-        default=["binary", "tfidf"],
-        choices=["binary", "tfidf"],
+    add_tree_analysis_arguments(
+        parser,
+        edge_alpha_default=DEFAULT_EDGE_ALPHA,
+        sibling_alpha_default=DEFAULT_SIBLING_ALPHA,
     )
-    parser.add_argument("--block-names", nargs="*", default=None)
     parser.add_argument("--top-terms-per-axis", type=int, default=20)
     parser.add_argument(
         "--dataset-label",
@@ -125,20 +114,12 @@ def binary_entropy_bits(probabilities: np.ndarray) -> np.ndarray:
 
 
 def load_binary_matrix(path: Path) -> pd.DataFrame:
-    data = pd.read_csv(path, sep="\t", index_col=0)
-    data.index = data.index.astype(str)
-    data.columns = data.columns.astype(str)
-    data = data.apply(pd.to_numeric, errors="raise")
-    values = data.to_numpy()
-    if not np.isin(values, (0, 1)).all():
-        raise ValueError(f"{path} contains values outside {{0,1}}.")
-    zero_columns = data.columns[(data.sum(axis=0) == 0).to_numpy()]
-    if len(zero_columns):
-        data = data.drop(columns=zero_columns)
-    zero_rows = data.index[(data.sum(axis=1) == 0).to_numpy()]
-    if len(zero_rows):
-        raise ValueError(f"Rows with no active GO terms: {list(zero_rows[:10])!r}.")
-    return data.astype(int)
+    return load_binary_feature_matrix(
+        path,
+        drop_zero_columns=True,
+        require_nonzero_rows=True,
+        non_binary_message="contains values outside {0,1}.",
+    )
 
 
 def component_feature_loadings(
@@ -245,36 +226,10 @@ def plot_combined_axis_terms(
 ) -> None:
     """Plot one signed-loading heatmap across all axes in a subspace."""
 
-    selected_frames = []
-    for _axis, frame in axis_frame.groupby("axis", sort=True):
-        selected_frames.append(
-            frame.sort_values("abs_loading", ascending=False).head(terms_per_axis)
-        )
-    if not selected_frames:
-        return
-    selected = pd.concat(selected_frames, ignore_index=True)
-    term_order = (
-        selected.groupby(["go_term", "go_id"], as_index=False)
-        .agg(max_abs_loading=("abs_loading", "max"))
-        .sort_values("max_abs_loading", ascending=False)
-        .head(max_terms)
-    )
-    selected_terms = set(zip(term_order["go_term"], term_order["go_id"], strict=False))
-    frame = axis_frame[
-        axis_frame.apply(lambda row: (row["go_term"], row["go_id"]) in selected_terms, axis=1)
-    ].copy()
-    frame["term_label"] = frame.apply(
-        lambda row: f"{row['go_term']} ({row['go_id']})" if row["go_id"] else str(row["go_term"]),
-        axis=1,
-    )
-    order = [
-        f"{row.go_term} ({row.go_id})" if row.go_id else str(row.go_term)
-        for row in term_order.itertuples(index=False)
-    ]
-    pivot = (
-        frame.pivot_table(index="term_label", columns="axis", values="loading", aggfunc="first")
-        .reindex(order)
-        .fillna(0.0)
+    pivot = _selected_axis_term_heatmap(
+        axis_frame,
+        terms_per_axis=terms_per_axis,
+        max_terms=max_terms,
     )
     if pivot.empty:
         return
@@ -395,6 +350,33 @@ def _wrap_annotation_lines(lines: list[str], *, width: int = 58) -> str:
     return "\n".join(wrapped).rstrip()
 
 
+def _embedding_figure_with_optional_axis_terms(
+    axis_term_lines: list[str] | None,
+) -> tuple[plt.Figure, plt.Axes]:
+    if not axis_term_lines:
+        return plt.subplots(figsize=(8, 6.5))
+
+    fig, (ax, text_ax) = plt.subplots(
+        1,
+        2,
+        figsize=(16, 8.5),
+        gridspec_kw={"width_ratios": [1.2, 0.95]},
+    )
+    text_ax.axis("off")
+    text_ax.set_title("Highest GO-term loadings by eigenmode", loc="left", fontsize=11)
+    text_ax.text(
+        0.0,
+        0.98,
+        _wrap_annotation_lines(axis_term_lines),
+        va="top",
+        ha="left",
+        fontsize=8.0,
+        linespacing=1.15,
+        transform=text_ax.transAxes,
+    )
+    return fig, ax
+
+
 def plot_subspace_embedding(
     coords: np.ndarray,
     labels: np.ndarray | None,
@@ -421,27 +403,7 @@ def plot_subspace_embedding(
         except Exception:
             embedding = PCA(n_components=2, random_state=1729).fit_transform(coords)
             method = "PCA"
-    if axis_term_lines:
-        fig, (ax, text_ax) = plt.subplots(
-            1,
-            2,
-            figsize=(16, 8.5),
-            gridspec_kw={"width_ratios": [1.2, 0.95]},
-        )
-        text_ax.axis("off")
-        text_ax.set_title("Highest GO-term loadings by eigenmode", loc="left", fontsize=11)
-        text_ax.text(
-            0.0,
-            0.98,
-            _wrap_annotation_lines(axis_term_lines),
-            va="top",
-            ha="left",
-            fontsize=8.0,
-            linespacing=1.15,
-            transform=text_ax.transAxes,
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(8, 6.5))
+    fig, ax = _embedding_figure_with_optional_axis_terms(axis_term_lines)
     if labels is None:
         scatter = ax.scatter(
             embedding[:, 0], embedding[:, 1], color="#4c78a8", s=18, alpha=0.72, linewidths=0
@@ -476,27 +438,7 @@ def plot_diffusion_embedding(
         random_state=1729,
         normalized_stress="auto",
     ).fit_transform(matrix)
-    if axis_term_lines:
-        fig, (ax, text_ax) = plt.subplots(
-            1,
-            2,
-            figsize=(16, 8.5),
-            gridspec_kw={"width_ratios": [1.2, 0.95]},
-        )
-        text_ax.axis("off")
-        text_ax.set_title("Highest GO-term loadings by eigenmode", loc="left", fontsize=11)
-        text_ax.text(
-            0.0,
-            0.98,
-            _wrap_annotation_lines(axis_term_lines),
-            va="top",
-            ha="left",
-            fontsize=8.0,
-            linespacing=1.15,
-            transform=text_ax.transAxes,
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(8, 6.5))
+    fig, ax = _embedding_figure_with_optional_axis_terms(axis_term_lines)
     scatter = ax.scatter(
         embedding[:, 0], embedding[:, 1], c=labels, cmap="turbo", s=18, alpha=0.88, linewidths=0
     )
@@ -1089,15 +1031,11 @@ def main() -> None:
                 "method_version": "current",
                 "tree_geometry": "adaptive_diffusion_cosine_subspace",
                 "weighting": weighting,
-                "block_id": int(block.block_id),
-                "block_name": block.block_name,
-                "block_type": block.block_type,
-                "block_start": int(block.block_start),
-                "block_end": int(block.block_end),
-                "subspace_dimensions": int(block.block_end - block.block_start + 1),
-                "block_energy_fraction": block_energy,
-                "segmentation_bic": diagnostics.get("bic", math.nan),
-                "common_mode_isolated": diagnostics.get("common_mode_isolated", False),
+                **spectral_block_record(
+                    block,
+                    block_energy=block_energy,
+                    diagnostics=diagnostics,
+                ),
                 "subspace_dir": str(subspace_dir),
             }
             block_rows.append(block_record)
