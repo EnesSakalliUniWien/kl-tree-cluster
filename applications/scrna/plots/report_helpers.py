@@ -2,48 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
-from pathlib import Path
-
 import pandas as pd
 
-
-def sha256_file(path: Path) -> str:
-    """Return the SHA-256 digest for a generated artifact."""
-
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def artifact_record(
-    path: Path,
-    *,
-    role: str,
-    relative_to: Path,
-    generated_at: str | None = None,
-) -> dict[str, object]:
-    """Return the shared provenance record for one generated artifact."""
-
-    record: dict[str, object] = {
-        "path": str(path.relative_to(relative_to)),
-        "role": role,
-        "bytes": path.stat().st_size,
-        "sha256": sha256_file(path),
-    }
-    if path.suffix == ".csv":
-        table = pd.read_csv(path)
-        record["rows"] = len(table)
-        record["columns"] = len(table.columns)
-        if generated_at is not None:
-            record["generated_at"] = generated_at
-        if "generated_at" in table.columns:
-            record["generated_at_values"] = sorted(
-                table["generated_at"].dropna().unique().tolist()
-            )
-    return record
+from applications.scrna._shared import artifact_record as artifact_record
+from applications.scrna._shared import sha256_file as sha256_file
 
 
 def plot_cluster_size_bars(

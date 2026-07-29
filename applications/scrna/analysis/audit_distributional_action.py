@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import warnings
 from dataclasses import dataclass
@@ -19,6 +18,8 @@ import pandas as pd
 from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
     edge_distributional_action_summary,
 )
+
+from applications.scrna._shared import artifact_record
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 BENCHMARK_ROOT = PROJECT_ROOT / "raw/assets/benchmark-results"
@@ -578,19 +579,6 @@ def _format_top_table(edges: pd.DataFrame, dataset: str, geometry: str) -> str:
     return rows[available].to_markdown(index=False, floatfmt=".4f")
 
 
-def _artifact_record(path: Path) -> dict[str, object]:
-    record: dict[str, object] = {
-        "path": str(path.relative_to(PROJECT_ROOT)),
-        "bytes": path.stat().st_size,
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-    }
-    if path.suffix == ".csv":
-        frame = pd.read_csv(path, low_memory=False)
-        record["rows"] = int(len(frame))
-        record["columns"] = int(len(frame.columns))
-    return record
-
-
 def _write_manifest(generated_at: str) -> None:
     artifact_paths = [
         OUTPUT_ROOT / "scrna_distributional_action_edges.csv",
@@ -608,7 +596,7 @@ def _write_manifest(generated_at: str) -> None:
         "source_inputs": [
             str(dataset.output_dir.relative_to(PROJECT_ROOT)) for dataset in DATASETS
         ],
-        "artifacts": [_artifact_record(path) for path in artifact_paths],
+        "artifacts": [artifact_record(path, relative_to=PROJECT_ROOT) for path in artifact_paths],
     }
     (OUTPUT_ROOT / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n",

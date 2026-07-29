@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -73,6 +74,15 @@ MARKERS = [
 ]
 
 
+@dataclass(frozen=True)
+class TreeReviewInputs:
+    assignments: pd.DataFrame
+    marker_frame: pd.DataFrame
+    children: dict[str, list[str]]
+    parent_nodes: set[str]
+    descendant_leaves: object
+
+
 def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -92,6 +102,20 @@ def top_counts_text(counts: pd.Series, n: int = 10) -> str:
 
 def cluster_ids_text(cluster_ids: list[int] | tuple[int, ...] | set[int] | frozenset[int]) -> str:
     return ",".join(f"C{cluster_id}" for cluster_id in sorted(cluster_ids))
+
+
+def cached_cluster_set(clusters: np.ndarray, descendant_leaves: object):
+    @lru_cache(maxsize=None)
+    def cluster_set(node: str) -> frozenset[int]:
+        return frozenset(int(clusters[index]) for index in descendant_leaves(node))  # type: ignore[operator]
+
+    return cluster_set
+
+
+def tree_review_arrays(inputs: TreeReviewInputs):
+    celltypes = inputs.assignments["celltype"].astype(str).to_numpy()
+    clusters = inputs.assignments[METHOD_KEY].astype(int).to_numpy()
+    return celltypes, clusters, cached_cluster_set(clusters, inputs.descendant_leaves)
 
 
 def fractions(counts: pd.Series, names: list[str], total: int) -> dict[str, float]:
@@ -327,19 +351,18 @@ def main() -> None:
         parent_nodes=parents,
         descendant_leaves=descendant_leaves,
     )
-    junction_review, junction_child_summary = build_two_three_cluster_junction_review(
+    tree_review_inputs = TreeReviewInputs(
         assignments=assignments,
         marker_frame=marker_frame,
         children=children,
         parent_nodes=parents,
         descendant_leaves=descendant_leaves,
     )
+    junction_review, junction_child_summary = build_two_three_cluster_junction_review(
+        inputs=tree_review_inputs,
+    )
     monophyletic_review, monophyletic_child_summary = build_monophyletic_subtree_meeting_review(
-        assignments=assignments,
-        marker_frame=marker_frame,
-        children=children,
-        parent_nodes=parents,
-        descendant_leaves=descendant_leaves,
+        inputs=tree_review_inputs,
     )
 
     summary.to_csv(output_dir / "tbs_adaptive_inner_node_lineage_summary.csv", index=False)
@@ -483,22 +506,16 @@ def build_terminal_cluster_review(
 
 def build_two_three_cluster_junction_review(
     *,
-    assignments: pd.DataFrame,
-    marker_frame: pd.DataFrame,
-    children: dict[str, list[str]],
-    parent_nodes: set[str],
-    descendant_leaves: object,
+    inputs: TreeReviewInputs,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    celltypes = assignments["celltype"].astype(str).to_numpy()
-    clusters = assignments[METHOD_KEY].astype(int).to_numpy()
-
-    @lru_cache(maxsize=None)
-    def cluster_set(node: str) -> frozenset[int]:
-        return frozenset(int(clusters[index]) for index in descendant_leaves(node))  # type: ignore[operator]
+    marker_frame = inputs.marker_frame
+    children = inputs.children
+    descendant_leaves = inputs.descendant_leaves
+    celltypes, clusters, cluster_set = tree_review_arrays(inputs)
 
     junction_rows: list[dict[str, object]] = []
     child_rows: list[dict[str, object]] = []
-    for node in sorted(parent_nodes, key=lambda value: int(value[1:])):
+    for node in sorted(inputs.parent_nodes, key=lambda value: int(value[1:])):
         node_cluster_set = cluster_set(node)
         if len(node_cluster_set) not in {2, 3}:
             continue
@@ -578,14 +595,12 @@ def build_two_three_cluster_junction_review(
 
 def build_monophyletic_subtree_meeting_review(
     *,
-    assignments: pd.DataFrame,
-    marker_frame: pd.DataFrame,
-    children: dict[str, list[str]],
-    parent_nodes: set[str],
-    descendant_leaves: object,
+    inputs: TreeReviewInputs,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    celltypes = assignments["celltype"].astype(str).to_numpy()
-    clusters = assignments[METHOD_KEY].astype(int).to_numpy()
+    marker_frame = inputs.marker_frame
+    children = inputs.children
+    descendant_leaves = inputs.descendant_leaves
+    celltypes, clusters, cluster_set = tree_review_arrays(inputs)
     cluster_leaf_sets = {
         int(cluster_id): frozenset(np.flatnonzero(clusters == cluster_id).astype(int).tolist())
         for cluster_id in np.unique(clusters)
@@ -594,10 +609,6 @@ def build_monophyletic_subtree_meeting_review(
     @lru_cache(maxsize=None)
     def leaf_set(node: str) -> frozenset[int]:
         return frozenset(descendant_leaves(node))  # type: ignore[operator]
-
-    @lru_cache(maxsize=None)
-    def cluster_set(node: str) -> frozenset[int]:
-        return frozenset(int(clusters[index]) for index in descendant_leaves(node))  # type: ignore[operator]
 
     def full_cluster_leaf_union(cluster_ids: frozenset[int]) -> frozenset[int]:
         leaves: set[int] = set()
@@ -616,7 +627,7 @@ def build_monophyletic_subtree_meeting_review(
 
     meeting_rows: list[dict[str, object]] = []
     child_rows: list[dict[str, object]] = []
-    for node in sorted(parent_nodes, key=lambda value: int(value[1:])):
+    for node in sorted(inputs.parent_nodes, key=lambda value: int(value[1:])):
         node_cluster_set = cluster_set(node)
         if len(node_cluster_set) < 2:
             continue

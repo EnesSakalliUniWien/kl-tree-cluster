@@ -5780,6 +5780,11 @@ verification, and maintenance events here in chronological order.
   `applications` clone scan dropped to 8 exact groups / 90 duplicated lines /
   0.35%; remaining groups are scRNA analysis logic plus tiny R renderer
   bootstrap blocks.
+- Removed the next scRNA analysis duplicate tranche. Static artifact provenance
+  is now shared through `applications/scrna/_shared.py` across scRNA audit and
+  plotting report code, and the pancreas inner-node review builders now share
+  their internal tree-review input/setup seam. The full `applications` clone
+  scan dropped to 6 exact groups / 63 duplicated lines / 0.24%.
 
 ## Evidence
 

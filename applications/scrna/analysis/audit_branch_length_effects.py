@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +16,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+
+from applications.scrna._shared import artifact_record
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_ROOT = (
@@ -395,19 +396,6 @@ def _write_sensitivity_plot(sensitivity: pd.DataFrame) -> None:
     plt.close(fig)
 
 
-def _artifact_record(path: Path) -> dict[str, object]:
-    record: dict[str, object] = {
-        "path": str(path.relative_to(PROJECT_ROOT)),
-        "bytes": path.stat().st_size,
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-    }
-    if path.suffix == ".csv":
-        frame = pd.read_csv(path, low_memory=False)
-        record["rows"] = int(len(frame))
-        record["columns"] = int(len(frame.columns))
-    return record
-
-
 def _write_manifest(generated_at: str) -> None:
     artifact_paths = [
         OUTPUT_ROOT / "branch_length_method_effects.csv",
@@ -426,7 +414,7 @@ def _write_manifest(generated_at: str) -> None:
         "source_inputs": [
             str((spec.output_dir / "manifest.json").relative_to(PROJECT_ROOT)) for spec in DATASETS
         ],
-        "artifacts": [_artifact_record(path) for path in artifact_paths],
+        "artifacts": [artifact_record(path, relative_to=PROJECT_ROOT) for path in artifact_paths],
     }
     (OUTPUT_ROOT / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n",
