@@ -13,10 +13,17 @@ from pathlib import Path
 from typing import Sequence
 
 from .coverage_evidence import compare_coverage
+from .duplicates import (
+    DEFAULT_DUPLICATE_SCOPES,
+    build_duplicate_report,
+    write_duplicate_report,
+)
 from .field_lineage import build_field_lineage, write_field_lineage_outputs
 from .inventory import build_inventory, write_inventory
 
 DEFAULT_OUTPUT = Path("reports/audits/generated/repository-hygiene.json")
+DEFAULT_DUPLICATE_OUTPUT = Path("reports/audits/generated/duplicate-cleanup.json")
+DEFAULT_DUPLICATE_MARKDOWN_OUTPUT = Path("reports/audits/generated/duplicate-cleanup.md")
 DEFAULT_FIELD_OUTPUT = Path("reports/audits/generated/field-function-lineage.json")
 DEFAULT_FIELD_GRAPHML_OUTPUT = Path(
     "reports/audits/generated/field-function-lineage.graphml"
@@ -296,11 +303,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=("map", "fields", "quick", "evidence", "mutation"),
+        choices=("map", "fields", "duplicates", "quick", "evidence", "mutation"),
         default="map",
         help=(
             "map: static evidence; fields: LibCST field/function lineage; "
-            "quick: add linters/clones/fixtures; "
+            "duplicates: classified jscpd cleanup report; quick: add linters/clones/fixtures; "
             "evidence: add calibration coverage contexts; mutation: add mutmut"
         ),
     )
@@ -314,6 +321,21 @@ def _parser() -> argparse.ArgumentParser:
         "--doctor",
         action="store_true",
         help="show whether every audit executable is reachable",
+    )
+    parser.add_argument(
+        "--scope",
+        action="append",
+        type=Path,
+        help=(
+            "file or directory scope for duplicate mode; repeatable. Defaults to "
+            f"{', '.join(DEFAULT_DUPLICATE_SCOPES)}"
+        ),
+    )
+    parser.add_argument(
+        "--duplicates-markdown-output",
+        type=Path,
+        default=DEFAULT_DUPLICATE_MARKDOWN_OUTPUT,
+        help="Markdown duplicate-cleanup report path, relative to the repository",
     )
     parser.add_argument(
         "--field-output",
@@ -379,6 +401,32 @@ def main(argv: Sequence[str] | None = None) -> int:
             "raw no-reader candidates; "
             f"{lineage['cleanup_classification_counts'].get('dead_write_candidate', 0)} "
             "cleanup candidates after graph/env/config/schema filtering"
+        )
+        return 0
+    if args.mode == "duplicates":
+        duplicate_output_default = args.output == DEFAULT_OUTPUT
+        duplicate_output = (
+            DEFAULT_DUPLICATE_OUTPUT if duplicate_output_default else args.output
+        )
+        output = (
+            duplicate_output if duplicate_output.is_absolute() else repo / duplicate_output
+        )
+        markdown_output = (
+            args.duplicates_markdown_output
+            if args.duplicates_markdown_output.is_absolute()
+            else repo / args.duplicates_markdown_output
+        )
+        scopes = args.scope or [Path(scope) for scope in DEFAULT_DUPLICATE_SCOPES]
+        report = build_duplicate_report(repo, scopes)
+        write_duplicate_report(report, output=output, markdown_output=markdown_output)
+        summary = report["summary"]
+        print(f"Duplicate cleanup report: {output}")
+        print(f"Duplicate cleanup markdown: {markdown_output}")
+        print(
+            "Duplicates: "
+            f"{summary['clone_group_count']} groups; "
+            f"{summary['duplicated_lines']} duplicated lines; "
+            f"{summary['duplicated_percent']}%"
         )
         return 0
 

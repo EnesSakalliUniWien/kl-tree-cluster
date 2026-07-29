@@ -12,6 +12,10 @@ The modes deliberately escalate in cost:
   raw read/write reuse evidence separate from cleanup classification, excluding
   graph, environment, configuration, and known output-schema keys from true
   dead-write candidates.
+- `tbs-audit --mode duplicates --scope applications` runs jscpd for a focused
+  path and writes a classified duplicate-cleanup report. Scopes are repeatable,
+  default to `applications`, and can be used from another worktree with
+  `--repo /absolute/path/to/repo`.
 - `tbs-audit --mode quick` also runs Ruff, Vulture, jscpd, and
   pytest-deadfixtures. Test collection runs through the repository's locked
   application environment, with the plugin added as a transient overlay, so
@@ -33,6 +37,12 @@ The field-lineage mode writes
 `reports/audits/generated/field-function-lineage.md` by default. OpenLineage is
 not used for static source cleanup; it belongs to runtime job/dataset/run
 lineage if the project later needs executed-pipeline metadata.
+The duplicate-cleanup mode writes
+`reports/audits/generated/duplicate-cleanup.json` and
+`reports/audits/generated/duplicate-cleanup.md` by default. Clone groups are
+classified as production, benchmark, plot/report, analysis-methodological,
+test-helper, bootstrap/structural, application, or uncategorized, with a risk
+label and cleanup recommendation for each group.
 Run
 `tbs-audit --doctor` to verify that all adapters are reachable.
 

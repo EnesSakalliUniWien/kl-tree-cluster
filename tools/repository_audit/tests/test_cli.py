@@ -143,3 +143,45 @@ def test_fields_mode_writes_json_markdown_and_graphml(tmp_path: Path) -> None:
     assert any(field["key"] == "lineage_field" for field in lineage["fields"])
     assert (tmp_path / "reports/fields.graphml").exists()
     assert (tmp_path / "reports/fields.md").exists()
+
+
+def test_duplicates_mode_writes_json_and_markdown(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / ".git").mkdir()
+    (tmp_path / "applications").mkdir()
+
+    def fake_build_duplicate_report(repo: Path, scopes: list[Path]) -> dict[str, object]:
+        assert repo == tmp_path.resolve()
+        assert scopes == [Path("applications")]
+        return {
+            "scope": ["applications"],
+            "summary": {
+                "clone_group_count": 0,
+                "duplicated_lines": 0,
+                "duplicated_percent": 0,
+                "classification_counts": {},
+            },
+            "groups": [],
+        }
+
+    monkeypatch.setattr(cli, "build_duplicate_report", fake_build_duplicate_report)
+
+    result = main(
+        [
+            "--repo",
+            str(tmp_path),
+            "--mode",
+            "duplicates",
+            "--scope",
+            "applications",
+            "--output",
+            "reports/duplicates.json",
+            "--duplicates-markdown-output",
+            "reports/duplicates.md",
+        ]
+    )
+
+    assert result == 0
+    assert (tmp_path / "reports/duplicates.json").exists()
+    assert (tmp_path / "reports/duplicates.md").exists()

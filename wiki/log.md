@@ -5785,6 +5785,12 @@ verification, and maintenance events here in chronological order.
   plotting report code, and the pancreas inner-node review builders now share
   their internal tree-review input/setup seam. The full `applications` clone
   scan dropped to 6 exact groups / 63 duplicated lines / 0.24%.
+- Added a dedicated duplicate-cleanup mode to the repository hygiene tool.
+  `tbs-audit --mode duplicates --scope applications` now runs jscpd, classifies
+  clone groups by cleanup purpose/risk, and writes JSON plus Markdown reports
+  under `reports/audits/generated/duplicate-cleanup.*`. The global
+  `/Users/berksakalli/.local/bin/tbs-audit` entrypoint exposes the mode, so it
+  is reachable from other worktrees via `--repo /path/to/repo`.
 
 ## Evidence
 
