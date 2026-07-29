@@ -21,7 +21,13 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from tree_break_selection.tree.construction import tree_from_linkage
 
-from applications.mnist._shared import best_rows, parse_digit_counts
+from applications.mnist._shared import (
+    DIGIT_COLORS,
+    alpha_label,
+    assignment_key,
+    best_rows,
+    parse_digit_counts,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIR = ROOT / "benchmarks/results/experiments/mnist"
@@ -37,28 +43,6 @@ OUT_UMAP3D_DIGIT_LABELS_HTML = OUT_DIR / "00c_mnist_umap3d_visible_digit_labels.
 OUT_UMAP3D_DOCSTYLE_HTML = OUT_DIR / "00d_mnist_umap3d_docstyle_digit_colorbar.html"
 OUT_UMAP_IMAGE_INSPECTOR_HTML = OUT_DIR / "00e_mnist_umap_point_image_inspector.html"
 OUT_UMAP3D_IMAGE_INSPECTOR_HTML = OUT_DIR / "00f_mnist_umap3d_point_image_inspector.html"
-
-DIGIT_COLORS = {
-    0: "#4e79a7",
-    1: "#f28e2b",
-    2: "#e15759",
-    3: "#76b7b2",
-    4: "#59a14f",
-    5: "#edc948",
-    6: "#b07aa1",
-    7: "#ff9da7",
-    8: "#9c755f",
-    9: "#bab0ab",
-}
-
-
-def _alpha_label(value: float) -> str:
-    return f"{value:g}"
-
-
-def _assignment_key(linkage: str, edge_alpha: float, sibling_alpha: float) -> str:
-    return f"{linkage}_e{_alpha_label(edge_alpha)}_s{_alpha_label(sibling_alpha)}"
-
 
 def _base_layout(fig: go.Figure, title: str) -> go.Figure:
     fig.update_layout(
@@ -139,8 +123,8 @@ def heatmap_figure(summary: pd.DataFrame, linkage: str, value: str, title: str) 
     fig = go.Figure(
         data=go.Heatmap(
             z=matrix,
-            x=[_alpha_label(v) for v in edges],
-            y=[_alpha_label(v) for v in siblings],
+            x=[alpha_label(v) for v in edges],
+            y=[alpha_label(v) for v in siblings],
             text=text,
             texttemplate="%{text}",
             colorscale="Viridis" if value != "n_clusters" else "Magma",
@@ -1328,7 +1312,7 @@ def main() -> None:
     continuous = pd.read_csv(SOURCE_DIR / "mnist_continuous_pca50_summary.csv")
     assignments = pd.read_csv(SWEEP_DIR / "alpha_sweep_assignments.csv")
     best = summary.sort_values("ARI", ascending=False).iloc[0]
-    best_key = _assignment_key(
+    best_key = assignment_key(
         str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"])
     )
     composition = pd.read_csv(SWEEP_DIR / f"{best_key}_top_cluster_digit_composition.csv")

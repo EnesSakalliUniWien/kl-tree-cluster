@@ -14,7 +14,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-from applications.mnist._shared import best_rows, parse_digit_counts
+from applications.mnist._shared import (
+    DIGIT_COLORS,
+    alpha_label,
+    assignment_key,
+    best_rows,
+    parse_digit_counts,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIR = ROOT / "benchmarks/results/experiments/mnist"
@@ -24,28 +30,6 @@ OUT_DIR = ROOT / "raw/assets/benchmark-results/mnist_tbs_analysis_20260624"
 OUT_PDF = OUT_DIR / "mnist_tbs_analysis_one_plot_per_page.pdf"
 OUT_MAIN = OUT_DIR / "mnist_tbs_analysis_summary.png"
 OUT_CSV = OUT_DIR / "mnist_tbs_analysis_summary.csv"
-
-DIGIT_COLORS = {
-    0: "#4e79a7",
-    1: "#f28e2b",
-    2: "#e15759",
-    3: "#76b7b2",
-    4: "#59a14f",
-    5: "#edc948",
-    6: "#b07aa1",
-    7: "#ff9da7",
-    8: "#9c755f",
-    9: "#bab0ab",
-}
-
-
-def _alpha_label(value: float) -> str:
-    return f"{value:g}"
-
-
-def _assignment_key(linkage: str, edge_alpha: float, sibling_alpha: float) -> str:
-    return f"{linkage}_e{_alpha_label(edge_alpha)}_s{_alpha_label(sibling_alpha)}"
-
 
 def _add_generated_at(fig: plt.Figure, generated_at: str) -> None:
     fig.text(
@@ -103,9 +87,9 @@ def _plot_heatmap(
     matrix, edges, siblings = _heatmap_matrix(summary, linkage, value)
     image = ax.imshow(matrix, cmap=cmap, origin="lower", aspect="auto")
     ax.set_xticks(np.arange(len(edges)))
-    ax.set_xticklabels([_alpha_label(v) for v in edges], rotation=35, ha="right")
+    ax.set_xticklabels([alpha_label(v) for v in edges], rotation=35, ha="right")
     ax.set_yticks(np.arange(len(siblings)))
-    ax.set_yticklabels([_alpha_label(v) for v in siblings])
+    ax.set_yticklabels([alpha_label(v) for v in siblings])
     ax.set_xlabel("edge alpha")
     ax.set_ylabel("sibling alpha")
     ax.set_title(title, weight="bold")
@@ -194,7 +178,7 @@ def main() -> None:
     binary = pd.read_csv(SOURCE_DIR / "mnist_benchmark_summary.csv")
     continuous = pd.read_csv(SOURCE_DIR / "mnist_continuous_pca50_summary.csv")
     best = summary.sort_values("ARI", ascending=False).iloc[0]
-    best_key = _assignment_key(
+    best_key = assignment_key(
         str(best["linkage"]), float(best["edge_alpha"]), float(best["sibling_alpha"])
     )
     composition = pd.read_csv(SWEEP_DIR / f"{best_key}_top_cluster_digit_composition.csv")

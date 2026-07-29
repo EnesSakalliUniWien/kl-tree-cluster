@@ -5775,6 +5775,11 @@ verification, and maintenance events here in chronological order.
   styling. The focused `applications/scrna` clone scan dropped to 8 exact
   groups / 90 duplicated lines / 0.83%; the full `applications` scan dropped to
   9 exact groups / 112 duplicated lines / 0.43%.
+- Removed the remaining MNIST plotting duplicate by moving digit colors and
+  alpha/assignment-key helpers into `applications/mnist/_shared.py`. The full
+  `applications` clone scan dropped to 8 exact groups / 90 duplicated lines /
+  0.35%; remaining groups are scRNA analysis logic plus tiny R renderer
+  bootstrap blocks.
 
 ## Evidence
 
