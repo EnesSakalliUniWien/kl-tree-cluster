@@ -5612,6 +5612,44 @@ verification, and maintenance events here in chronological order.
   (4.26%) to 345 groups and 5,808 lines (4.03%). The selected-root and tie-rank
   validation subsets, focused spectral/generator/reporting tests, math-trace
   inference test, targeted Ruff checks, and import checks passed.
+- Removed the duplicated overlap branch-incidence/structural-sibling runner
+  mechanics by adding `benchmarks/diagnostics/calibration/overlap/panel_runner.py`.
+  The helper owns supported-case filtering, replicate/data-role iteration,
+  one-case binary-template TBS execution, node-row collection, rows/summary
+  output, and manifest envelopes; each panel still owns its analytical row
+  builder, relevant-node filter, and summary semantics. The benchmark jscpd
+  slice fell from 345 groups and 5,808 duplicated lines (4.03%) to 339 groups
+  and 5,671 lines (3.94%). The two overlap validation panels, targeted Ruff
+  checks, and compile checks passed.
+- Added a static field/function lineage mode to `tbs-audit` using LibCST for
+  lossless Python source parsing and NetworkX GraphML export. The mode records
+  field writer scopes, reader scopes, schema declarations, surfaces, and
+  no-reader production candidates for pandas/dictionary cleanup. OpenLineage
+  remains documented as runtime job/dataset/run lineage only, not as the static
+  source cleanup adapter. A detailed inspection of the first report exposed
+  missed pandas `.loc` and field-helper reads, so the LibCST adapter now traces
+  multi-slice subscripts and project field-access helpers before classifying
+  no-reader candidates. A later detailed pass added the benchmark
+  `_annotation_float`, `_annotation_bool`, `_annotation_int`, and
+  `_annotation_str` helper readers, reducing generic selected-permutation
+  false positives from the production no-reader set.
+- Removed 12 production empirical-null support/diagnostic metadata keys from
+  `CalibrationDecision.support` and descriptive strata after field-lineage
+  review showed they were output-only mirrors rather than decision inputs:
+  dropped context axes, family/local weight diagnostics, family strict-null and
+  edge-blocked counts, and seven `support_threshold_*` threshold-value mirrors.
+  The retained support contract still records the actual decision inputs,
+  effective sample sizes, max-weight and leave-one-record diagnostics, contract
+  status, and failure reasons. Regenerating `tbs-audit --mode fields` reduced
+  total no-reader candidates from 207 to 195 and production no-reader
+  candidates from 31 to 19 with zero parse errors.
+- Before broad non-production field cleanup, ran the benchmark quality checks:
+  integration benchmark smoke tests, the fixed regression gate, and the quick
+  subset benchmark. The current regression-gate output was row-identical to the
+  stored `benchmarks/results/regression_gate_20260729_070310Z` comparison:
+  17 rows, 11 ok, 6 skip, mean ARI `0.595706`, median ARI `0.680293`, exact-K
+  `4/17`. The quick subset reported exact-K `8/14`, mean ARI `0.898`, and
+  median ARI `0.970`.
 
 ## Evidence
 

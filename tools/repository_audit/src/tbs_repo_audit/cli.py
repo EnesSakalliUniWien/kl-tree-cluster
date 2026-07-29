@@ -13,9 +13,17 @@ from pathlib import Path
 from typing import Sequence
 
 from .coverage_evidence import compare_coverage
+from .field_lineage import build_field_lineage, write_field_lineage_outputs
 from .inventory import build_inventory, write_inventory
 
 DEFAULT_OUTPUT = Path("reports/audits/generated/repository-hygiene.json")
+DEFAULT_FIELD_OUTPUT = Path("reports/audits/generated/field-function-lineage.json")
+DEFAULT_FIELD_GRAPHML_OUTPUT = Path(
+    "reports/audits/generated/field-function-lineage.graphml"
+)
+DEFAULT_FIELD_MARKDOWN_OUTPUT = Path(
+    "reports/audits/generated/field-function-lineage.md"
+)
 CHECK_COMMANDS = {
     "ruff": ["ruff", "check", "."],
     "vulture": [
@@ -62,7 +70,9 @@ TOOL_NAMES = (
 PYTHON_ADAPTERS = {
     "coverage": "coverage",
     "grimp": "grimp",
+    "libcst": "libcst",
     "mutmut": "mutmut",
+    "networkx": "networkx",
     "pytest": "pytest",
     "pytest-cov": "pytest_cov",
     "pytest-deadfixtures": "pytest_deadfixtures",
@@ -286,10 +296,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=("map", "quick", "evidence", "mutation"),
+        choices=("map", "fields", "quick", "evidence", "mutation"),
         default="map",
         help=(
-            "map: static evidence; quick: add linters/clones/fixtures; "
+            "map: static evidence; fields: LibCST field/function lineage; "
+            "quick: add linters/clones/fixtures; "
             "evidence: add calibration coverage contexts; mutation: add mutmut"
         ),
     )
@@ -303,6 +314,24 @@ def _parser() -> argparse.ArgumentParser:
         "--doctor",
         action="store_true",
         help="show whether every audit executable is reachable",
+    )
+    parser.add_argument(
+        "--field-output",
+        type=Path,
+        default=DEFAULT_FIELD_OUTPUT,
+        help="JSON field-lineage path, relative to the repository",
+    )
+    parser.add_argument(
+        "--field-graphml-output",
+        type=Path,
+        default=DEFAULT_FIELD_GRAPHML_OUTPUT,
+        help="GraphML field-lineage path, relative to the repository",
+    )
+    parser.add_argument(
+        "--field-markdown-output",
+        type=Path,
+        default=DEFAULT_FIELD_MARKDOWN_OUTPUT,
+        help="Markdown field-lineage path, relative to the repository",
     )
     parser.add_argument(
         "--mutation-target",
@@ -321,6 +350,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _doctor()
 
     repo = _repo_root(args.repo)
+    if args.mode == "fields":
+        field_output = (
+            args.field_output if args.field_output.is_absolute() else repo / args.field_output
+        )
+        graphml_output = (
+            args.field_graphml_output
+            if args.field_graphml_output.is_absolute()
+            else repo / args.field_graphml_output
+        )
+        markdown_output = (
+            args.field_markdown_output
+            if args.field_markdown_output.is_absolute()
+            else repo / args.field_markdown_output
+        )
+        lineage = build_field_lineage(repo)
+        write_field_lineage_outputs(
+            lineage,
+            output=field_output,
+            graphml_output=graphml_output,
+            markdown_output=markdown_output,
+        )
+        print(f"Field lineage: {field_output}")
+        print(
+            "Fields: "
+            f"{lineage['field_count']} total; "
+            f"{lineage['reuse_counts'].get('no_reader_dead_candidate', 0)} "
+            "no-reader candidates"
+        )
+        return 0
+
     mutation_target = (
         _mutation_target(repo, args.mutation_target)
         if args.mode == "mutation"

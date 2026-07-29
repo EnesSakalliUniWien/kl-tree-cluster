@@ -275,14 +275,7 @@ def _decision_support(
         support["n_family_supported_records"] = int(np.sum(family_mask))
         if np.any(family_mask):
             family_weights = model.sample_weights[family_mask]
-            support["n_family_strict_null_records"] = int(
-                np.sum(model.sample_is_strict_null[family_mask])
-            )
-            support["n_family_edge_blocked_records"] = int(
-                np.sum(model.sample_is_edge_blocked[family_mask])
-            )
             support["family_effective_sample_size"] = _effective_sample_size(family_weights)
-            support["family_max_weight_share"] = _max_weight_share(family_weights)
             support["leave_one_record_max_delta_log_c"] = _leave_one_record_max_delta_log_c(
                 model.sample_statistics[family_mask],
                 (
@@ -303,7 +296,6 @@ def _decision_support(
                 ),
             )
     if local_weights is not None:
-        support["local_weight_sum"] = float(np.sum(local_weights))
         support["local_effective_sample_size"] = (
             _effective_sample_size(local_weights) if float(np.sum(local_weights)) > 0.0 else 0.0
         )
@@ -355,25 +347,6 @@ def _with_support_contract(
         else "below_internal_support_thresholds"
     )
     annotated_support["support_contract_failure_reasons"] = ";".join(failures)
-    annotated_support["support_threshold_min_supported_records"] = int(
-        thresholds.min_supported_records
-    )
-    annotated_support["support_threshold_min_family_supported_records"] = int(
-        thresholds.min_family_supported_records
-    )
-    annotated_support["support_threshold_min_stopped_or_null_records"] = int(
-        thresholds.min_stopped_or_null_records
-    )
-    annotated_support["support_threshold_min_family_effective_sample_size"] = float(
-        thresholds.min_family_effective_sample_size
-    )
-    annotated_support["support_threshold_min_local_effective_sample_size"] = float(
-        thresholds.min_local_effective_sample_size
-    )
-    annotated_support["support_threshold_max_weight_share"] = float(thresholds.max_weight_share)
-    annotated_support["support_threshold_max_leave_one_record_delta_log_c"] = float(
-        thresholds.max_leave_one_record_delta_log_c
-    )
     return annotated_support, failures
 
 
@@ -516,12 +489,6 @@ def decide_empirical_null_calibration(
         if model.context_bandwidth.size > 1
         else 0.0,
     }
-    dropped_axes = []
-    if not bool(active_context_axes[0]):
-        dropped_axes.append("sibling_projection_dimension")
-    if not bool(active_context_axes[1]):
-        dropped_axes.append("parent_sample_size")
-    descriptive_strata["dropped_context_axes"] = ",".join(dropped_axes)
     if not np.any(active_context_axes):
         c_hat = float(max(family_baseline_inflation_factor, 1.0))
         local_weights = model.sample_weights[family_mask]

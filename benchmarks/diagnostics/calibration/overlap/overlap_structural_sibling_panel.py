@@ -17,25 +17,19 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 
+from benchmarks.diagnostics.calibration.overlap.panel_runner import (
+    build_binary_overlap_case_node_rows,
+    run_binary_overlap_panel,
+)
 from benchmarks.diagnostics.calibration.selected.family.selected_family_traversal_panel import (
-    _build_node_decisions,
     _output_data_role,
 )
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_panel import (
     DEFAULT_DATA_ROLES,
-    validate_data_roles,
 )
-from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
-    _generate_data_with_truth,
-)
-from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
-from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
-    _case_contract,
-    _select_cases,
     parse_names,
 )
 
@@ -566,7 +560,7 @@ def _run_one(
     data_seed: int,
     config: OverlapStructuralSiblingPanelConfig,
 ) -> pd.DataFrame:
-    data, feature_space, truth_labels, _true_clusters = _generate_data_with_truth(
+    return build_binary_overlap_case_node_rows(
         case=case,
         case_id=case_id,
         source_family=source_family,
@@ -575,49 +569,17 @@ def _run_one(
         n_features=n_features,
         n_categories=n_categories,
         data_role=data_role,
-        seed=data_seed,
-    )
-    distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = run_tbs_on_distance(
-        data,
-        distance,
-        sibling_significance_level=float(config.sibling_alpha),
-        tree_linkage_method="average",
-        edge_alpha=float(config.edge_alpha),
-        feature_space=feature_space,
-        sibling_gate_profile=str(config.profile_id),
-        trace_level="full",
-    )
-    node_decisions = _build_node_decisions(
-        case_id=case_id,
-        data_role=data_role,
-        method_id=str(config.profile_id),
         replicate=replicate,
         data_seed=data_seed,
-        result=result,
-    )
-    truth_by_label = {
-        str(label): int(value)
-        for label, value in zip(data.index.astype(str), np.asarray(truth_labels, dtype=int))
-    }
-    records: list[dict[str, object]] = []
-    for _, node_row in _relevant_node_rows(node_decisions).iterrows():
-        row = _analytical_rows_for_node(
-            case_id=case_id,
-            data_role=data_role,
-            replicate=replicate,
-            data_seed=data_seed,
-            profile_id=str(config.profile_id),
-            node_row=node_row,
-            result=result,
-            data=data,
-            truth_by_label=truth_by_label,
+        config=config,
+        row_columns=ROW_COLUMNS,
+        relevant_node_rows=_relevant_node_rows,
+        node_row_builder=lambda **kwargs: _analytical_rows_for_node(
+            **{key: value for key, value in kwargs.items() if key != "config"},
             top_k=int(config.top_k),
             max_pairwise_samples=int(config.max_pairwise_samples),
-        )
-        if row is not None:
-            records.append(row)
-    return pd.DataFrame.from_records(records, columns=ROW_COLUMNS)
+        ),
+    )
 
 
 def _summarize_rows(rows: pd.DataFrame) -> pd.DataFrame:
@@ -704,96 +666,17 @@ def run_overlap_structural_sibling_panel(
     config: OverlapStructuralSiblingPanelConfig,
 ) -> dict[str, Path]:
     """Run overlap structural sibling diagnostics and write outputs."""
-    if int(config.replicates) <= 0:
-        raise ValueError("replicates must be positive.")
-    if int(config.top_k) <= 0:
-        raise ValueError("top_k must be positive.")
-    validate_data_roles(config.data_roles)
-    config.output_dir.mkdir(parents=True, exist_ok=True)
-
-    row_frames: list[pd.DataFrame] = []
-    skipped_cases: list[dict[str, object]] = []
-    for case in _select_cases(suite=config.suite, case_names=config.case_names):
-        try:
-            (
-                case_id,
-                source_family,
-                feature_representation,
-                n_samples,
-                n_features,
-                n_categories,
-            ) = _case_contract(case)
-        except ValueError as exc:
-            case_id = str(case.get("case_id", case.get("name", "unknown_case")))
-            if not bool(config.skip_unsupported_cases):
-                raise
-            skipped_cases.append({"case_id": case_id, "reason": str(exc)})
-            continue
-        if source_family != "binary_template":
-            if not bool(config.skip_unsupported_cases):
-                raise ValueError(f"Unsupported overlap structural family: {source_family}")
-            skipped_cases.append(
-                {
-                    "case_id": case_id,
-                    "reason": f"unsupported source_family={source_family}",
-                }
-            )
-            continue
-        for replicate in range(int(config.replicates)):
-            data_seed = int(config.base_seed) + replicate
-            for data_role in config.data_roles:
-                row_frames.append(
-                    _run_one(
-                        case=case,
-                        case_id=case_id,
-                        source_family=source_family,
-                        feature_representation=feature_representation,
-                        n_samples=n_samples,
-                        n_features=n_features,
-                        n_categories=n_categories,
-                        data_role=data_role,
-                        replicate=replicate,
-                        data_seed=data_seed,
-                        config=config,
-                    )
-                )
-
-    rows = (
-        pd.concat([frame for frame in row_frames if not frame.empty], ignore_index=True)
-        if any(not frame.empty for frame in row_frames)
-        else pd.DataFrame(columns=ROW_COLUMNS)
+    return run_binary_overlap_panel(
+        config=config,
+        row_columns=ROW_COLUMNS,
+        row_builder=_run_one,
+        summarize_rows=_summarize_rows,
+        schema_version=SCHEMA_VERSION,
+        study_role=STUDY_ROLE,
+        generated_by=GENERATED_BY,
+        unsupported_family_label="overlap structural",
+        manifest_extra={"max_pairwise_samples": int(config.max_pairwise_samples)},
     )
-    summary = _summarize_rows(rows)
-    rows.to_csv(config.rows_path, index=False)
-    summary.to_csv(config.summary_path, index=False)
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at_utc": format_timestamp_utc(),
-        "suite": config.suite,
-        "case_names": list(config.case_names),
-        "data_roles": list(config.data_roles),
-        "replicates": int(config.replicates),
-        "base_seed": int(config.base_seed),
-        "profile_id": str(config.profile_id),
-        "sibling_alpha": float(config.sibling_alpha),
-        "edge_alpha": float(config.edge_alpha),
-        "top_k": int(config.top_k),
-        "max_pairwise_samples": int(config.max_pairwise_samples),
-        "rows": int(rows.shape[0]),
-        "skipped_cases": skipped_cases,
-        "outputs": {
-            "rows": str(config.rows_path),
-            "summary": str(config.summary_path),
-        },
-    }
-    config.manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))
-    return {
-        "rows": config.rows_path,
-        "summary": config.summary_path,
-        "manifest": config.manifest_path,
-    }
 
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:

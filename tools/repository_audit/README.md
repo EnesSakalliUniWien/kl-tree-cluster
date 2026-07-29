@@ -7,6 +7,8 @@ repository-hygiene interface.
 The modes deliberately escalate in cost:
 
 - `tbs-audit --mode map` builds read-only import, field-use, and history evidence.
+- `tbs-audit --mode fields` builds LibCST field/function lineage and exports a
+  NetworkX GraphML graph for pandas/dictionary field cleanup review.
 - `tbs-audit --mode quick` also runs Ruff, Vulture, jscpd, and
   pytest-deadfixtures. Test collection runs through the repository's locked
   application environment, with the plugin added as a transient overlay, so
@@ -22,6 +24,12 @@ The modes deliberately escalate in cost:
 The default report is
 `reports/audits/generated/repository-hygiene.json`. Generated snapshots are
 ignored by Git because they contain timestamps and current-worktree evidence.
+The field-lineage mode writes
+`reports/audits/generated/field-function-lineage.json`,
+`reports/audits/generated/field-function-lineage.graphml`, and
+`reports/audits/generated/field-function-lineage.md` by default. OpenLineage is
+not used for static source cleanup; it belongs to runtime job/dataset/run
+lineage if the project later needs executed-pipeline metadata.
 Run
 `tbs-audit --doctor` to verify that all adapters are reachable.
 

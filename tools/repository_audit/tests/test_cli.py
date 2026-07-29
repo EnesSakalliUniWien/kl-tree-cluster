@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -107,3 +108,38 @@ def test_map_mode_writes_report_through_public_interface(tmp_path: Path) -> None
 
     assert result == 0
     assert (tmp_path / "reports/audit.json").exists()
+
+
+def test_fields_mode_writes_json_markdown_and_graphml(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "tree_break_selection/result.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        'def build():\n'
+        "    row = {}\n"
+        '    row["lineage_field"] = 1\n'
+        '    return row["lineage_field"]\n',
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "--repo",
+            str(tmp_path),
+            "--mode",
+            "fields",
+            "--field-output",
+            "reports/fields.json",
+            "--field-graphml-output",
+            "reports/fields.graphml",
+            "--field-markdown-output",
+            "reports/fields.md",
+        ]
+    )
+
+    assert result == 0
+    lineage = json.loads((tmp_path / "reports/fields.json").read_text(encoding="utf-8"))
+    assert lineage["adapter"] == "libcst"
+    assert any(field["key"] == "lineage_field" for field in lineage["fields"])
+    assert (tmp_path / "reports/fields.graphml").exists()
+    assert (tmp_path / "reports/fields.md").exists()

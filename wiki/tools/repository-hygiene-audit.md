@@ -8,9 +8,11 @@ sources:
   - tools/repository_audit/pyproject.toml
   - tools/repository_audit/src/tbs_repo_audit/cli.py
   - tools/repository_audit/src/tbs_repo_audit/coverage_evidence.py
+  - tools/repository_audit/src/tbs_repo_audit/field_lineage.py
   - tools/repository_audit/src/tbs_repo_audit/inventory.py
   - tools/repository_audit/tests/test_cli.py
   - tools/repository_audit/tests/test_coverage_evidence.py
+  - tools/repository_audit/tests/test_field_lineage.py
   - tools/repository_audit/tests/test_inventory.py
 tags:
   - hygiene
@@ -57,9 +59,16 @@ mistaking application dependencies for missing packages.
 The higher-cost modes are explicit:
 
 ```bash
+tbs-audit --mode fields
 tbs-audit --mode evidence
 tbs-audit --mode mutation --mutation-target tree_break_selection/tree
 ```
+
+`fields` builds a LibCST-backed field/function lineage map and exports JSON,
+Markdown, and NetworkX GraphML. This mode is the static source cleanup path for
+pandas and dictionary result fields. OpenLineage is intentionally not part of
+this mode because its standard role is runtime job, dataset, and run lineage
+metadata for executed pipelines.
 
 `evidence` adds per-test calibration coverage contexts through a transient
 pytest-cov overlay on the repository's locked environment. It records the
@@ -85,6 +94,10 @@ The repository also exposes `make audit`, `make audit-quick`, and
   import map with Grimp, traces string subscript and mapping-method accesses,
   recognizes standalone `__main__` entry points, records documentation
   references, and attaches Git history.
+- `tools/repository_audit/src/tbs_repo_audit/field_lineage.py` uses LibCST for
+  lossless static Python parsing and NetworkX GraphML export so pandas and
+  dictionary fields can be reviewed by writer scope, reader scope, schema
+  declaration, and surface before deletion.
 - Calibration package initializers are excluded from study-module counts.
 - Statically unimported files are separated from unresolved files because
   command runners and documented reproducibility artifacts can be valid without
@@ -108,8 +121,9 @@ The repository also exposes `make audit`, `make audit-quick`, and
   that count to 2. The two retained lines choose sequential or all-core
   execution in the production spectral worker resolver. The remaining 21,936
   calibration-only lines are confined to benchmark and diagnostic modules.
-- The tool package has 20 focused tests, including compact coverage-set
-  comparison and punctuation-insensitive documentation matching.
+- The tool package has 24 focused tests, including compact coverage-set
+  comparison, punctuation-insensitive documentation matching, and LibCST
+  field-lineage read/write classification.
 - The first responsibility-aware clone tranche split application/production
   and benchmark scans before editing. The combined scan fell from 492 groups
   and 8,753 duplicated lines (3.71%) to 473 groups and 8,178 lines (3.47%).
