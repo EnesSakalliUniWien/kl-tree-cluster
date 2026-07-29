@@ -170,7 +170,6 @@ def run_single_method_once(
     distance_matrix: np.ndarray | None,
     distance_condensed: np.ndarray | None,
     matrix_audit: bool,
-    strict: bool = False,
 ) -> tuple[BenchmarkResultRow, ComputedResultRecord | None, tuple[str, dict[str, object]] | None]:
     """Execute one method+params run and return typed outputs."""
     benchmark_metadata = benchmark_param_metadata(

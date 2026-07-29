@@ -5708,6 +5708,52 @@ verification, and maintenance events here in chronological order.
   audit warning filter. A full Python scan now leaves only vendor
   BranchArchitect compatibility terms, wiki-schema/test policy wording, and
   diagnostic metric-compatibility terminology outside maintained TBS aliases.
+- Removed doubled probability-validation and grouped-categorical simplex
+  covariance setup inside the production contrast-covariance module. Bernoulli
+  and categorical tangent checks now share one probability-input validator, and
+  grouped categorical Wald/tangent whitening share contrast-slice and Cholesky
+  construction helpers.
+- Removed the next statically proven dead parameters from maintained
+  application, benchmark, and validation code. The cleanup eliminated unused
+  endotype report/plot parameters, scRNA diagnostic/report helper parameters,
+  the random-feature coverage width argument, the dead inner benchmark
+  `strict` pass-through after fail-loud execution hardening, and an unused
+  BranchArchitect split-length root argument.
+- Ran a non-canonical full-suite benchmark sweep excluding the TBS-family
+  methods after the fail-loud empirical-null calibration abort. The run used
+  `TBS_METHODS=leiden,louvain,kmeans,spectral,dbscan,optics,hdbscan` and
+  `TBS_ENABLE_PLOTS=0`, completed all 121 cases with 847/847 ok rows, and wrote
+  results under
+  `benchmarks/results/run_20260729_noncanonical_no_tbs_full/`. Mean ARI ranked
+  k-means `0.864`, spectral `0.837`, Leiden `0.816`, Louvain `0.812`, HDBSCAN
+  `0.601`, DBSCAN `0.573`, and OPTICS `0.524`, confirming the non-TBS default
+  methods run through the cleaned benchmark stack.
+- Fixed the TBS empirical-null calibration blocker exposed by
+  `gauss_extreme_noise_highd`. When a sibling gate has selected focal tests but
+  no internal empirical-null support records, annotation now fails closed with
+  explicit `empirical_null_no_internal_support` metadata instead of raising
+  during full benchmark execution.
+- Hardened diffusion benchmark execution around library limitations. Adaptive
+  pydiffmap neighbor resolution now accounts for exact duplicate rows, and
+  pydiffmap variable-bandwidth methods explicitly skip duplicate blocks that
+  would trigger zero local bandwidths. Hamming-diffusion methods also skip
+  continuous feature spaces with recorded compatibility reasons rather than
+  silently falling through.
+- Reran the canonical full benchmark with plots disabled after calibration and
+  diffusion hardening. The run completed all 121 cases and wrote results under
+  `benchmarks/results/run_20260729_canonical_full_maxiter1000_no_plots/`.
+  Status counts were 1176 ok rows, 34 explicit skips, and 0 failures across
+  1210 method-case rows. Mean ARI on ok rows ranked k-means `0.864`, spectral
+  `0.837`, Leiden `0.816`, Louvain `0.812`, adaptive-diffusion NNLS `0.773`,
+  TBS `0.612`, HDBSCAN `0.601`, DBSCAN `0.573`, OPTICS `0.524`, and fixed
+  Hamming diffusion TBS `0.483`.
+- Modularized maintained benchmark orchestration. Added
+  `benchmarks/shared/benchmark_runs/` for runtime defaults, resume/grid
+  coverage, smoke-suite selection and summaries, and regression-gate execution.
+  Added `benchmarks/continuous/run.py` as a continuously runnable local/CI
+  benchmark gate that reuses the regression-gate seam instead of duplicating
+  benchmark logic. Existing full, smoke, and regression entrypoints now delegate
+  to the shared run modules while preserving their command names.
 
 ## Evidence
 

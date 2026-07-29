@@ -12,7 +12,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failures
-from benchmarks.shared.benchmark_grid import benchmark_run_id
+from benchmarks.shared.benchmark_runs.resume import (
+    compute_resume_coverage,
+    filter_methods_and_params_by_run_ids,
+    run_ids_for_params,
+)
+from benchmarks.shared.benchmark_runs.runtime import apply_single_thread_runtime_defaults
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.cases.geometry import case_recipe_geometry
 from benchmarks.shared.env import get_env_bool, get_env_int
@@ -35,79 +40,6 @@ from benchmarks.shared.util.method_selection import (
 from benchmarks.shared.util.method_sets import DEFAULT_METHODS
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
-
-
-def _compute_resume_coverage(
-    existing_results: pd.DataFrame,
-    expected_run_ids: list[str],
-) -> tuple[set[int], dict[int, list[str]], int]:
-    """Compute fully-complete and partial case coverage from an existing CSV."""
-    if existing_results.empty:
-        return set(), {}, 0
-
-    if "test_case" not in existing_results.columns:
-        return set(), {}, 0
-
-    if "run_id" not in existing_results.columns:
-        return set(), {}, 0
-
-    expected_set = set(expected_run_ids)
-
-    case_keys = pd.to_numeric(existing_results["test_case"], errors="coerce")
-    run_ids_raw = existing_results["run_id"].astype(str)
-    run_ids_norm = run_ids_raw.where(run_ids_raw.isin(expected_set))
-    progress = pd.DataFrame({"case_key": case_keys, "run_id": run_ids_norm})
-    progress = progress.dropna(subset=["case_key", "run_id"])
-    if progress.empty:
-        return set(), {}, 0
-
-    progress["case_key"] = progress["case_key"].astype(int)
-
-    run_ids_by_case = (
-        progress.groupby("case_key")["run_id"].agg(lambda s: set(s.tolist())).to_dict()
-    )
-
-    completed_cases: set[int] = set()
-    missing_run_ids_by_case: dict[int, list[str]] = {}
-    for case_key, seen_run_ids in run_ids_by_case.items():
-        missing = [run_id for run_id in expected_run_ids if run_id not in seen_run_ids]
-        if not missing:
-            completed_cases.add(int(case_key))
-        else:
-            missing_run_ids_by_case[int(case_key)] = missing
-
-    return completed_cases, missing_run_ids_by_case, len(run_ids_by_case)
-
-
-def _run_ids_for_params(
-    methods: list[str],
-    param_sets: dict[str, list[dict[str, object]]],
-) -> list[str]:
-    return [
-        benchmark_run_id(method_id, params)
-        for method_id in methods
-        for params in param_sets[method_id]
-    ]
-
-
-def _filter_methods_and_params_by_run_ids(
-    *,
-    methods: list[str],
-    param_sets: dict[str, list[dict[str, object]]],
-    run_ids: set[str],
-) -> tuple[list[str], dict[str, list[dict[str, object]]]]:
-    filtered_methods: list[str] = []
-    filtered_params: dict[str, list[dict[str, object]]] = {}
-    for method_id in methods:
-        selected_params = [
-            params
-            for params in param_sets[method_id]
-            if benchmark_run_id(method_id, params) in run_ids
-        ]
-        if selected_params:
-            filtered_methods.append(method_id)
-            filtered_params[method_id] = selected_params
-    return filtered_methods, filtered_params
 
 
 def _stamp_full_run_case_identity(
@@ -136,7 +68,8 @@ def run_benchmarks():
     # Default to single-threaded spectral decomposition workers to avoid
     # thread oversubscription (outer benchmark parallelism + BLAS threads).
     # Users can still override by setting TBS_N_JOBS explicitly.
-    spectral_jobs = os.environ.setdefault("TBS_N_JOBS", "1")
+    apply_single_thread_runtime_defaults()
+    spectral_jobs = os.environ["TBS_N_JOBS"]
 
     case_suite = os.environ.get("TBS_CASE_SUITE", "full").strip().lower()
     print(f"Fetching benchmark case suite: {case_suite}")
@@ -162,7 +95,7 @@ def run_benchmarks():
         default_methods=DEFAULT_METHODS,
         method_specs=METHOD_SPECS,
     )
-    expected_run_ids = _run_ids_for_params(methods_to_test, param_sets)
+    expected_run_ids = run_ids_for_params(methods_to_test, param_sets)
     print(f"Methods: {methods_to_test}")
     print(f"Benchmark run cells: {len(expected_run_ids)}")
     print(f"Spectral settings: TBS_N_JOBS={spectral_jobs}")
@@ -226,7 +159,7 @@ def run_benchmarks():
     # Load existing results if any to resume
     if output_path.exists():
         all_results = pd.read_csv(output_path)
-        completed_case_keys, missing_run_ids_by_case, tracked_case_count = _compute_resume_coverage(
+        completed_case_keys, missing_run_ids_by_case, tracked_case_count = compute_resume_coverage(
             all_results,
             expected_run_ids,
         )
@@ -255,7 +188,7 @@ def run_benchmarks():
 
         if case_key in missing_run_ids_by_case:
             missing_run_ids = set(missing_run_ids_by_case[case_key])
-            methods_for_case, method_params_for_case = _filter_methods_and_params_by_run_ids(
+            methods_for_case, method_params_for_case = filter_methods_and_params_by_run_ids(
                 methods=methods_to_test,
                 param_sets=param_sets,
                 run_ids=missing_run_ids,

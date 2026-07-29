@@ -669,7 +669,6 @@ def write_csv_outputs(
 def draw_subspace_plot_page(
     pdf: PdfPages,
     row: pd.Series,
-    cache: dict[str, Any],
 ) -> None:
     fig = plt.figure(figsize=(18, 11), layout="constrained")
     grid = fig.add_gridspec(2, 3, width_ratios=[1.35, 1.0, 1.0], height_ratios=[1, 1])
@@ -791,7 +790,7 @@ def write_pdf(
 ) -> None:
     with PdfPages(output_path) as pdf:
         for _, row in ranking.iterrows():
-            draw_subspace_plot_page(pdf, row, cache)
+            draw_subspace_plot_page(pdf, row)
             draw_subspace_annotation_page(pdf, row, annotations, cache)
 
 

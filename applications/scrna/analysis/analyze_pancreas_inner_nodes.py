@@ -324,7 +324,6 @@ def main() -> None:
         assignments=assignments,
         summary=summary,
         marker_frame=marker_frame,
-        children=children,
         parent_nodes=parents,
         descendant_leaves=descendant_leaves,
     )
@@ -373,11 +372,10 @@ def main() -> None:
         index=False,
     )
     write_plot(summary, review, output_dir)
-    write_junction_umap_plot(junction_review, assignments, children, descendant_leaves, output_dir)
+    write_junction_umap_plot(junction_review, assignments, descendant_leaves, output_dir)
     write_monophyletic_meeting_umap_plot(
         monophyletic_review,
         assignments,
-        children,
         descendant_leaves,
         output_dir,
     )
@@ -388,7 +386,6 @@ def build_terminal_cluster_review(
     assignments: pd.DataFrame,
     summary: pd.DataFrame,
     marker_frame: pd.DataFrame,
-    children: dict[str, list[str]],
     parent_nodes: set[str],
     descendant_leaves: object,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -884,7 +881,6 @@ def write_plot(summary: pd.DataFrame, review: pd.DataFrame, output_dir: Path) ->
 def write_junction_umap_plot(
     junction_review: pd.DataFrame,
     assignments: pd.DataFrame,
-    children: dict[str, list[str]],
     descendant_leaves: object,
     output_dir: Path,
 ) -> None:
@@ -942,7 +938,6 @@ def write_junction_umap_plot(
 def write_monophyletic_meeting_umap_plot(
     meeting_review: pd.DataFrame,
     assignments: pd.DataFrame,
-    children: dict[str, list[str]],
     descendant_leaves: object,
     output_dir: Path,
 ) -> None:

@@ -19,6 +19,9 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
+from tree_break_selection.space_separation.diffusion import (
+    PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS,
+)
 from tree_break_selection.tree.construction import DEFAULT_BINARY_TREE_DISTANCE_METRIC
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
@@ -136,6 +139,65 @@ def _tbs_branch_length_optimization_kwargs(params: Dict[str, Any]) -> Dict[str, 
     }
 
 
+def _skip_unsupported_hamming_diffusion(
+    *,
+    method_id: str,
+    feature_space: FeatureSpace | None,
+) -> MethodRunResult | None:
+    """Return an explicit benchmark skip for Hamming-only diffusion on continuous data."""
+    if feature_space is None or not feature_space.has_continuous_blocks:
+        return None
+    return MethodRunResult(
+        labels=None,
+        found_clusters=0,
+        report_df=None,
+        status="skip",
+        skip_reason=(
+            f"{method_id} uses Hamming diffusion and requires binary or one-hot "
+            "feature matrices; continuous FeatureSpace inputs are unsupported."
+        ),
+        extra={
+            "method_compatibility_status": "unsupported_feature_space",
+            "method_compatibility_reason": "hamming_diffusion_requires_discrete_features",
+        },
+    )
+
+
+def _skip_degenerate_pydiffmap_variable_bandwidth(
+    *,
+    data_df: pd.DataFrame,
+    method_id: str,
+    bandwidth_type: str | float | None,
+) -> MethodRunResult | None:
+    """Return an explicit benchmark skip for pydiffmap's zero-bandwidth case."""
+    if bandwidth_type is None:
+        return None
+    values = data_df.to_numpy(dtype=float)
+    _unique_rows, counts = np.unique(values, axis=0, return_counts=True)
+    max_duplicate_count = int(counts.max(initial=0))
+    if max_duplicate_count < PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS:
+        return None
+    return MethodRunResult(
+        labels=None,
+        found_clusters=0,
+        report_df=None,
+        status="skip",
+        skip_reason=(
+            f"{method_id} uses pydiffmap variable-bandwidth diffusion, but the "
+            f"largest exact duplicate block has {max_duplicate_count} rows. "
+            f"pydiffmap's internal NNKDE query size is "
+            f"{PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS}, which can produce "
+            "zero local bandwidths and non-finite diffusion weights."
+        ),
+        extra={
+            "method_compatibility_status": "unsupported_duplicate_geometry",
+            "method_compatibility_reason": "pydiffmap_variable_bandwidth_zero_bandwidth",
+            "max_duplicate_count": max_duplicate_count,
+            "pydiffmap_nnkde_query_size": PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS,
+        },
+    )
+
+
 def _optional_int_sequence(value: Any) -> tuple[int, ...] | None:
     """Parse optional integer-list method parameters from registry/env inputs."""
     if value is None:
@@ -168,6 +230,12 @@ def run_clustering_result(
     alpha = DEFAULT_SIBLING_ALPHA if significance_level is None else float(significance_level)
     resolved_edge_alpha = DEFAULT_EDGE_ALPHA if edge_alpha is None else float(edge_alpha)
     if method_id == "tbs_diffusion":
+        skipped = _skip_unsupported_hamming_diffusion(
+            method_id=method_id,
+            feature_space=feature_space,
+        )
+        if skipped is not None:
+            return skipped
         result = spec.runner(
             data_df,
             alpha,
@@ -182,6 +250,20 @@ def run_clustering_result(
         )
         return _normalize_method_result(result, data_df.index)
     if method_id in {"tbs_diffusion_adaptive", "tbs_diffusion_adaptive_nnls"}:
+        if str(params["metric"]).lower() == "hamming":
+            skipped = _skip_unsupported_hamming_diffusion(
+                method_id=method_id,
+                feature_space=feature_space,
+            )
+            if skipped is not None:
+                return skipped
+        skipped = _skip_degenerate_pydiffmap_variable_bandwidth(
+            data_df=data_df,
+            method_id=method_id,
+            bandwidth_type=params["bandwidth_type"],
+        )
+        if skipped is not None:
+            return skipped
         result = spec.runner(
             data_df,
             alpha,

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import pandas as pd
-from benchmarks.full.run import (
-    _compute_resume_coverage,
-    _filter_methods_and_params_by_run_ids,
-    _run_ids_for_params,
-)
 from benchmarks.shared.benchmark_grid import benchmark_grid, benchmark_run_id
+from benchmarks.shared.benchmark_runs.resume import (
+    compute_resume_coverage,
+    filter_methods_and_params_by_run_ids,
+    run_ids_for_params,
+)
 
 
 def test_full_runner_resume_tracks_grid_run_ids():
@@ -18,7 +18,7 @@ def test_full_runner_resume_tracks_grid_run_ids():
             axes={"variant": ("a", "b")},
         )
     }
-    expected_run_ids = _run_ids_for_params(["kmeans"], param_sets)
+    expected_run_ids = run_ids_for_params(["kmeans"], param_sets)
     existing_results = pd.DataFrame(
         [
             {"test_case": 1, "method": "kmeans", "run_id": expected_run_ids[0]},
@@ -27,7 +27,7 @@ def test_full_runner_resume_tracks_grid_run_ids():
         ]
     )
 
-    completed, missing_by_case, tracked_count = _compute_resume_coverage(
+    completed, missing_by_case, tracked_count = compute_resume_coverage(
         existing_results,
         expected_run_ids,
     )
@@ -36,7 +36,7 @@ def test_full_runner_resume_tracks_grid_run_ids():
     assert missing_by_case == {2: [expected_run_ids[1]]}
     assert tracked_count == 2
 
-    methods, filtered_params = _filter_methods_and_params_by_run_ids(
+    methods, filtered_params = filter_methods_and_params_by_run_ids(
         methods=["kmeans"],
         param_sets=param_sets,
         run_ids={expected_run_ids[1]},

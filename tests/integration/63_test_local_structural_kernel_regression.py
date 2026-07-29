@@ -16,28 +16,50 @@ from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils impo
 
 
 @pytest.mark.slow
-def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -> None:
+def test_strict_sibling_calibration_fails_closed_gauss_null_large_without_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_null_large")
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
-    with pytest.raises(ValueError, match="selected non-null"):
-        run_tbs_on_distance(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+    result = run_tbs_on_distance(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+
+    assert result.status == "ok"
+    annotations = result.extra["annotations"]
+    fail_closed = annotations[
+        annotations["Sibling_Gate_P_Value_Calibration"].eq("undefined_no_internal_support")
+    ]
+    assert not fail_closed.empty
+    assert fail_closed["Sibling_Test_Method"].eq("empirical_null_no_internal_support").all()
+    assert fail_closed["Sibling_Gate_P_Value_Role"].eq("fail_closed_sibling_gate").all()
+    assert fail_closed["Sibling_Divergence_Skipped"].eq(True).all()
+    assert fail_closed["Sibling_Divergence_Invalid"].eq(True).all()
+    assert not fail_closed["Sibling_BH_Different"].any()
 
 
 @pytest.mark.slow
-def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
+def test_leaf_only_cat_highcard_fails_closed_without_explicit_calibration_support() -> None:
     case = next(
         case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c"
     )
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
-    with pytest.raises(ValueError, match="selected non-null"):
-        run_tbs_on_distance(
-            context.data,
-            context.distance_condensed,
-            DEFAULT_SIBLING_ALPHA,
-            feature_space=context.feature_space,
-        )
+    result = run_tbs_on_distance(
+        context.data,
+        context.distance_condensed,
+        DEFAULT_SIBLING_ALPHA,
+        feature_space=context.feature_space,
+    )
+
+    assert result.status == "ok"
+    annotations = result.extra["annotations"]
+    fail_closed = annotations[
+        annotations["Sibling_Gate_P_Value_Calibration"].eq("undefined_no_internal_support")
+    ]
+    assert not fail_closed.empty
+    assert fail_closed["Sibling_Test_Method"].eq("empirical_null_no_internal_support").all()
+    assert fail_closed["Sibling_Gate_P_Value_Role"].eq("fail_closed_sibling_gate").all()
+    assert fail_closed["Sibling_Divergence_Skipped"].eq(True).all()
+    assert fail_closed["Sibling_Divergence_Invalid"].eq(True).all()
+    assert not fail_closed["Sibling_BH_Different"].any()
 
 
 @pytest.mark.slow

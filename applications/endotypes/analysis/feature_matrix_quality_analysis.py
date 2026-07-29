@@ -207,8 +207,6 @@ def write_report(
     duplicate_gene_groups: pd.DataFrame,
     duplicate_term_groups: pd.DataFrame,
     entropy_summary: pd.DataFrame,
-    term_entropy_bins: pd.DataFrame,
-    gene_entropy_bins: pd.DataFrame,
 ) -> None:
     with PdfPages(output_path) as pdf:
         fig, ax = plt.subplots(figsize=(11, 8.5))
@@ -583,8 +581,6 @@ def main() -> None:
         duplicate_gene_groups=duplicate_gene_groups,
         duplicate_term_groups=duplicate_term_groups,
         entropy_summary=entropy_summary,
-        term_entropy_bins=term_entropy_bins,
-        gene_entropy_bins=gene_entropy_bins,
     )
 
     readme = [

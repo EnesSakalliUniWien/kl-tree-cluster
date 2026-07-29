@@ -24,6 +24,9 @@ uv run python -m benchmarks.smoke.run_subset
 # Fast regression gate
 uv run python -m benchmarks.regression.run_gate
 
+# Continuously runnable local/CI gate
+uv run python -m benchmarks.continuous.run
+
 # Real-world datasets (MNIST, Penguins, Digits)
 uv run python -m benchmarks.experiments.mnist.run
 uv run python -m benchmarks.experiments.umap_datasets.run
@@ -58,6 +61,7 @@ Benchmark code is classified by role, not by age or filename:
 | Class | Location | Role |
 | ----- | -------- | ---- |
 | `canonical` | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/`, `benchmarks/shared/` | Current benchmark contract, shared runners, default method set, and fast gates. |
+| `continuous` | `benchmarks/continuous/`, `benchmarks/shared/benchmark_runs/` | CI/local maintained benchmark entrypoints and reusable run orchestration seams. |
 | `experiment` | `benchmarks/experiments/` | Standalone scientific studies with explicit sweeps or real datasets. |
 | `validation` | `benchmarks/validation/` | Focused calibration or method-constant checks with manifests. |
 | `diagnostic` | `benchmarks/diagnostics/` | Investigation-only panels, failure analysis, and post-run diagnosis. |
@@ -83,6 +87,8 @@ K, and repeat index.
 ### Shared Features
 
 The `benchmarks/shared/` system provides:
+- `benchmark_runs/` for reusable full/smoke/regression/continuous orchestration
+  seams
 - `matrix_audit` parameter for TensorBoard-style matrix exports
 - `evolution.py` for temporal evolution tracking
 - `audit_utils.py` for matrix export infrastructure
@@ -101,6 +107,7 @@ experiments that are not part of the canonical full-suite contract live under
 | `shared/cases/__init__.py` | All test case definitions (Gaussian, binary, SBM, phylogenetic) |
 | `shared/cases/geometry.py` | Canonical case-recipe shape and true-K helpers                  |
 | `shared/pipeline.py`       | `benchmark_cluster_algorithm()` shared execution pipeline       |
+| `shared/benchmark_runs/`   | Shared run planning, runtime defaults, resume logic, and summaries |
 | `full/run.py`              | Canonical suite/report orchestrator                             |
 | `shared/util/case_inputs.py` | Matrix contract validation and shared distance preparation    |
 | `shared/util/method_execution.py` | One method+parameter run and result-row construction     |
@@ -109,6 +116,7 @@ experiments that are not part of the canonical full-suite contract live under
 | `shared/generators/`       | Data generators (phylogenetic, Gaussian, etc.)                  |
 | `smoke/run_subset.py`      | Small fast smoke runner                                         |
 | `regression/run_gate.py`   | Historically sensitive benchmark regression gate                |
+| `continuous/run.py`        | CI/local continuously runnable benchmark gate                   |
 | `experiments/`             | Standalone branch-length, MNIST, UMAP, and multi-split studies  |
 | `diagnostics/`             | Oracle, calibration, spectral, failure, and post-run diagnostics |
 | `validation/`              | Method-constant validation manifests and checks                 |

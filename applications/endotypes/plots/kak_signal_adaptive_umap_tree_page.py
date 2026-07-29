@@ -650,7 +650,6 @@ def compute_block_geometry(
     row: pd.Series,
     coords: np.ndarray,
     eigvals: np.ndarray,
-    eigvecs: np.ndarray,
     common_axis_score: np.ndarray,
     assignment: pd.DataFrame,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
@@ -839,7 +838,6 @@ def build_artifacts(
             row=row,
             coords=coords,
             eigvals=eigvals,
-            eigvecs=eigvecs,
             common_axis_score=common_axis_score,
             assignment=assignment,
         )

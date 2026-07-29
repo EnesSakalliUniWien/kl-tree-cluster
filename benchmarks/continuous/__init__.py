@@ -1,0 +1,1 @@
+"""Continuously runnable benchmark entrypoints."""

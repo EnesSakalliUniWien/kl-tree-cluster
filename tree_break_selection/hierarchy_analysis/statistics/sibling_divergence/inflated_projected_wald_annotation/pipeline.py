@@ -55,6 +55,49 @@ def _validate_focal_sibling_records(records: list[SiblingPairRecord]) -> None:
             )
 
 
+def _has_internal_empirical_null_support(record: SiblingPairRecord) -> bool:
+    return bool(
+        record.degrees_of_freedom > 0.0
+        and record.sibling_null_weight > 0.0
+        and (record.is_null_like or record.is_edge_blocked)
+    )
+
+
+def _mark_no_internal_support_as_fail_closed(
+    annotations_df: pd.DataFrame,
+    records: list[SiblingPairRecord],
+) -> pd.DataFrame:
+    """Mark focal sibling tests as fail-closed when calibration support is absent."""
+    focal_records = [record for record in records if not record.is_null_like]
+    if not focal_records:
+        return annotations_df
+
+    focal_parents = [record.parent for record in focal_records]
+    annotations_df.loc[focal_parents, "Sibling_Divergence_Skipped"] = True
+    annotations_df.loc[focal_parents, "Sibling_Divergence_Invalid"] = True
+    annotations_df.loc[focal_parents, "Sibling_BH_Different"] = False
+    annotations_df.loc[focal_parents, "Sibling_BH_Same"] = False
+    annotations_df.loc[focal_parents, "Sibling_Test_Statistic"] = [
+        float(record.stat) for record in focal_records
+    ]
+    annotations_df.loc[focal_parents, "Sibling_Degrees_of_Freedom"] = [
+        float(record.degrees_of_freedom) for record in focal_records
+    ]
+    annotations_df.loc[focal_parents, "Sibling_Divergence_P_Value"] = [
+        float(record.p_value) for record in focal_records
+    ]
+    annotations_df.loc[focal_parents, "Sibling_Test_Method"] = (
+        "empirical_null_no_internal_support"
+    )
+    annotations_df.loc[focal_parents, "Sibling_Gate_P_Value_Calibration"] = (
+        "undefined_no_internal_support"
+    )
+    annotations_df.loc[focal_parents, "Sibling_Gate_P_Value_Role"] = (
+        "fail_closed_sibling_gate"
+    )
+    return annotations_df
+
+
 def annotate_sibling_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
@@ -122,6 +165,9 @@ def annotate_sibling_divergence(
                 stage_timings.get("sibling_gate_fdr_sec", 0.0)
             ) + float(perf_counter() - sibling_fdr_start_sec)
         return result_df
+
+    if not any(_has_internal_empirical_null_support(record) for record in records):
+        return _mark_no_internal_support_as_fail_closed(annotations_df, records)
 
     inflation_fit_start_sec = perf_counter()
     model = fit_empirical_null_inflation_model(records)

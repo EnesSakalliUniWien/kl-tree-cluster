@@ -412,7 +412,6 @@ def _root_path_edges_by_leaf(
 
 def _split_lengths_from_tree(
     tree: Any,
-    root: object,
     descendants: Mapping[object, tuple[str, ...]],
 ) -> dict[frozenset[str], float]:
     split_lengths: dict[frozenset[str], float] = {}
@@ -545,7 +544,7 @@ def snapshot_from_computed(
         root,
         descendants,
     )
-    split_lengths = _split_lengths_from_tree(tree, root, descendants)
+    split_lengths = _split_lengths_from_tree(tree, descendants)
     labels = [int(label) for label in np.asarray(computed.labels).tolist()]
     sample_ids = [str(sample_id) for sample_id in computed.data.index.tolist()]
     label_by_leaf = {
@@ -966,7 +965,6 @@ def rebuild_snapshots(
                 distance_matrix=inputs.distance_matrix,
                 distance_condensed=inputs.distance_condensed,
                 matrix_audit=False,
-                strict=True,
             )
             if row.status == BenchmarkRunStatus.OK and computed is not None:
                 snapshots.append(

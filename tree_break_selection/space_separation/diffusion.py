@@ -21,6 +21,12 @@ class DiffusionGeometry:
     metadata: dict[str, object]
 
 
+PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS = 8
+PYDIFFMAP_VARIABLE_BANDWIDTH_MIN_POSITIVE_NEIGHBORS = (
+    PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS - 1
+)
+
+
 def _diffusion_geometry(
     coordinates: np.ndarray,
     *,
@@ -48,6 +54,53 @@ def resolve_neighbor_search_k(n_samples: int, k_neighbors: int) -> int:
     if n_samples <= 2:
         return 1
     return max(2, min(int(k_neighbors), n_samples - 1))
+
+
+def _row_duplicate_counts(values: np.ndarray) -> tuple[int, int, int]:
+    if len(values) == 0:
+        return 0, 0, 0
+    _unique_rows, counts = np.unique(values, axis=0, return_counts=True)
+    unique_rows = int(len(counts))
+    return unique_rows, int(len(values) - unique_rows), int(counts.max(initial=0))
+
+
+def _resolve_pydiffmap_neighbor_search_k(
+    values: np.ndarray,
+    *,
+    k_neighbors: int,
+    bandwidth_type: str | float | None,
+) -> int:
+    neighbor_k = resolve_neighbor_search_k(len(values), k_neighbors)
+    if bandwidth_type is None:
+        return neighbor_k
+
+    _unique_rows, _duplicate_rows, max_duplicate_count = _row_duplicate_counts(values)
+
+    # pydiffmap's variable-bandwidth Kernel uses NNKDE(k=8), then builds
+    # bandwidths from the 7 nearest nonzero distances in each sparse neighbor
+    # row. Exact duplicate rows occupy zero-distance neighbor slots but are
+    # removed by sparse nonzero extraction, so the search graph needs enough
+    # extra neighbors to leave 7 positive distances after duplicates.
+    min_positive_neighbors_for_nnkde = PYDIFFMAP_VARIABLE_BANDWIDTH_MIN_POSITIVE_NEIGHBORS
+    if max_duplicate_count >= PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS:
+        raise ValueError(
+            "Adaptive pydiffmap variable-bandwidth diffusion cannot handle exact "
+            "duplicate blocks at least as large as pydiffmap's internal NNKDE "
+            f"query size ({PYDIFFMAP_VARIABLE_BANDWIDTH_KDE_NEIGHBORS}); "
+            f"max_duplicate_count={max_duplicate_count}. Such blocks produce zero "
+            "local bandwidths and non-finite diffusion weights."
+        )
+    duplicate_aware_min_k = max_duplicate_count + min_positive_neighbors_for_nnkde
+    max_valid_k = len(values)
+    if duplicate_aware_min_k > max_valid_k:
+        raise ValueError(
+            "Adaptive pydiffmap variable-bandwidth diffusion needs at least "
+            f"{min_positive_neighbors_for_nnkde} positive nonzero neighbors after "
+            "exact duplicate rows are removed. "
+            f"n_samples={len(values)}, max_duplicate_count={max_duplicate_count}, "
+            f"required_k={duplicate_aware_min_k}, max_valid_k={max_valid_k}."
+        )
+    return max(neighbor_k, duplicate_aware_min_k)
 
 
 def resolve_adaptive_epsilon(
@@ -233,7 +286,12 @@ def adaptive_diffusion_geometry(
     if not np.isfinite(values).all():
         raise ValueError("Adaptive diffusion coordinates contain non-finite values.")
 
-    neighbor_k = resolve_neighbor_search_k(len(values), k_neighbors)
+    unique_rows, duplicate_rows, max_duplicate_count = _row_duplicate_counts(values)
+    neighbor_k = _resolve_pydiffmap_neighbor_search_k(
+        values,
+        k_neighbors=k_neighbors,
+        bandwidth_type=bandwidth_type,
+    )
     kernel_object = kernel.Kernel(
         epsilon=1.0 if not isinstance(epsilon, numbers.Real) else float(epsilon),
         k=neighbor_k,
@@ -264,6 +322,7 @@ def adaptive_diffusion_geometry(
         metadata={
             "backend": "pydiffmap",
             "metric": metric,
+            "requested_neighbor_search_k": int(k_neighbors),
             "neighbor_search_k": int(neighbor_k),
             "bandwidth_type": (
                 bandwidth_type
@@ -274,6 +333,9 @@ def adaptive_diffusion_geometry(
             "epsilon_method": epsilon_method,
             "diffusion_time": int(diffusion_time),
             "diffusion_components": int(coordinates.shape[1]),
+            "unique_rows": int(unique_rows),
+            "duplicate_rows": int(duplicate_rows),
+            "max_duplicate_count": int(max_duplicate_count),
         },
     )
 

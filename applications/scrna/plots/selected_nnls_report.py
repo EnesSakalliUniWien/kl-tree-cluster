@@ -202,7 +202,7 @@ def plot_umap(ax, df, color_col, palette, title, annotate_clusters=False, point_
         )
 
 
-def build_boundary_tree_info(cfg, assign_df, cluster_palette):
+def build_boundary_tree_info(cfg, assign_df):
     trace = pd.read_csv(cfg["dir"] / f"{SELECTED}_traversal_trace.csv")
     edges = pd.read_csv(cfg["dir"] / f"{SELECTED}_tree_edges.csv")
     selected = cfg["selected"]
@@ -761,7 +761,7 @@ def selected_dataset_page(cfg, save_path=None, generated_at=None):
     selected = cfg["selected"]
     cluster_palette = make_cluster_palette(assign[selected].unique())
     celltype_palette = make_label_palette(assign["celltype"].fillna("unknown").unique())
-    tree_info = build_boundary_tree_info(cfg, assign, cluster_palette)
+    tree_info = build_boundary_tree_info(cfg, assign)
     summary = cluster_summary(assign, selected)
 
     fig = plt.figure(figsize=(17, 11), facecolor="white")
@@ -820,7 +820,7 @@ def selected_radial_dataset_page(cfg, save_path=None, generated_at=None):
     assign = pd.read_csv(cfg["dir"] / "method_assignments.csv")
     selected = cfg["selected"]
     cluster_palette = make_cluster_palette(assign[selected].unique())
-    tree_info = build_boundary_tree_info(cfg, assign, cluster_palette)
+    tree_info = build_boundary_tree_info(cfg, assign)
 
     fig = plt.figure(figsize=(16, 9.2), facecolor="white")
     gs = GridSpec(1, 2, figure=fig, width_ratios=[0.92, 1.38], wspace=0.12)

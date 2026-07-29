@@ -75,8 +75,6 @@ def test_scrna_benchmark_tree_edges_include_distributional_action_and_mass(
             "annotations": tree.annotations_df,
             "edge_branch_length_variance_policy": "none",
         },
-        leaf_data=leaf_data,
-        feature_space=feature_space,
         sample_ids=leaf_data.index.to_numpy(),
         y_true=np.array(["a", "a", "b", "b"]),
         output_dir=tmp_path,

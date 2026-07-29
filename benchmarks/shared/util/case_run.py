@@ -30,7 +30,6 @@ def run_single_case(
     matrix_audit: bool,
     verbose: bool,
     tree_consensus_label_dir: Path | str | None = None,
-    strict: bool = False,
 ) -> tuple[list[BenchmarkResultRow], list[ComputedResultRecord]]:
     """Run one benchmark case across all selected methods and params."""
     case_idx = tc["test_case_num"]
@@ -74,7 +73,6 @@ def run_single_case(
                     distance_matrix=inputs.distance_matrix,
                     distance_condensed=inputs.distance_condensed,
                     matrix_audit=matrix_audit,
-                    strict=strict,
                 )
                 case_result_rows.append(result_row)
                 if computed_result is not None:

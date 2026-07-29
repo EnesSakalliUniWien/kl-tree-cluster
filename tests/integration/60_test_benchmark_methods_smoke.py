@@ -73,16 +73,21 @@ def test_benchmark_graphtools_diffusion_method_smoke():
 
 
 def test_hamming_diffusion_rejects_continuous_benchmark_input():
-    """The Hamming diffusion method must not silently score continuous cases."""
+    """The Hamming diffusion method must explicitly skip continuous cases."""
     case = next(
         case.copy()
         for case in get_default_test_cases()
         if case["name"] == "gauss_clear_medium_continuous"
     )
-    with pytest.raises(ValueError, match="requires binary or one-hot"):
-        benchmark_cluster_algorithm(
-            test_cases=[case],
-            verbose=False,
-            plot_umap=False,
-            methods=["tbs_diffusion"],
-        )
+    df_results, _ = benchmark_cluster_algorithm(
+        test_cases=[case],
+        verbose=False,
+        plot_umap=False,
+        methods=["tbs_diffusion"],
+    )
+
+    assert len(df_results) == 1
+    row = df_results.iloc[0]
+    assert row["status"] == "skip"
+    assert row["labels_length"] == 0
+    assert "requires binary or one-hot" in row["skip_reason"]

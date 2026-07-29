@@ -3,7 +3,6 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pandas as pd
-import pytest
 from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -68,7 +67,7 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
     return tree, base_df, leaf_data
 
 
-def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
+def test_gate_annotation_pipeline_matches_sequential_gate_annotations() -> None:
     tree, base_df, leaf_data = _build_small_binary_tree()
 
     edge_df, spectral_context = annotate_child_parent_divergence(
@@ -90,21 +89,44 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
         sibling_projection_dimensions,
         spectral_context=spectral_context,
     )
-    with pytest.raises(ValueError, match="selected non-null"):
-        annotate_sibling_divergence(
-            tree,
-            edge_df,
-            significance_level_alpha=0.01,
-            sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
-            parent_principal_component_projections=parent_principal_component_projections,
-            parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
-        )
+    sequential_df = annotate_sibling_divergence(
+        tree,
+        edge_df,
+        significance_level_alpha=0.01,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
+        parent_principal_component_projections=parent_principal_component_projections,
+        parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
+    )
+    bundled = run_gate_annotation_pipeline(
+        tree,
+        base_df.copy(),
+        edge_alpha=0.01,
+        sibling_alpha=0.01,
+        leaf_data=leaf_data,
+    )
 
-    with pytest.raises(ValueError, match="selected non-null"):
-        run_gate_annotation_pipeline(
-            tree,
-            base_df.copy(),
-            edge_alpha=0.01,
-            sibling_alpha=0.01,
-            leaf_data=leaf_data,
-        )
+    fail_closed_nodes = ["root", "cal"]
+    assert sequential_df.loc[
+        fail_closed_nodes, "Sibling_Test_Method"
+    ].eq("empirical_null_no_internal_support").all()
+    assert sequential_df.loc[
+        fail_closed_nodes, "Sibling_Gate_P_Value_Calibration"
+    ].eq("undefined_no_internal_support").all()
+    assert sequential_df.loc[
+        fail_closed_nodes, "Sibling_Gate_P_Value_Role"
+    ].eq("fail_closed_sibling_gate").all()
+    assert sequential_df.loc[fail_closed_nodes, "Sibling_Divergence_Skipped"].eq(True).all()
+    assert sequential_df.loc[fail_closed_nodes, "Sibling_Divergence_Invalid"].eq(True).all()
+    assert sequential_df.loc[fail_closed_nodes, "Sibling_BH_Different"].eq(False).all()
+    fail_closed_columns = [
+        "Sibling_Test_Method",
+        "Sibling_Gate_P_Value_Calibration",
+        "Sibling_Gate_P_Value_Role",
+        "Sibling_Divergence_Skipped",
+        "Sibling_Divergence_Invalid",
+        "Sibling_BH_Different",
+    ]
+    pd.testing.assert_frame_equal(
+        sequential_df[fail_closed_columns],
+        bundled.annotated_df[fail_closed_columns],
+    )

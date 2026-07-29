@@ -275,7 +275,7 @@ def _method_configs(true_k: int) -> list[MethodConfig]:
         "branch_length_optimization_pair_sample_size": 50_000,
         "branch_length_optimization_random_state": 0,
         "branch_length_optimization_solver_tolerance": 1e-5,
-        "branch_length_optimization_max_iterations": 300,
+        "branch_length_optimization_max_iterations": 1000,
     }
     tbs_adaptive_topology_params = {
         **_base_tbs_params(),
@@ -294,7 +294,7 @@ def _method_configs(true_k: int) -> list[MethodConfig]:
         "branch_length_optimization_pair_sample_size": 50_000,
         "branch_length_optimization_random_state": 0,
         "branch_length_optimization_solver_tolerance": 1e-5,
-        "branch_length_optimization_max_iterations": 300,
+        "branch_length_optimization_max_iterations": 1000,
     }
     return [
         MethodConfig(
@@ -743,8 +743,6 @@ def _write_tbs_tree_diagnostics(
     *,
     config: MethodConfig,
     result_extra: dict[str, object],
-    leaf_data: pd.DataFrame,
-    feature_space: object,
     sample_ids: np.ndarray,
     y_true: np.ndarray,
     output_dir: Path,
@@ -1219,8 +1217,6 @@ def _run_benchmarks(
             summary = _write_tbs_tree_diagnostics(
                 config=config,
                 result_extra=result.extra,
-                leaf_data=X_df,
-                feature_space=feature_space,
                 sample_ids=sample_ids,
                 y_true=y_true,
                 output_dir=output_dir,
@@ -1420,7 +1416,6 @@ def _write_report(
     length_sensitivity_rows: list[dict[str, object]],
     max_cells: int,
     n_pcs: int,
-    seed: int,
     generated_at: str,
 ) -> None:
     label_counts = adata.obs["celltype"].astype(str).value_counts()
@@ -1660,7 +1655,6 @@ def main() -> None:
         length_sensitivity_rows=length_sensitivity_rows,
         max_cells=args.max_cells,
         n_pcs=args.n_pcs,
-        seed=args.seed,
         generated_at=generated_at,
     )
     print(results.to_string(index=False))

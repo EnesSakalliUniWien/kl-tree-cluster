@@ -143,7 +143,7 @@ def _apply_template_following(
 
 
 def _ensure_feature_coverage(
-    leaf_matrix_dict: Dict[str, List[int]], n_cols: int, rng: np.random.Generator
+    leaf_matrix_dict: Dict[str, List[int]], rng: np.random.Generator
 ) -> None:
     """Ensures all features appear at least once by modifying the data in-place.
 
@@ -157,7 +157,6 @@ def _ensure_feature_coverage(
     Args:
         leaf_matrix_dict: A dictionary mapping sample names to feature vectors.
             This dictionary is modified in-place.
-        n_cols: The total number of features.
         rng: NumPy random Generator instance.
     """
     feature_sums = np.sum(list(leaf_matrix_dict.values()), axis=0)
@@ -322,7 +321,6 @@ def generate_random_feature_matrix(
             leaf_matrix_dict[name].extend(noise_cols)
 
     # Step 5: Ensure all features appear at least once
-    total_cols = n_cols + noise_features
-    _ensure_feature_coverage(leaf_matrix_dict, total_cols, rng)
+    _ensure_feature_coverage(leaf_matrix_dict, rng)
 
     return leaf_matrix_dict, cluster_assignments

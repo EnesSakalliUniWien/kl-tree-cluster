@@ -35,7 +35,7 @@ def test_scrna_benchmark_branch_time_rows_use_nnls_branch_lengths() -> None:
         assert config.params["branch_length_optimization_pair_sample_size"] == 50_000
         assert config.params["branch_length_optimization_random_state"] == 0
         assert config.params["branch_length_optimization_solver_tolerance"] == 1e-5
-        assert config.params["branch_length_optimization_max_iterations"] == 300
+        assert config.params["branch_length_optimization_max_iterations"] == 1000
         assert "allow_linkage_ultrametric_branch_time" not in config.params
 
     raw_diagnostic_rows = {
