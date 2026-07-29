@@ -7,6 +7,7 @@ from benchmarks.shared.benchmark_runs.regression_gate import (
     resolve_case_list,
     sort_regression_results,
 )
+from benchmarks.shared.benchmark_runs.regression_gate_cli import build_regression_gate_parser
 from benchmarks.shared.benchmark_runs.smoke import SMOKE_SUBSET_NAMES, select_smoke_cases
 from benchmarks.shared.cases import get_default_test_cases
 
@@ -55,3 +56,15 @@ def test_regression_gate_sort_keeps_case_and_method_order() -> None:
         ("case_a", "tbs"),
         ("case_a", "kmeans"),
     ]
+
+
+def test_regression_gate_cli_parser_uses_supplied_case_label() -> None:
+    parser = build_regression_gate_parser(
+        description="Run test gate.",
+        case_help_label="continuous gate",
+    )
+
+    help_text = parser.format_help()
+
+    assert "Run test gate." in help_text
+    assert "continuous gate" in help_text

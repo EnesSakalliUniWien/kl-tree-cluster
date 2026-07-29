@@ -5754,6 +5754,11 @@ verification, and maintenance events here in chronological order.
   benchmark gate that reuses the regression-gate seam instead of duplicating
   benchmark logic. Existing full, smoke, and regression entrypoints now delegate
   to the shared run modules while preserving their command names.
+- Simplified the regression-style benchmark gate CLI seam after modularization.
+  `benchmarks/continuous/run.py` and `benchmarks/regression/run_gate.py` now
+  share `benchmarks/shared/benchmark_runs/regression_gate_cli.py`, keeping both
+  command adapters thin while preserving their distinct help text and completion
+  labels.
 
 ## Evidence
 
