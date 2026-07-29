@@ -25,6 +25,12 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    require_columns,
+    safe_log1p,
+    spectral_excess_log,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_region_margins import (
     collect_observed_root_selected_region_row,
 )
@@ -213,38 +219,10 @@ def _parse_float_grid(raw: str) -> tuple[float, ...]:
     return values
 
 
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
-def _safe_log1p(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(math.log1p(max(numeric, 0.0)))
-
-
-def _spectral_excess_log(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(max(math.log(max(numeric, 1e-12)), 0.0))
-
-
 def _action_edge_bottleneck(row: pd.Series) -> float:
-    tie = _finite_float(row.get("root_tie_rank_median_fraction", math.nan))
-    action = _safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
-    edge = _safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
+    tie = finite_float(row.get("root_tie_rank_median_fraction", math.nan))
+    action = safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
+    edge = safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
     if not (math.isfinite(tie) and math.isfinite(action) and math.isfinite(edge)):
         return math.nan
     return float(tie * min(action, edge))
@@ -359,7 +337,7 @@ def _conditioned_coherent_spike_setting_records(
     target spectral excess is deliberately excluded so this remains a geometry
     conditioner rather than a target-fitting spectral rescue.
     """
-    _require_columns(
+    require_columns(
         observed_mixed_rows,
         {
             "case_id",
@@ -384,8 +362,8 @@ def _conditioned_coherent_spike_setting_records(
     settings: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
         target_id = str(target["case_id"])
-        action_edge = _finite_float(target.get("_action_edge_bottleneck", math.nan))
-        tie_fraction = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
+        action_edge = finite_float(target.get("_action_edge_bottleneck", math.nan))
+        tie_fraction = finite_float(target.get("root_tie_rank_median_fraction", math.nan))
         action_score = _scale_to_unit_interval(action_edge, minimum, maximum)
         tie_score = float(np.clip(tie_fraction, 0.0, 1.0)) if math.isfinite(tie_fraction) else 0.0
         geometry_score = float(math.sqrt(max(action_score * tie_score, 0.0)))
@@ -489,8 +467,8 @@ def _write_generated_case(
     setting: dict[str, object],
 ) -> tuple[dict[str, object], dict[str, object]]:
     family = str(setting["proposal_family"])
-    spike_fraction = _finite_float(setting["proposal_spike_feature_fraction"])
-    spike_delta = _finite_float(setting["proposal_spike_delta"])
+    spike_fraction = finite_float(setting["proposal_spike_feature_fraction"])
+    spike_delta = finite_float(setting["proposal_spike_delta"])
     if family in {
         COHERENT_RANK_ONE_SPIKE_PROPOSAL,
         CONDITIONED_COHERENT_RANK_ONE_SPIKE_PROPOSAL,
@@ -638,7 +616,7 @@ def _best_generated_row(eligible: pd.DataFrame) -> pd.Series | None:
         return None
     ranked = eligible.sort_values(
         [
-            "_spectral_excess_log",
+            "spectral_excess_log",
             "_action_edge_bottleneck",
             "_tie_fraction",
             "case_id",
@@ -656,7 +634,7 @@ def build_spectral_lift_sweep_target_rows(
     min_tie_fraction_floor: float = 0.70,
 ) -> pd.DataFrame:
     """Compare each sweep setting against each observed target."""
-    _require_columns(
+    require_columns(
         observed_mixed_rows,
         {
             "case_id",
@@ -669,7 +647,7 @@ def build_spectral_lift_sweep_target_rows(
     )
     if generated_mixed_rows.empty:
         return pd.DataFrame(columns=TARGET_ROW_COLUMNS)
-    _require_columns(
+    require_columns(
         generated_mixed_rows,
         {
             "case_id",
@@ -687,9 +665,9 @@ def build_spectral_lift_sweep_target_rows(
         "generated mixed rows",
     )
     generated = generated_mixed_rows.copy()
-    generated["_spectral_excess_log"] = generated[
+    generated["spectral_excess_log"] = generated[
         "root_selected_eigenvalue_over_mp_upper_bound"
-    ].map(_spectral_excess_log)
+    ].map(spectral_excess_log)
     generated["_action_edge_bottleneck"] = generated.apply(
         _action_edge_bottleneck,
         axis=1,
@@ -708,11 +686,11 @@ def build_spectral_lift_sweep_target_rows(
     ]
     for _, target in observed_mixed_rows.sort_values("case_id").iterrows():
         target_id = str(target["case_id"])
-        target_spectral = _spectral_excess_log(
+        target_spectral = spectral_excess_log(
             target.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
         )
         target_bottleneck = _action_edge_bottleneck(target)
-        target_tie = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
+        target_tie = finite_float(target.get("root_tie_rank_median_fraction", math.nan))
         target_generated = generated
         if "conditioning_target_case_id" in generated.columns:
             conditioning_target = generated["conditioning_target_case_id"].fillna("")
@@ -739,9 +717,9 @@ def build_spectral_lift_sweep_target_rows(
             else:
                 best_case_id = str(best["case_id"])
                 best_base_case_id = str(best.get("base_case_id", ""))
-                best_spectral = _finite_float(best["_spectral_excess_log"])
-                best_bottleneck = _finite_float(best["_action_edge_bottleneck"])
-                best_tie = _finite_float(best["_tie_fraction"])
+                best_spectral = finite_float(best["spectral_excess_log"])
+                best_bottleneck = finite_float(best["_action_edge_bottleneck"])
+                best_tie = finite_float(best["_tie_fraction"])
             if math.isfinite(target_spectral) and math.isfinite(best_spectral):
                 lift_log = float(max(target_spectral - best_spectral, 0.0))
             else:
@@ -880,7 +858,7 @@ def evaluate_spectral_lift_parameter_sweep(
 ) -> dict[str, pd.DataFrame]:
     """Run the sweep and return output tables."""
     observed_mixed = pd.read_csv(config.observed_mixed_region_rows_path)
-    _require_columns(observed_mixed, {"case_id"}, "observed mixed rows")
+    require_columns(observed_mixed, {"case_id"}, "observed mixed rows")
     case_names = (
         tuple(config.case_names)
         if config.case_names

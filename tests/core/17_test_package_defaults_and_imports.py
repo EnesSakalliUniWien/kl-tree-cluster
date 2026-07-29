@@ -36,7 +36,7 @@ def test_plot_package_selects_file_safe_backend_before_pyplot() -> None:
             sys.executable,
             "-c",
             (
-                "from tree_break_selection.plot.multiscale_umap import plt; "
+                "from tree_break_selection.plot.cluster_tree_visualization import plt; "
                 "fig, _ = plt.subplots(); "
                 "print(plt.get_backend()); "
                 "plt.close(fig)"

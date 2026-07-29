@@ -77,6 +77,25 @@ RESULT_COLUMNS = [
     "labels_length",
 ]
 
+_TEXT_RESULT_COLUMNS = frozenset(
+    {
+        "case_id",
+        "case_category",
+        "source_family",
+        "feature_representation",
+        "method",
+        "run_id",
+        "benchmark_class",
+        "benchmark_grid",
+        "params",
+        "status",
+        "skip_reason",
+    }
+)
+NUMERIC_RESULT_COLUMNS = tuple(
+    column for column in RESULT_COLUMNS if column not in _TEXT_RESULT_COLUMNS
+)
+
 
 def benchmark_rows_to_dataframe(rows: Iterable[BenchmarkResultRow]) -> pd.DataFrame:
     """Convert typed benchmark rows to the stable output DataFrame schema."""
@@ -154,4 +173,8 @@ def benchmark_rows_to_dataframe(rows: Iterable[BenchmarkResultRow]) -> pd.DataFr
     return pd.DataFrame(records, columns=RESULT_COLUMNS)
 
 
-__all__ = ["RESULT_COLUMNS", "benchmark_rows_to_dataframe"]
+__all__ = [
+    "NUMERIC_RESULT_COLUMNS",
+    "RESULT_COLUMNS",
+    "benchmark_rows_to_dataframe",
+]

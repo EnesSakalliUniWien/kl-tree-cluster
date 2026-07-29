@@ -19,12 +19,24 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    is_calibration_support,
+    is_observed_target,
+    lookup_numeric_by_key,
+    require_columns,
+    root_tail_stratum_key,
+    safe_log1p,
+    string_value,
+    tail_excess_for_case,
+)
 
 SCHEMA_VERSION = "root_selected_spectral_tail_law_panel/v1"
 STUDY_ROLE = "diagnostic_root_selected_spectral_tail_law_not_calibration"
@@ -42,14 +54,6 @@ DEFAULT_JOINED_FEASIBILITY_ROWS = (
 ROWS_OUTPUT = "root_selected_spectral_tail_law_rows.csv"
 SUMMARY_OUTPUT = "root_selected_spectral_tail_law_summary.csv"
 MANIFEST_OUTPUT = "manifest.json"
-
-CALIBRATION_SUPPORT_ROLES = {
-    "selected_null",
-    "selected_null_candidate_support",
-    "external_selected_null",
-    "external_null_support",
-    "calibration_null",
-}
 
 ROW_COLUMNS = (
     "schema_version",
@@ -118,159 +122,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedSpectralTailLawConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
-def _finite_int(value: object) -> int:
-    numeric = _finite_float(value)
-    return int(numeric) if math.isfinite(numeric) else 0
-
-
-def _string_value(
-    row: pd.Series | dict[str, object],
-    column: str,
-    default: str = "",
-) -> str:
-    if column not in row:
-        return default
-    value = row[column]
-    if pd.isna(value):
-        return default
-    return str(value)
-
-
-def _safe_log1p(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(math.log1p(max(numeric, 0.0)))
-
-
-def _spectral_excess_log(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(max(math.log(max(numeric, 1e-12)), 0.0))
-
-
-def _lookup_numeric_by_key(
-    frame: pd.DataFrame,
-    *,
-    key_column: str,
-    value_column: str,
-) -> dict[str, float]:
-    if frame.empty or key_column not in frame.columns or value_column not in frame.columns:
-        return {}
-    lookup: dict[str, float] = {}
-    for _, row in frame.iterrows():
-        key = _string_value(row, key_column)
-        if not key:
-            continue
-        value = _finite_float(row.get(value_column, math.nan))
-        if math.isfinite(value):
-            lookup[key] = value
-    return lookup
-
-
-def _tail_excess_for_case(
-    row: pd.Series,
-    *,
-    deformed_excess_by_case: dict[str, float],
-) -> tuple[float, float, float, str]:
-    case_id = _string_value(row, "case_id")
-    identity_excess = _spectral_excess_log(
-        row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
-    )
-    deformed_excess = deformed_excess_by_case.get(case_id, math.nan)
-    if math.isfinite(deformed_excess):
-        return (
-            float(deformed_excess),
-            identity_excess,
-            float(deformed_excess),
-            "deformed_mp_s_h_u",
-        )
-    return identity_excess, identity_excess, math.nan, "identity_mp_s_root"
-
-
-def _is_observed_target(row: pd.Series) -> bool:
-    return (
-        _string_value(row, "proposal_family") == "observed_target"
-        or _string_value(row, "calibration_role") == "observed_target_not_null_support"
-        or _string_value(row, "data_role") == "observed_target"
-    )
-
-
-def _is_calibration_support(row: pd.Series) -> bool:
-    return (
-        _string_value(row, "data_role") in CALIBRATION_SUPPORT_ROLES
-        or _string_value(row, "calibration_role") in CALIBRATION_SUPPORT_ROLES
-    )
-
-
-def _tie_band(value: float) -> str:
-    if not math.isfinite(value):
-        return "tie_missing"
-    if value < 0.70:
-        return "tie_low_lt_0_70"
-    if value < 0.85:
-        return "tie_mid_0_70_0_85"
-    return "tie_high_ge_0_85"
-
-
-def _action_band(value: float) -> str:
-    if not math.isfinite(value):
-        return "action_missing"
-    if value < 5.0:
-        return "action_log_low_lt_5"
-    if value < 7.0:
-        return "action_log_mid_5_7"
-    return "action_log_high_ge_7"
-
-
-def _root_tail_stratum_key(
-    *,
-    target: pd.Series,
-    h_u_population_law_status: str,
-) -> str:
-    tie = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
-    action = _safe_log1p(target.get("root_sibling_selected_ratio", math.nan))
-    edge = _safe_log1p(target.get("root_edge_path_statistic_margin", math.nan))
-    bandwidth = _string_value(target, "root_bandwidth_reopen_band", "")
-    return "|".join(
-        [
-            _string_value(target, "root_mixed_region_component", "root_component_missing"),
-            _tie_band(tie),
-            _action_band(action),
-            _action_band(edge),
-            bandwidth or "bandwidth_missing",
-            str(h_u_population_law_status),
-        ]
-    )
-
-
 def _support_in_target_stratum(
     *,
     target: pd.Series,
@@ -279,20 +130,20 @@ def _support_in_target_stratum(
 ) -> pd.DataFrame:
     if generated.empty:
         return generated.copy()
-    target_key = _root_tail_stratum_key(
+    target_key = root_tail_stratum_key(
         target=target,
         h_u_population_law_status=h_u_population_law_status,
     )
     rows = generated.copy()
     rows["_root_tail_stratum_key"] = rows.apply(
-        lambda row: _root_tail_stratum_key(
+        lambda row: root_tail_stratum_key(
             target=row,
             h_u_population_law_status=h_u_population_law_status,
         ),
         axis=1,
     )
     rows = rows.loc[rows["_root_tail_stratum_key"].eq(target_key)].copy()
-    support_mask = rows.apply(_is_calibration_support, axis=1)
+    support_mask = rows.apply(is_calibration_support, axis=1)
     return rows.loc[support_mask].copy()
 
 
@@ -369,7 +220,7 @@ def build_root_selected_spectral_tail_law_rows(
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated",
 ) -> pd.DataFrame:
     """Return support-aware root spectral tail rows."""
-    _require_columns(
+    require_columns(
         joined_feasibility_rows,
         {
             "case_id",
@@ -388,7 +239,7 @@ def build_root_selected_spectral_tail_law_rows(
         rows["root_bandwidth_reopen_band"] = ""
     if "root_mixed_region_component" not in rows.columns:
         rows["root_mixed_region_component"] = "root_component_missing"
-    target_mask = rows.apply(_is_observed_target, axis=1)
+    target_mask = rows.apply(is_observed_target, axis=1)
     targets = rows[target_mask].copy()
     generated = rows[~target_mask].copy()
     target_deformed = deformed_mp_edge_rows if deformed_mp_edge_rows is not None else pd.DataFrame()
@@ -398,12 +249,12 @@ def build_root_selected_spectral_tail_law_rows(
         else pd.DataFrame()
     )
     deformed_excess_by_case = {
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             target_deformed,
             key_column="target_case_id",
             value_column="s_root_deformed_excess_log",
         ),
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             support_deformed,
             key_column="case_id",
             value_column="s_root_deformed_excess_log",
@@ -411,19 +262,19 @@ def build_root_selected_spectral_tail_law_rows(
     }
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        case_id = _string_value(target, "case_id")
+        case_id = string_value(target, "case_id")
         (
             s_root,
             identity_excess,
             deformed_excess,
             spectral_tail_variable,
-        ) = _tail_excess_for_case(
+        ) = tail_excess_for_case(
             target,
             deformed_excess_by_case=deformed_excess_by_case,
         )
-        t_rank = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
-        action = _safe_log1p(target.get("root_sibling_selected_ratio", math.nan))
-        edge = _safe_log1p(target.get("root_edge_path_statistic_margin", math.nan))
+        t_rank = finite_float(target.get("root_tie_rank_median_fraction", math.nan))
+        action = safe_log1p(target.get("root_sibling_selected_ratio", math.nan))
+        edge = safe_log1p(target.get("root_edge_path_statistic_margin", math.nan))
         support = _support_in_target_stratum(
             target=target,
             generated=generated,
@@ -432,7 +283,7 @@ def build_root_selected_spectral_tail_law_rows(
         support_count = int(support.shape[0])
         if support_count:
             support_s = support.apply(
-                lambda row: _tail_excess_for_case(
+                lambda row: tail_excess_for_case(
                     row,
                     deformed_excess_by_case=deformed_excess_by_case,
                 )[0],
@@ -476,12 +327,12 @@ def build_root_selected_spectral_tail_law_rows(
                 "t_selected_tie_rank_fraction": t_rank,
                 "a_selected_ratio_action_log1p": action,
                 "e_edge_margin_action_log1p": edge,
-                "b_bandwidth_topology_status": _string_value(
+                "b_bandwidth_topology_status": string_value(
                     target,
                     "root_bandwidth_reopen_band",
                 ),
                 "h_u_population_law_status": str(h_u_population_law_status),
-                "root_tail_stratum_key": _root_tail_stratum_key(
+                "root_tail_stratum_key": root_tail_stratum_key(
                     target=target,
                     h_u_population_law_status=str(h_u_population_law_status),
                 ),
@@ -560,30 +411,22 @@ def run_root_selected_spectral_tail_law_panel(
     config: RootSelectedSpectralTailLawConfig,
 ) -> dict[str, Path]:
     """Run the panel and write outputs."""
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_selected_spectral_tail_law_panel(config)
-    paths = {
-        "rows": config.output_dir / ROWS_OUTPUT,
-        "summary": config.output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:

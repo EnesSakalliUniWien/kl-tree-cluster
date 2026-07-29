@@ -33,9 +33,6 @@ from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
-from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
-    effective_rank,
-)
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     compute_sibling_branch_length_sum,
     extract_sibling_pair_observations,
@@ -66,6 +63,9 @@ from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_nu
 )
 from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_stratification_diagnostic import (
     _parent_size_bin,
+)
+from benchmarks.diagnostics.calibration.statistics.spectral_summary import (
+    effective_rank,
 )
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.time import format_timestamp_utc

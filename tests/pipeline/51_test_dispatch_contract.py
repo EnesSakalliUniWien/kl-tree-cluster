@@ -707,17 +707,18 @@ def test_run_clustering_result_forwards_graphtools_neighbor_joining_tree_params(
     assert captured["kwargs"]["adaptive_neighbor_profile"] == "fragmentation_guard"
 
 
-def test_method_registry_exposes_current_support_profiles_without_legacy_ids():
+def test_method_registry_exposes_current_support_profiles():
+    current_profile_ids = {
+        "tbs_internal_filter_v1",
+        "tbs_internal_filter_branch_length_v1",
+        "tbs_bandwidth_context_v1",
+    }
     internal = METHOD_SPECS["tbs_internal_filter_v1"].param_grid[0]
     branch_length = METHOD_SPECS["tbs_internal_filter_branch_length_v1"].param_grid[0]
     bandwidth = METHOD_SPECS["tbs_bandwidth_context_v1"].param_grid[0]
 
-    assert "tbs_legacy_c2ef9a69" not in METHOD_SPECS
-    assert "tbs_legacy_internal_spectral_diagnostic" not in METHOD_SPECS
-    assert "tbs_rescued_legacy_v1" not in METHOD_SPECS
-    assert "tbs_legacy_c2ef9a69" not in TBS_RUNNER_METHODS
-    assert "tbs_legacy_internal_spectral_diagnostic" not in TBS_RUNNER_METHODS
-    assert "tbs_rescued_legacy_v1" not in TBS_RUNNER_METHODS
+    assert current_profile_ids.issubset(METHOD_SPECS)
+    assert current_profile_ids.issubset(TBS_RUNNER_METHODS)
     assert internal["spectral_include_internal_barycenters"] is True
     assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
     assert internal["enforce_internal_support_thresholds"] is True

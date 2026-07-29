@@ -12,7 +12,8 @@ if (!length(script_arg)) {
   stop("Unable to resolve script path from Rscript command arguments.")
 }
 script_path <- normalizePath(sub("^--file=", "", script_arg[[1]]))
-project_root <- normalizePath(file.path(dirname(script_path), "..", "..", ".."))
+source(file.path(dirname(script_path), "tree_plot_helpers.R"), local = TRUE)
+project_root <- scrna_project_root(script_path)
 default_output_dir <- file.path(
   project_root,
   "raw",
@@ -62,60 +63,6 @@ edge_state <- function(edges) {
     "edge significant",
     ifelse(blocked, "ancestor blocked", ifelse(tested, "tested closed", "not tested"))
   )
-}
-
-readable_branch_lengths <- function(branch_lengths) {
-  values <- as.numeric(branch_lengths)
-  values[!is.finite(values) | values < 0] <- 0
-  if (!any(values > 0)) {
-    return(rep(1, length(values)))
-  }
-
-  transformed <- sqrt(values)
-  positive <- transformed[transformed > 0]
-  floor_value <- stats::median(positive, na.rm = TRUE) * 0.05
-  if (!is.finite(floor_value) || floor_value <= 0) {
-    floor_value <- min(positive, na.rm = TRUE)
-  }
-  transformed <- pmax(transformed, floor_value)
-
-  cap_value <- stats::quantile(transformed, probs = 0.99, names = FALSE, na.rm = TRUE)
-  if (is.finite(cap_value) && cap_value > 0) {
-    transformed <- pmin(transformed, cap_value)
-  }
-  transformed
-}
-
-edge_table_to_phylo <- function(edges) {
-  parents <- unique(as.character(edges$parent))
-  children <- unique(as.character(edges$child))
-  root <- setdiff(parents, children)
-  if (length(root) != 1L) {
-    stop("Expected exactly one root; found ", length(root))
-  }
-
-  tips <- sort(setdiff(children, parents))
-  tip_order <- order(as.integer(sub("^L", "", tips)))
-  tips <- tips[tip_order]
-  internal_nodes <- c(root, sort(setdiff(parents, root)))
-  tip_ids <- stats::setNames(seq_along(tips), tips)
-  internal_ids <- stats::setNames(length(tips) + seq_along(internal_nodes), internal_nodes)
-  node_ids <- c(tip_ids, internal_ids)
-
-  branch_lengths <- readable_branch_lengths(edges$branch_length)
-
-  phy <- list(
-    edge = cbind(
-      unname(node_ids[as.character(edges$parent)]),
-      unname(node_ids[as.character(edges$child)])
-    ),
-    tip.label = tips,
-    Nnode = length(internal_nodes),
-    node.label = internal_nodes,
-    edge.length = branch_lengths
-  )
-  class(phy) <- "phylo"
-  ape::reorder.phylo(phy, order = "cladewise")
 }
 
 node_metadata <- function(phy, edges) {

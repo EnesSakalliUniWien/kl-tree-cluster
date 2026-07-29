@@ -15,23 +15,24 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    is_observed_target,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _action_band,
-    _finite_float,
-    _is_calibration_support,
-    _is_observed_target,
-    _root_tail_stratum_key,
-    _safe_log1p,
-    _spectral_excess_log,
-    _tie_band,
+)
+from benchmarks.diagnostics.calibration.root.selected.root_tail_action_support import (
+    annotate_root_tail_support,
+    calibration_support_rows,
+    root_tail_coordinates,
+    string_value,
 )
 
 SCHEMA_VERSION = "root_selected_action_dominance_tail_panel/v1"
@@ -111,93 +112,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedActionDominanceTailConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
 def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
     missing = columns - set(frame.columns)
     if missing:
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
-    if column not in row:
-        return default
-    value = row[column]
-    if pd.isna(value):
-        return default
-    return str(value)
-
-
-def _support_rows(rows: pd.DataFrame) -> pd.DataFrame:
-    support_mask = rows.apply(_is_calibration_support, axis=1)
-    target_mask = rows.apply(_is_observed_target, axis=1)
-    return rows.loc[support_mask & ~target_mask].copy()
-
-
-def _coordinates(
-    row: pd.Series,
-    *,
-    h_u_population_law_status: str,
-) -> dict[str, object]:
-    tie = _finite_float(row.get("root_tie_rank_median_fraction", math.nan))
-    action = _safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
-    edge = _safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
-    bandwidth = _string_value(row, "root_bandwidth_reopen_band", "")
-    return {
-        "tie": tie,
-        "action": action,
-        "edge": edge,
-        "tie_band": _tie_band(tie),
-        "action_band": _action_band(action),
-        "edge_band": _action_band(edge),
-        "bandwidth": bandwidth,
-        "h_u": str(h_u_population_law_status),
-        "s_root": _spectral_excess_log(
-            row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
-        ),
-        "stratum": _root_tail_stratum_key(
-            target=row,
-            h_u_population_law_status=h_u_population_law_status,
-        ),
-    }
-
-
-def _annotated_support(
-    support: pd.DataFrame,
-    *,
-    h_u_population_law_status: str,
-) -> pd.DataFrame:
-    rows = support.copy()
-    if rows.empty:
-        return rows
-    rows["_tie_band"] = rows["root_tie_rank_median_fraction"].map(
-        lambda value: _tie_band(_finite_float(value))
-    )
-    rows["_action_log1p"] = rows["root_sibling_selected_ratio"].map(_safe_log1p)
-    rows["_action_band"] = rows["_action_log1p"].map(_action_band)
-    rows["_edge_log1p"] = rows["root_edge_path_statistic_margin"].map(_safe_log1p)
-    rows["_edge_band"] = rows["_edge_log1p"].map(_action_band)
-    rows["_bandwidth"] = rows.get("root_bandwidth_reopen_band", "").astype(str)
-    rows["_h_u"] = str(h_u_population_law_status)
-    rows["_s_root"] = rows["root_selected_eigenvalue_over_mp_upper_bound"].map(_spectral_excess_log)
-    rows["_root_tail_stratum_key"] = rows.apply(
-        lambda row: _root_tail_stratum_key(
-            target=row,
-            h_u_population_law_status=h_u_population_law_status,
-        ),
-        axis=1,
-    )
-    return rows
 
 
 def _exact_support_mask(support: pd.DataFrame, target: dict[str, object]) -> pd.Series:
@@ -254,15 +172,15 @@ def build_root_selected_action_dominance_tail_rows(
         rows["root_bandwidth_reopen_band"] = ""
     if "root_mixed_region_component" not in rows.columns:
         rows["root_mixed_region_component"] = "root_component_missing"
-    targets = rows.loc[rows.apply(_is_observed_target, axis=1)].copy()
-    support = _annotated_support(
-        _support_rows(rows),
+    targets = rows.loc[rows.apply(is_observed_target, axis=1)].copy()
+    support = annotate_root_tail_support(
+        calibration_support_rows(rows),
         h_u_population_law_status=h_u_population_law_status,
     )
     records: list[dict[str, object]] = []
     for _, target_row in targets.sort_values("case_id").iterrows():
-        target_case_id = _string_value(target_row, "case_id")
-        target = _coordinates(
+        target_case_id = string_value(target_row, "case_id")
+        target = root_tail_coordinates(
             target_row,
             h_u_population_law_status=h_u_population_law_status,
         )
@@ -317,15 +235,15 @@ def build_root_selected_action_dominance_tail_rows(
                     if dominated_count
                     else "action_dominating_support_missing"
                 ),
-                "best_action_dominating_support_case_id": _string_value(best, "case_id"),
-                "best_action_dominating_support_proposal_family": _string_value(
+                "best_action_dominating_support_case_id": string_value(best, "case_id"),
+                "best_action_dominating_support_proposal_family": string_value(
                     best,
                     "proposal_family",
                 ),
-                "best_action_dominating_support_action_log1p": _finite_float(
+                "best_action_dominating_support_action_log1p": finite_float(
                     best.get("_action_log1p", math.nan) if dominated_count else math.nan
                 ),
-                "best_action_dominating_support_s_root_log": _finite_float(
+                "best_action_dominating_support_s_root_log": finite_float(
                     best.get("_s_root", math.nan) if dominated_count else math.nan
                 ),
                 "production_inference_status": (
@@ -399,30 +317,19 @@ def evaluate_root_selected_action_dominance_tail_panel(
 def run_root_selected_action_dominance_tail_panel(
     config: RootSelectedActionDominanceTailConfig,
 ) -> dict[str, Path]:
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_selected_action_dominance_tail_panel(config)
-    paths = {
-        "rows": config.output_dir / ROWS_OUTPUT,
-        "summary": config.output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={"rows": ROWS_OUTPUT, "summary": SUMMARY_OUTPUT},
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:

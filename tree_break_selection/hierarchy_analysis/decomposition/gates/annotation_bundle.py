@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
 
 import pandas as pd
 
@@ -77,16 +76,6 @@ class GateAnnotationConfigMetadata:
 
 
 @dataclass(frozen=True)
-class GateAnnotationLeafDataMetadata:
-    """Leaf-data identity used to validate reusable gate annotations."""
-
-    present: bool
-    shape: tuple[int, int] | None = None
-    content_hash: str | None = None
-    feature_space_signature: tuple[Any, ...] | None = None
-
-
-@dataclass(frozen=True)
 class GateAnnotationMetadata:
     """Metadata for a complete gate annotation run."""
 
@@ -94,7 +83,6 @@ class GateAnnotationMetadata:
     edge: GateMetadata
     sibling: GateMetadata
     config: GateAnnotationConfigMetadata
-    leaf_data: GateAnnotationLeafDataMetadata
 
 
 @dataclass
@@ -108,7 +96,7 @@ class EdgeGateResult:
 
 @dataclass
 class GateAnnotationBundle:
-    """Gate annotation output plus metadata required for reuse."""
+    """Gate annotation output plus its methodological configuration."""
 
     annotated_df: pd.DataFrame
     metadata: GateAnnotationMetadata
@@ -120,7 +108,6 @@ __all__ = [
     "EdgeGateResult",
     "GateAnnotationBundle",
     "GateAnnotationConfigMetadata",
-    "GateAnnotationLeafDataMetadata",
     "GateAnnotationMetadata",
     "GateMetadata",
 ]

@@ -23,6 +23,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.overlap.binary_threshold_scan import (
+    THRESHOLD_SCAN_COLUMNS,
+    scan_binary_role_thresholds,
+)
 from benchmarks.diagnostics.calibration.overlap.overlap_weak_zone_separability import (
     rank_auc,
 )
@@ -245,21 +249,6 @@ SUMMARY_COLUMNS = (
     "best_separator_value_margin",
     "diagnostic_status",
 )
-
-THRESHOLD_SCAN_COLUMNS = (
-    "schema_version",
-    "study_role",
-    "metric",
-    "direction",
-    "threshold",
-    "truth_selected_count",
-    "negative_selected_count",
-    "truth_total",
-    "negative_total",
-    "truth_retention",
-    "negative_selection_rate",
-)
-
 
 @dataclass(frozen=True)
 class OverlapContextNegativeTopologyConditioningConfig:
@@ -632,42 +621,12 @@ def _zero_negative_separator(
 
 def threshold_scan_for_metric(rows: pd.DataFrame, *, metric: str) -> pd.DataFrame:
     """Scan observed thresholds for one topology-conditioning metric."""
-    roles = rows["guard_truth_role"].astype(str)
-    truth = roles.eq("truth_recovery")
-    negative = ~truth
-    values = _numeric(rows, metric)
-    finite = values[np.isfinite(values)]
-    thresholds = np.sort(finite.unique())
-    records: list[dict[str, object]] = []
-    truth_total = int(truth.sum())
-    negative_total = int(negative.sum())
-    for direction in ("greater_equal", "less_equal"):
-        for threshold in thresholds:
-            selected = values.ge(float(threshold))
-            if direction == "less_equal":
-                selected = values.le(float(threshold))
-            truth_selected = int((selected & truth).sum())
-            negative_selected = int((selected & negative).sum())
-            records.append(
-                {
-                    "schema_version": SCHEMA_VERSION,
-                    "study_role": STUDY_ROLE,
-                    "metric": metric,
-                    "direction": direction,
-                    "threshold": float(threshold),
-                    "truth_selected_count": truth_selected,
-                    "negative_selected_count": negative_selected,
-                    "truth_total": truth_total,
-                    "negative_total": negative_total,
-                    "truth_retention": (
-                        float(truth_selected / truth_total) if truth_total else math.nan
-                    ),
-                    "negative_selection_rate": (
-                        float(negative_selected / negative_total) if negative_total else math.nan
-                    ),
-                }
-            )
-    return pd.DataFrame.from_records(records, columns=THRESHOLD_SCAN_COLUMNS)
+    return scan_binary_role_thresholds(
+        rows,
+        metric=metric,
+        schema_version=SCHEMA_VERSION,
+        study_role=STUDY_ROLE,
+    )
 
 
 def summarize_metric(rows: pd.DataFrame, *, metric: str) -> dict[str, object]:

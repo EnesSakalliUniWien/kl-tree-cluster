@@ -10,9 +10,7 @@ _PUBLIC_IMPORTS = {
     "ClusterColorSpec": ("cluster_color_mapping", "ClusterColorSpec"),
     "build_cluster_color_spec": ("cluster_color_mapping", "build_cluster_color_spec"),
     "draw_image_panel": ("image_panel", "draw_image_panel"),
-    "load_overlay_data": ("multiscale_umap", "load_overlay_data"),
     "plot_tree_with_clusters": ("cluster_tree_visualization", "plot_tree_with_clusters"),
-    "render_multiscale_umap_overlay": ("multiscale_umap", "render_multiscale_umap_overlay"),
 }
 
 __all__ = [
@@ -21,9 +19,7 @@ __all__ = [
     "build_cluster_color_spec",
     "configure_matplotlib_backend",
     "draw_image_panel",
-    "load_overlay_data",
     "plot_tree_with_clusters",
-    "render_multiscale_umap_overlay",
 ]
 
 

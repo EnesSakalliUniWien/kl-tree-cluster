@@ -54,7 +54,7 @@ def test_scrna_benchmark_branch_time_rows_use_nnls_branch_lengths() -> None:
         assert "branch_length_optimization_method" not in config.params
 
 
-def test_scrna_benchmark_does_not_register_uncalibrated_split_action_filter_rows() -> None:
+def test_scrna_benchmark_does_not_register_distributional_action_configuration() -> None:
     pytest.importorskip("anndata")
     pytest.importorskip("scanpy")
 
@@ -63,10 +63,8 @@ def test_scrna_benchmark_does_not_register_uncalibrated_split_action_filter_rows
 
     assert all("split-action q50" not in config.label for config in configs)
     assert all(
-        "distributional_action_split_filter_policy" not in config.params for config in configs
-    )
-    assert all(
-        "distributional_action_split_filter_quantile" not in config.params for config in configs
+        not any(str(key).startswith("distributional_action") for key in config.params)
+        for config in configs
     )
 
 

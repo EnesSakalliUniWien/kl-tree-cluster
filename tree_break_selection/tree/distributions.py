@@ -265,7 +265,6 @@ def _calculate_hierarchy_continuous_scatter(
 def _finalize_continuous_covariances(
     tree: nx.DiGraph,
     feature_space: FeatureSpace,
-    use_dense_continuous_covariance: bool,
 ) -> None:
     """Write empirical covariance blocks and remove scatter work state.
 
@@ -347,7 +346,6 @@ def populate_distributions(
     _finalize_continuous_covariances(
         tree,
         active_feature_space,
-        use_dense_continuous_covariance,
     )
 
 

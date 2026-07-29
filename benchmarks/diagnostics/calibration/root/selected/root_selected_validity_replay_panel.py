@@ -23,10 +23,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, string_value
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
-    _string_value,
 )
 
 SCHEMA_VERSION = "root_selected_validity_replay_panel/v1"
@@ -157,7 +156,7 @@ def _first_finite(row: pd.Series, columns: tuple[str, ...], default: float) -> f
     for column in columns:
         if column not in row:
             continue
-        value = _finite_float(row.get(column, math.nan))
+        value = finite_float(row.get(column, math.nan))
         if math.isfinite(value):
             return value
     return float(default)
@@ -432,7 +431,7 @@ def build_root_selected_validity_replay_rows(
     replay_lookup = _root_replay_case_lookup(replay_rows)
     records: list[dict[str, object]] = []
     for _, tail in tail_rows.sort_values("target_case_id").iterrows():
-        case_id = _string_value(tail, "target_case_id")
+        case_id = string_value(tail, "target_case_id")
         replay_summary = _root_replay_summary(
             replay_lookup.get(case_id),
             configured_stability_threshold=float(root_stability_threshold),
@@ -441,7 +440,7 @@ def build_root_selected_validity_replay_rows(
         validity_status, validity_action, validity_interpretation = _root_validity_status(
             replay_summary
         )
-        tail_status = _string_value(tail, "root_tail_inference_status")
+        tail_status = string_value(tail, "root_tail_inference_status")
         usability_status, method_action, usability_interpretation = _selected_root_usability(
             root_validity_status=validity_status,
             tail_status=tail_status,
@@ -461,23 +460,23 @@ def build_root_selected_validity_replay_rows(
                 "selected_null_support_count": int(
                     _first_finite(tail, ("selected_null_support_count",), 0.0)
                 ),
-                "s_root_spectral_excess_log": _finite_float(
+                "s_root_spectral_excess_log": finite_float(
                     tail.get("s_root_spectral_excess_log", math.nan)
                 ),
-                "t_selected_tie_rank_fraction": _finite_float(
+                "t_selected_tie_rank_fraction": finite_float(
                     tail.get("t_selected_tie_rank_fraction", math.nan)
                 ),
-                "a_selected_ratio_action_log1p": _finite_float(
+                "a_selected_ratio_action_log1p": finite_float(
                     tail.get("a_selected_ratio_action_log1p", math.nan)
                 ),
-                "e_edge_margin_action_log1p": _finite_float(
+                "e_edge_margin_action_log1p": finite_float(
                     tail.get("e_edge_margin_action_log1p", math.nan)
                 ),
-                "b_bandwidth_topology_status": _string_value(
+                "b_bandwidth_topology_status": string_value(
                     tail,
                     "b_bandwidth_topology_status",
                 ),
-                "h_u_population_law_status": _string_value(
+                "h_u_population_law_status": string_value(
                     tail,
                     "h_u_population_law_status",
                 ),

@@ -21,4 +21,7 @@ python applications/scrna/plot_pipeline.py --help
 Specialized scRNA figure generators used by `plot_pipeline.py` live in
 `applications/scrna/plots/`; dataset-specific follow-up analyses live in
 `applications/scrna/analysis/`. They are application code, not reusable
-method or plotting-engine code.
+method or plotting-engine code. The R tree renderers share their application
+tree-construction, branch-display, cluster-metadata, palette, and MRCA-audit
+behavior through `plots/tree_plot_helpers.R`; dataset-specific composition
+stays in each renderer.

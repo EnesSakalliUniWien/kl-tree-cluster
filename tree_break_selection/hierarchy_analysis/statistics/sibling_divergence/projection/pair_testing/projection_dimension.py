@@ -6,9 +6,6 @@ from __future__ import annotations
 def resolve_sibling_projection_dimension(
     *,
     projection_dimension_from_edge_comparisons: int | None,
-    left_sample_size: float,
-    right_sample_size: float,
-    n_features: int,
 ) -> tuple[int, str]:
     """Resolve the sibling projection dimension and record its provenance."""
     if projection_dimension_from_edge_comparisons is None:

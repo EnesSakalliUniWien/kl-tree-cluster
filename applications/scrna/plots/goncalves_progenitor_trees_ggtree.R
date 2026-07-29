@@ -13,7 +13,8 @@ if (!length(script_arg)) {
   stop("Unable to resolve script path from Rscript command arguments.")
 }
 script_path <- normalizePath(sub("^--file=", "", script_arg[[1]]))
-project_root <- normalizePath(file.path(dirname(script_path), "..", "..", ".."))
+source(file.path(dirname(script_path), "tree_plot_helpers.R"), local = TRUE)
+project_root <- scrna_project_root(script_path)
 default_output_dir <- file.path(
   project_root,
   "raw",
@@ -78,145 +79,6 @@ meetings <- read.csv(
   stringsAsFactors = FALSE,
   check.names = FALSE
 )
-
-readable_branch_lengths <- function(branch_lengths) {
-  values <- as.numeric(branch_lengths)
-  values[!is.finite(values) | values < 0] <- 0
-  if (!any(values > 0)) {
-    return(rep(1, length(values)))
-  }
-
-  transformed <- sqrt(values)
-  positive <- transformed[transformed > 0]
-  floor_value <- stats::median(positive, na.rm = TRUE) * 0.05
-  if (!is.finite(floor_value) || floor_value <= 0) {
-    floor_value <- min(positive, na.rm = TRUE)
-  }
-  transformed <- pmax(transformed, floor_value)
-
-  cap_value <- stats::quantile(transformed, probs = 0.99, names = FALSE, na.rm = TRUE)
-  if (is.finite(cap_value) && cap_value > 0) {
-    transformed <- pmin(transformed, cap_value)
-  }
-  transformed
-}
-
-edge_table_to_phylo <- function(edge_table) {
-  parents <- unique(as.character(edge_table$parent))
-  children <- unique(as.character(edge_table$child))
-  root <- setdiff(parents, children)
-  if (length(root) != 1L) {
-    stop("Expected exactly one root; found ", length(root))
-  }
-
-  tips <- sort(setdiff(children, parents))
-  tip_order <- order(as.integer(sub("^L", "", tips)))
-  tips <- tips[tip_order]
-  internal_nodes <- c(root, sort(setdiff(parents, root)))
-  tip_ids <- stats::setNames(seq_along(tips), tips)
-  internal_ids <- stats::setNames(length(tips) + seq_along(internal_nodes), internal_nodes)
-  node_ids <- c(tip_ids, internal_ids)
-
-  phy <- list(
-    edge = cbind(
-      unname(node_ids[as.character(edge_table$parent)]),
-      unname(node_ids[as.character(edge_table$child)])
-    ),
-    tip.label = tips,
-    Nnode = length(internal_nodes),
-    node.label = internal_nodes,
-    edge.length = readable_branch_lengths(edge_table$branch_length)
-  )
-  class(phy) <- "phylo"
-  ape::reorder.phylo(phy, order = "cladewise")
-}
-
-descendant_tip_indices <- function(phy) {
-  children <- split(phy$edge[, 2], phy$edge[, 1])
-  cache <- new.env(parent = emptyenv())
-
-  visit <- function(node) {
-    key <- as.character(node)
-    if (exists(key, cache, inherits = FALSE)) {
-      return(get(key, cache, inherits = FALSE))
-    }
-    if (node <= length(phy$tip.label)) {
-      tips <- node
-    } else {
-      tips <- unlist(lapply(children[[key]], visit), use.names = FALSE)
-    }
-    assign(key, tips, cache)
-    tips
-  }
-
-  nodes <- seq_len(length(phy$tip.label) + phy$Nnode)
-  stats::setNames(lapply(nodes, visit), nodes)
-}
-
-cluster_palette <- function(cluster_ids) {
-  ids <- unique(as.character(cluster_ids))
-  cluster_numbers <- suppressWarnings(as.integer(sub("^C", "", ids)))
-  ids <- ids[order(ifelse(is.na(cluster_numbers), Inf, cluster_numbers), ids)]
-  hues <- (15 + (seq_along(ids) - 1L) * 137.508) %% 360
-  chroma <- rep(c(90, 80, 70, 86), length.out = length(ids))
-  luminance <- rep(c(42, 50, 36, 56), length.out = length(ids))
-  colors <- grDevices::hcl(h = hues, c = chroma, l = luminance, fixup = TRUE)
-  stats::setNames(colors, ids)
-}
-
-build_cluster_tree_metadata <- function(phy, tip_data) {
-  node_count <- length(phy$tip.label) + phy$Nnode
-  cluster_by_tip <- stats::setNames(as.character(tip_data$cluster_id), tip_data$label)
-  tip_desc <- descendant_tip_indices(phy)
-
-  node_cluster <- rep("shared ancestors", node_count)
-  names(node_cluster) <- as.character(seq_len(node_count))
-  for (node in seq_len(node_count)) {
-    tip_labels <- phy$tip.label[tip_desc[[as.character(node)]]]
-    clusters <- unique(cluster_by_tip[tip_labels])
-    if (length(clusters) == 1L) {
-      node_cluster[[as.character(node)]] <- clusters
-    }
-  }
-
-  data.frame(
-    node = seq_len(node_count),
-    branch_cluster = factor(node_cluster),
-    stringsAsFactors = FALSE
-  )
-}
-
-cluster_root_rows <- function(phy, tip_data, tree_plot) {
-  rows <- list()
-  split_tips <- split(tip_data$label, tip_data$cluster_id)
-  for (cluster_id in names(split_tips)) {
-    leaves <- split_tips[[cluster_id]]
-    node <- if (length(leaves) == 1L) {
-      match(leaves[[1]], phy$tip.label)
-    } else {
-      ape::getMRCA(phy, leaves)
-    }
-    rows[[length(rows) + 1L]] <- data.frame(
-      node = node,
-      cluster_id = cluster_id,
-      cluster_size = length(leaves),
-      stringsAsFactors = FALSE
-    )
-  }
-  root_data <- do.call(rbind, rows)
-  root_data <- merge(
-    root_data,
-    tree_plot$data[, c("node", "x", "y")],
-    by = "node",
-    all.x = TRUE
-  )
-  root_data$cluster_label <- ifelse(
-    root_data$cluster_size >= large_cluster_label_min,
-    paste0(root_data$cluster_id, " n=", root_data$cluster_size),
-    ""
-  )
-  root_data
-}
 
 state_class <- function(interpretation) {
   ifelse(
@@ -438,6 +300,11 @@ tip_cluster_data <- data.frame(
 cluster_tree_base <- ggtree(phy, layout = "circular")
 cluster_tree_metadata <- build_cluster_tree_metadata(phy, tip_cluster_data)
 cluster_root_data <- cluster_root_rows(phy, tip_cluster_data, cluster_tree_base)
+cluster_root_data$cluster_label <- ifelse(
+  cluster_root_data$cluster_size >= large_cluster_label_min,
+  paste0(cluster_root_data$cluster_id, " n=", cluster_root_data$cluster_size),
+  ""
+)
 cluster_tree_colors <- c(cluster_colors, "shared ancestors" = "#eeeeee")
 
 population_label_data <- aggregate(

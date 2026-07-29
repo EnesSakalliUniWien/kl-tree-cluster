@@ -36,7 +36,6 @@ STAGES: tuple[Stage, ...] = (
         "Statistical engines + calibration",
         (
             "tests/statistics",
-            "tests/test_methodology_fixes.py",
         ),
     ),
     Stage(
@@ -48,16 +47,17 @@ STAGES: tuple[Stage, ...] = (
     ),
     Stage(
         4,
-        "Cluster validation stack",
+        "Validation, calibration + diagnostic studies",
         (
             "tests/validation",
         ),
     ),
     Stage(
         5,
-        "Pipeline contracts + reporting artifacts",
+        "Pipeline + application contracts and reporting artifacts",
         (
             "tests/pipeline",
+            "tests/applications",
         ),
     ),
     Stage(

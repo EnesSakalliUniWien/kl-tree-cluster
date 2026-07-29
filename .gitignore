@@ -36,6 +36,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+/mutants/
 
 # Virtual environments
 venv/
@@ -101,6 +102,7 @@ $RECYCLE.BIN/
 results/
 cluster_tree_plots/
 cluster_validation_failures/
+reports/audits/generated/
 
 # Benchmark outputs
 benchmarks/**/results/

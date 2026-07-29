@@ -23,15 +23,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
-    _finite_float,
-    _finite_int,
-    _is_calibration_support,
-    _is_observed_target,
-    _lookup_numeric_by_key,
-    _safe_log1p,
-    _string_value,
-    _tail_excess_for_case,
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    finite_int,
+    is_calibration_support,
+    is_observed_target,
+    lookup_numeric_by_key,
+    safe_log1p,
+    string_value,
+    tail_excess_for_case,
 )
 
 SCHEMA_VERSION = "root_selected_kernel_spectral_tail_law_panel/v1"
@@ -275,7 +275,7 @@ def _fill_observed_root_topology(
         return rows
     summary_by_case = {str(row["case_id"]): row for _, row in observed_root_summary_rows.iterrows()}
     enriched = rows.copy()
-    observed_mask = enriched.apply(_is_observed_target, axis=1)
+    observed_mask = enriched.apply(is_observed_target, axis=1)
     for column in OBSERVED_ROOT_TOPOLOGY_COLUMNS:
         if column not in enriched.columns:
             enriched[column] = math.nan
@@ -303,17 +303,17 @@ def _positive_bandwidth(values: pd.Series, default: float) -> float:
 
 def _coordinate_bandwidths(targets: pd.DataFrame, support: pd.DataFrame) -> dict[str, float]:
     combined = pd.concat([targets, support], ignore_index=True, sort=False)
-    action = combined["root_sibling_selected_ratio"].map(_safe_log1p)
-    edge = combined["root_edge_path_statistic_margin"].map(_safe_log1p)
+    action = combined["root_sibling_selected_ratio"].map(safe_log1p)
+    edge = combined["root_edge_path_statistic_margin"].map(safe_log1p)
     tie = pd.to_numeric(combined["root_tie_rank_median_fraction"], errors="coerce")
     log_k = combined["root_active_feature_count"].map(
-        lambda value: math.log(max(_finite_float(value), 1.0))
+        lambda value: math.log(max(finite_float(value), 1.0))
     )
     log_rows = combined["root_effective_independent_rows"].map(
-        lambda value: math.log(max(_finite_float(value), 1.0))
+        lambda value: math.log(max(finite_float(value), 1.0))
     )
     log_h = combined["root_mp_upper_bound"].map(
-        lambda value: math.log(max(_finite_float(value), 1e-12))
+        lambda value: math.log(max(finite_float(value), 1e-12))
     )
     return {
         "tau_tie": _positive_bandwidth(tie.diff().abs(), 0.12),
@@ -326,14 +326,14 @@ def _coordinate_bandwidths(targets: pd.DataFrame, support: pd.DataFrame) -> dict
 
 
 def _safe_log_feature(row: pd.Series, column: str) -> float:
-    value = _finite_float(row.get(column, math.nan))
+    value = finite_float(row.get(column, math.nan))
     if not math.isfinite(value):
         return math.nan
     return float(math.log(max(value, 1.0)))
 
 
 def _safe_log_positive(row: pd.Series, column: str) -> float:
-    value = _finite_float(row.get(column, math.nan))
+    value = finite_float(row.get(column, math.nan))
     if not math.isfinite(value):
         return math.nan
     return float(math.log(max(value, 1e-12)))
@@ -372,7 +372,7 @@ def _count_bin(value: float) -> str:
 
 
 def _merge_count_signature(row: pd.Series, *, coarse: bool) -> str:
-    value = _finite_float(row.get("root_child_construction_merge_count", math.nan))
+    value = finite_float(row.get("root_child_construction_merge_count", math.nan))
     if not math.isfinite(value):
         return "missing"
     integer = int(round(max(value, 0.0)))
@@ -391,7 +391,7 @@ def _balance_signature(
     coarse: bool,
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> str:
-    value = _finite_float(row.get("root_child_balance", math.nan))
+    value = finite_float(row.get("root_child_balance", math.nan))
     if not math.isfinite(value):
         return "missing"
     bounded = min(max(value, 0.0), 0.5)
@@ -409,11 +409,11 @@ def _balance_signature(
 
 
 def _tie_density(row: pd.Series) -> float:
-    fraction = _finite_float(row.get("root_tie_step_fraction", math.nan))
+    fraction = finite_float(row.get("root_tie_step_fraction", math.nan))
     if math.isfinite(fraction):
         return min(max(fraction, 0.0), 1.0)
-    tied = _finite_float(row.get("root_child_tied_minimum_merge_count", math.nan))
-    merges = _finite_float(row.get("root_child_construction_merge_count", math.nan))
+    tied = finite_float(row.get("root_child_tied_minimum_merge_count", math.nan))
+    merges = finite_float(row.get("root_child_construction_merge_count", math.nan))
     if math.isfinite(tied) and math.isfinite(merges) and merges > 0.0:
         return min(max(tied / merges, 0.0), 1.0)
     return math.nan
@@ -448,27 +448,27 @@ def _root_topology_signature(
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> str:
     parts = {
-        "component": _string_value(row, "root_mixed_region_component"),
+        "component": string_value(row, "root_mixed_region_component"),
         "balance": _balance_signature(row, coarse=coarse, config=config),
         "merges": _merge_count_signature(row, coarse=coarse),
         "tie_density": _tie_density_signature(row, coarse=coarse, config=config),
         "tie_cell": _count_bin(
-            _finite_float(row.get("root_child_discrete_tie_cell_count", math.nan))
+            finite_float(row.get("root_child_discrete_tie_cell_count", math.nan))
         ),
         "smooth": _count_bin(
-            _finite_float(row.get("root_child_smooth_constraint_count", math.nan))
+            finite_float(row.get("root_child_smooth_constraint_count", math.nan))
         ),
     }
     if coarse:
         parts.pop("tie_cell")
         parts["tie_cell_presence"] = (
             "tie_cell_present"
-            if _finite_float(row.get("root_child_discrete_tie_cell_count", math.nan)) > 0.0
+            if finite_float(row.get("root_child_discrete_tie_cell_count", math.nan)) > 0.0
             else "tie_cell_absent"
         )
         parts["smooth_presence"] = (
             "smooth_present"
-            if _finite_float(row.get("root_child_smooth_constraint_count", math.nan)) > 0.0
+            if finite_float(row.get("root_child_smooth_constraint_count", math.nan)) > 0.0
             else "smooth_absent"
         )
         parts.pop("smooth")
@@ -513,7 +513,7 @@ def _squared_scaled_delta(
 
 
 def _importance_log_weight(row: pd.Series) -> float:
-    value = _finite_float(row.get("importance_log_weight", 0.0))
+    value = finite_float(row.get("importance_log_weight", 0.0))
     return value if math.isfinite(value) else 0.0
 
 
@@ -522,12 +522,12 @@ def _tail_lookup(
     support_deformed: pd.DataFrame,
 ) -> dict[str, float]:
     return {
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             target_deformed,
             key_column="target_case_id",
             value_column="s_root_deformed_excess_log",
         ),
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             support_deformed,
             key_column="case_id",
             value_column="s_root_deformed_excess_log",
@@ -550,7 +550,7 @@ def _prepare_joined_rows(
         if column not in rows.columns:
             rows[column] = math.nan if column.startswith("root_") else ""
     rows["s_h_u_excess_log"] = rows.apply(
-        lambda row: _tail_excess_for_case(
+        lambda row: tail_excess_for_case(
             row,
             deformed_excess_by_case=deformed_lookup,
         )[0],
@@ -577,26 +577,26 @@ def _kernel_log_weight(
     bandwidths: dict[str, float],
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> float:
-    if _string_value(target, "root_mixed_region_component") != _string_value(
+    if string_value(target, "root_mixed_region_component") != string_value(
         support,
         "root_mixed_region_component",
     ):
         return -math.inf
 
-    target_bandwidth = _string_value(target, "root_bandwidth_reopen_band")
-    support_bandwidth = _string_value(support, "root_bandwidth_reopen_band")
+    target_bandwidth = string_value(target, "root_bandwidth_reopen_band")
+    support_bandwidth = string_value(support, "root_bandwidth_reopen_band")
     bandwidth_weight = (
         1.0
         if target_bandwidth == support_bandwidth
         else max(float(config.bandwidth_mismatch_weight), 1e-12)
     )
 
-    target_action = _safe_log1p(target.get("root_sibling_selected_ratio", math.nan))
-    support_action = _safe_log1p(support.get("root_sibling_selected_ratio", math.nan))
-    target_edge = _safe_log1p(target.get("root_edge_path_statistic_margin", math.nan))
-    support_edge = _safe_log1p(support.get("root_edge_path_statistic_margin", math.nan))
-    target_tie = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
-    support_tie = _finite_float(support.get("root_tie_rank_median_fraction", math.nan))
+    target_action = safe_log1p(target.get("root_sibling_selected_ratio", math.nan))
+    support_action = safe_log1p(support.get("root_sibling_selected_ratio", math.nan))
+    target_edge = safe_log1p(target.get("root_edge_path_statistic_margin", math.nan))
+    support_edge = safe_log1p(support.get("root_edge_path_statistic_margin", math.nan))
+    target_tie = finite_float(target.get("root_tie_rank_median_fraction", math.nan))
+    support_tie = finite_float(support.get("root_tie_rank_median_fraction", math.nan))
     target_log_k = _safe_log_feature(target, "root_active_feature_count")
     support_log_k = _safe_log_feature(support, "root_active_feature_count")
     target_log_rows = _safe_log_feature(target, "root_effective_independent_rows")
@@ -626,7 +626,7 @@ def _weighted_support_summary(
     bandwidths: dict[str, float],
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> dict[str, object]:
-    target_s = _finite_float(target.get("s_h_u_excess_log", math.nan))
+    target_s = finite_float(target.get("s_h_u_excess_log", math.nan))
     if support.empty:
         return {
             "support_count": 0,
@@ -762,7 +762,7 @@ def _weighted_support_summary(
         "p_value": p_value,
         "status": status,
         "decision": decision,
-        "nearest_case_id": _string_value(valid_support.iloc[max_index], "case_id"),
+        "nearest_case_id": string_value(valid_support.iloc[max_index], "case_id"),
         "nearest_weight_share": float(shares[max_index]),
         "nearest_s": float(support_s[max_index]),
     }
@@ -956,20 +956,20 @@ def build_kernel_spectral_tail_rows(
         rows=rows,
         observed_root_summary_rows=observed_root_summary_rows,
     )
-    target_mask = rows.apply(_is_observed_target, axis=1)
+    target_mask = rows.apply(is_observed_target, axis=1)
     targets = rows.loc[target_mask].copy()
     support = rows.loc[~target_mask].copy()
-    support = support.loc[support.apply(_is_calibration_support, axis=1)].copy()
+    support = support.loc[support.apply(is_calibration_support, axis=1)].copy()
     if config.require_deformed_support:
         support = support.loc[support["s_h_u_deformed_available"].astype(bool)].copy()
     non_support = rows.loc[~target_mask].copy()
-    non_support = non_support.loc[~non_support.apply(_is_calibration_support, axis=1)].copy()
+    non_support = non_support.loc[~non_support.apply(is_calibration_support, axis=1)].copy()
     bandwidths = _coordinate_bandwidths(targets, support)
     strict_lookup = _strict_tail_lookup(strict_tail_rows)
 
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        case_id = _string_value(target, "case_id")
+        case_id = string_value(target, "case_id")
         strict = strict_lookup.get(case_id, pd.Series(dtype=object))
         support_summary = _weighted_support_summary(
             target=target,
@@ -984,28 +984,28 @@ def build_kernel_spectral_tail_rows(
             config=config,
         )
         excluded_count = int(non_support.shape[0])
-        strict_status = _string_value(strict, "root_tail_inference_status")
+        strict_status = string_value(strict, "root_tail_inference_status")
         records.append(
             {
                 "schema_version": SCHEMA_VERSION,
                 "study_role": STUDY_ROLE,
                 "target_case_id": case_id,
-                "target_s_h_u_excess_log": _finite_float(target.get("s_h_u_excess_log", math.nan)),
+                "target_s_h_u_excess_log": finite_float(target.get("s_h_u_excess_log", math.nan)),
                 "target_spectral_tail_variable": (
                     "deformed_mp_s_h_u"
                     if bool(target.get("s_h_u_deformed_available", False))
                     else "identity_mp_s_root"
                 ),
-                "target_t_selected_tie_rank_fraction": _finite_float(
+                "target_t_selected_tie_rank_fraction": finite_float(
                     target.get("root_tie_rank_median_fraction", math.nan)
                 ),
-                "target_a_selected_ratio_action_log1p": _safe_log1p(
+                "target_a_selected_ratio_action_log1p": safe_log1p(
                     target.get("root_sibling_selected_ratio", math.nan)
                 ),
-                "target_e_edge_margin_action_log1p": _safe_log1p(
+                "target_e_edge_margin_action_log1p": safe_log1p(
                     target.get("root_edge_path_statistic_margin", math.nan)
                 ),
-                "target_b_bandwidth_topology_status": _string_value(
+                "target_b_bandwidth_topology_status": string_value(
                     target,
                     "root_bandwidth_reopen_band",
                 ),
@@ -1022,10 +1022,10 @@ def build_kernel_spectral_tail_rows(
                 "target_root_topology_coarse_signature": topology_summary[
                     "target_coarse_signature"
                 ],
-                "strict_selected_null_support_count": _finite_int(
+                "strict_selected_null_support_count": finite_int(
                     strict.get("selected_null_support_count", math.nan)
                 ),
-                "strict_conservative_spectral_tail_p_value": _finite_float(
+                "strict_conservative_spectral_tail_p_value": finite_float(
                     strict.get("conservative_spectral_tail_p_value", math.nan)
                 ),
                 "strict_root_tail_inference_status": strict_status,

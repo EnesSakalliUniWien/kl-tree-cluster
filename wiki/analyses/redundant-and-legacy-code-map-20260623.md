@@ -117,11 +117,14 @@ matches, so they are prioritization signals rather than removable-line totals.
 | scripts to scripts | 2 | 26 | Repeated provenance verification branches |
 | applications to benchmark support | 1 | 13 | One small shared workflow prefix |
 
-Tests contain 58 weak-mode clone pairs and 1,298 duplicated lines, or 2.81% of
-46,177 scanned lines. Most are fixture construction and repeated contract
-cases. They should be replaced only when a shared public-interface test
-expresses the same behavior; line similarity alone is not evidence that a test
-is redundant.
+Tests initially contained 58 weak-mode clone pairs and 1,298 duplicated lines,
+or 2.81% of 46,177 scanned lines. The 2026-07-29 test-surface cleanup deleted
+one completely duplicated gate-annotation test module, three lower-level
+`TreeDecomposition` tests already covered through the core interface, and one
+duplicated method-registry contract. The same scan now reports 51 pairs and
+1,084 duplicated lines across 250 files, or 2.36%. The remaining matches are
+predominantly fixture construction for distinct outcomes; line similarity
+alone is not evidence that a test is redundant.
 
 The actionable clusters, in cleanup order, are:
 
@@ -199,6 +202,10 @@ Several high-ranked matches should not be mechanically consolidated:
   out of 183,106, and 46,149 duplicated tokens out of 980,227.
 - The corresponding 12-line/80-token test scan measured 58 clone pairs across
   246 files and 1,298 duplicated lines out of 46,177.
+- After the 2026-07-29 redundant-test deletion, the current 12-line/80-token
+  scan reports 51 clone pairs and 1,084 duplicated lines across 250 files and
+  45,854 lines. Exact normalized test-body comparison finds no repeated
+  validation test bodies.
 - Exact normalized AST function-body comparison found 48 repeated function
   groups. Its largest exact groups are diagnostic selectors and threshold
   helpers; the production-facing exact groups corroborate the guard and

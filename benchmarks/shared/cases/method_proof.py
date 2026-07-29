@@ -2,46 +2,7 @@
 
 from __future__ import annotations
 
-TRACE_COLUMNS = [
-    "case_id",
-    "replicate_id",
-    "node_id",
-    "parent_id",
-    "left_child",
-    "right_child",
-    "parent_depth",
-    "parent_sample_size",
-    "left_sample_size",
-    "right_sample_size",
-    "child_balance",
-    "barycentric_leverage",
-    "edge_left_raw_p",
-    "edge_right_raw_p",
-    "edge_left_bh_p",
-    "edge_right_bh_p",
-    "edge_path_open",
-    "edge_action",
-    "sibling_raw_stat",
-    "sibling_raw_p",
-    "sibling_projection_dimension",
-    "reference_scale",
-    "degrees_of_freedom",
-    "selected_ratio",
-    "selected_subspace_cos2",
-    "selected_subspace_tan2",
-    "lambda_k_over_mp",
-    "selected_eigenvalue_mass",
-    "internal_support_status",
-    "n_supported_records",
-    "n_strict_null_records",
-    "n_stopped_records",
-    "n_eff_family",
-    "inflation_c_hat",
-    "sibling_adjusted_p",
-    "sibling_bh_p",
-    "traversal_decision",
-    "failure_label",
-]
+from benchmarks.diagnostics.math_trace.trace_schema import REQUIRED_NODE_TRACE_COLUMNS
 
 
 def _method_case(
@@ -60,7 +21,7 @@ def _method_case(
         "benchmark_role": benchmark_role,
         "mathematical_target": mathematical_target,
         "expected_failure_modes": expected_failure_modes,
-        "required_trace_columns": TRACE_COLUMNS,
+        "required_trace_columns": list(REQUIRED_NODE_TRACE_COLUMNS),
         "admissibility_rule": ("fail_closed_until_trace_support_and_heldout_precision_pass"),
         "success_criterion": success_criterion,
     }

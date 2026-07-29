@@ -24,15 +24,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    action_band,
+    finite_float,
+    is_calibration_support,
+    is_observed_target,
+    root_tail_stratum_key,
+    safe_log1p,
+    string_value,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _action_band,
-    _finite_float,
-    _is_calibration_support,
-    _is_observed_target,
-    _root_tail_stratum_key,
-    _safe_log1p,
-    _string_value,
 )
 
 SCHEMA_VERSION = "root_selected_deformed_tail_support_gap_panel/v1"
@@ -194,18 +196,18 @@ def _coordinates(
     *,
     h_u_population_law_status: str,
 ) -> dict[str, object]:
-    tie = _finite_float(row.get("root_tie_rank_median_fraction", math.nan))
-    action = _safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
-    edge = _safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
+    tie = finite_float(row.get("root_tie_rank_median_fraction", math.nan))
+    action = safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
+    edge = safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
     return {
         "tie": tie,
         "action": action,
         "edge": edge,
         "tie_band": _tie_band(tie),
-        "action_band": _action_band(action),
-        "edge_band": _action_band(edge),
-        "bandwidth": _string_value(row, "root_bandwidth_reopen_band", ""),
-        "stratum": _root_tail_stratum_key(
+        "action_band": action_band(action),
+        "edge_band": action_band(edge),
+        "bandwidth": string_value(row, "root_bandwidth_reopen_band", ""),
+        "stratum": root_tail_stratum_key(
             target=row,
             h_u_population_law_status=h_u_population_law_status,
         ),
@@ -213,13 +215,13 @@ def _coordinates(
 
 
 def _identity_excess(row: pd.Series) -> float:
-    ratio = _finite_float(row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan))
+    ratio = finite_float(row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan))
     return float(max(math.log(max(ratio, 1e-12)), 0.0)) if math.isfinite(ratio) else math.nan
 
 
 def _support_rows(joined_rows: pd.DataFrame) -> pd.DataFrame:
-    support_mask = joined_rows.apply(_is_calibration_support, axis=1)
-    target_mask = joined_rows.apply(_is_observed_target, axis=1)
+    support_mask = joined_rows.apply(is_calibration_support, axis=1)
+    target_mask = joined_rows.apply(is_observed_target, axis=1)
     return joined_rows.loc[support_mask & ~target_mask].copy()
 
 
@@ -295,28 +297,28 @@ def build_root_selected_deformed_tail_support_gap_rows(
         rows["root_mixed_region_component"] = "root_component_missing"
     tail_by_case = _tail_lookup(deformed_tail_rows)
     support_deformed_by_case = _support_deformed_lookup(deformed_support_rows)
-    targets = rows.loc[rows.apply(_is_observed_target, axis=1)].copy()
+    targets = rows.loc[rows.apply(is_observed_target, axis=1)].copy()
     supports = _support_rows(rows)
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        target_id = _string_value(target, "case_id")
+        target_id = string_value(target, "case_id")
         target_tail = tail_by_case.get(target_id)
         target_coords = _coordinates(
             target,
             h_u_population_law_status=h_u_population_law_status,
         )
-        target_s_h_u = _finite_float(
+        target_s_h_u = finite_float(
             target_tail.get("s_root_deformed_excess_log", math.nan)
             if target_tail is not None
             else math.nan
         )
-        target_identity = _finite_float(
+        target_identity = finite_float(
             target_tail.get("s_root_identity_excess_log", math.nan)
             if target_tail is not None
             else _identity_excess(target)
         )
         tail_support_count = int(
-            _finite_float(
+            finite_float(
                 target_tail.get("selected_null_support_count", 0) if target_tail is not None else 0
             )
         )
@@ -326,9 +328,9 @@ def build_root_selected_deformed_tail_support_gap_rows(
         nearest_identity = math.nan
         same_stratum_s: list[float] = []
         for _, support in supports.iterrows():
-            support_id = _string_value(support, "case_id")
+            support_id = string_value(support, "case_id")
             support_deformed = support_deformed_by_case.get(support_id)
-            support_s_h_u = _finite_float(
+            support_s_h_u = finite_float(
                 support_deformed.get("s_root_deformed_excess_log", math.nan)
                 if support_deformed is not None
                 else math.nan
@@ -350,7 +352,7 @@ def build_root_selected_deformed_tail_support_gap_rows(
                 nearest = support
                 nearest_components = components
                 nearest_s_h_u = support_s_h_u
-                nearest_identity = _finite_float(
+                nearest_identity = finite_float(
                     support_deformed.get("s_root_identity_excess_log", math.nan)
                     if support_deformed is not None
                     else _identity_excess(support)
@@ -395,23 +397,23 @@ def build_root_selected_deformed_tail_support_gap_rows(
                 "target_edge_log1p": target_coords["edge"],
                 "target_bandwidth_topology_status": target_coords["bandwidth"],
                 "tail_panel_support_count": tail_support_count,
-                "tail_panel_inference_status": _string_value(
+                "tail_panel_inference_status": string_value(
                     target_tail if target_tail is not None else {},
                     "root_tail_inference_status",
                 ),
-                "nearest_support_case_id": _string_value(
+                "nearest_support_case_id": string_value(
                     nearest if nearest is not None else {},
                     "case_id",
                 ),
-                "nearest_support_data_role": _string_value(
+                "nearest_support_data_role": string_value(
                     nearest if nearest is not None else {},
                     "data_role",
                 ),
-                "nearest_support_calibration_role": _string_value(
+                "nearest_support_calibration_role": string_value(
                     nearest if nearest is not None else {},
                     "calibration_role",
                 ),
-                "nearest_support_proposal_family": _string_value(
+                "nearest_support_proposal_family": string_value(
                     nearest if nearest is not None else {},
                     "proposal_family",
                 ),

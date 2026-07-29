@@ -30,13 +30,15 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    is_calibration_support,
+    is_observed_target,
+    safe_log1p,
+    string_value,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
-    _is_calibration_support,
-    _is_observed_target,
-    _safe_log1p,
-    _string_value,
 )
 
 SCHEMA_VERSION = "root_selected_conditional_tilt_feasibility_panel/v1"
@@ -172,7 +174,7 @@ def _parse_moment_json(value: object) -> dict[str, float]:
         raw = value
     else:
         raw = {}
-    return {axis: _finite_float(raw.get(axis, math.nan)) for axis in ALL_AXES}
+    return {axis: finite_float(raw.get(axis, math.nan)) for axis in ALL_AXES}
 
 
 def _axis_tuple(value: object) -> tuple[str, ...]:
@@ -189,9 +191,9 @@ def _support_deformed_lookup(rows: pd.DataFrame) -> dict[str, float]:
     _require_columns(rows, {"case_id", "s_root_deformed_excess_log"}, "support rows")
     lookup: dict[str, float] = {}
     for _, row in rows.iterrows():
-        value = _finite_float(row.get("s_root_deformed_excess_log", math.nan))
+        value = finite_float(row.get("s_root_deformed_excess_log", math.nan))
         if math.isfinite(value):
-            lookup[_string_value(row, "case_id")] = value
+            lookup[string_value(row, "case_id")] = value
     return lookup
 
 
@@ -202,8 +204,8 @@ def _support_pool(
     target_bandwidth: str,
     scope: Literal["same_B_Hu", "all_B_Hu"],
 ) -> pd.DataFrame:
-    support_mask = joined_feasibility_rows.apply(_is_calibration_support, axis=1)
-    target_mask = joined_feasibility_rows.apply(_is_observed_target, axis=1)
+    support_mask = joined_feasibility_rows.apply(is_calibration_support, axis=1)
+    target_mask = joined_feasibility_rows.apply(is_observed_target, axis=1)
     support = joined_feasibility_rows.loc[support_mask & ~target_mask].copy()
     support_s = _support_deformed_lookup(deformed_support_rows)
     support["S_Hu"] = support["case_id"].astype(str).map(support_s)
@@ -216,8 +218,8 @@ def _support_pool(
         support["root_tie_rank_median_fraction"],
         errors="coerce",
     )
-    support["A"] = support["root_sibling_selected_ratio"].map(_safe_log1p)
-    support["E"] = support["root_edge_path_statistic_margin"].map(_safe_log1p)
+    support["A"] = support["root_sibling_selected_ratio"].map(safe_log1p)
+    support["E"] = support["root_edge_path_statistic_margin"].map(safe_log1p)
     support["S_Hu"] = pd.to_numeric(support["S_Hu"], errors="coerce")
     finite = np.isfinite(support[list(ALL_AXES)].to_numpy(dtype=float)).all(axis=1)
     return support.loc[finite].copy()
@@ -346,10 +348,10 @@ def build_root_selected_conditional_tilt_feasibility_rows(
     for _, target_row in external_law_target_rows.sort_values("target_case_id").iterrows():
         target = _parse_moment_json(target_row["target_moment_vector_json"])
         target_bandwidth = _target_bandwidth(
-            _string_value(target_row, "target_root_tail_stratum_key")
+            string_value(target_row, "target_root_tail_stratum_key")
         )
         axes_to_check: list[tuple[str, tuple[str, ...]]] = [("same_B_Hu", ALL_AXES)]
-        if _string_value(target_row, "required_tilt_axes") != "none":
+        if string_value(target_row, "required_tilt_axes") != "none":
             axes_to_check.append(
                 ("same_B_Hu", _axis_tuple(target_row.get("required_tilt_axes", "")))
             )
@@ -369,14 +371,14 @@ def build_root_selected_conditional_tilt_feasibility_rows(
                 {
                     "schema_version": SCHEMA_VERSION,
                     "study_role": STUDY_ROLE,
-                    "target_case_id": _string_value(target_row, "target_case_id"),
-                    "target_status": _string_value(target_row, "target_status"),
-                    "target_root_tail_stratum_key": _string_value(
+                    "target_case_id": string_value(target_row, "target_case_id"),
+                    "target_status": string_value(target_row, "target_status"),
+                    "target_root_tail_stratum_key": string_value(
                         target_row,
                         "target_root_tail_stratum_key",
                     ),
                     "support_pool_scope": scope,
-                    "required_tilt_axes": _string_value(
+                    "required_tilt_axes": string_value(
                         target_row,
                         "required_tilt_axes",
                     ),

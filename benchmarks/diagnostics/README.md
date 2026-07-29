@@ -58,7 +58,7 @@ multi-scale node, region, and sample outputs. Use
 selected-family diagnostic candidate; it remains validation-only, not a
 production default.
 
-`tree_break_selection/plot/multiscale_umap.py` joins
+`calibration/selected/family/multiscale_umap.py` joins
 `multiscale_gene_assignments.csv` to existing UMAP coordinates and renders a
 stable-region-first overlay with pass-through or guard zones marked separately.
 

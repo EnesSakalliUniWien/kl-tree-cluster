@@ -67,7 +67,6 @@ def test_nearest_support_is_diagnostic_and_production_fails_closed() -> None:
     assert row["nearest_support_status"] == "nearest_support_diagnostic_only"
     assert row["production_inference_status"] == "fail_closed_nearest_support_only"
     assert not row["nearest_support_root_tail_stratum_match"]
-    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_summary_counts_exact_support_separately_from_nearest_support() -> None:

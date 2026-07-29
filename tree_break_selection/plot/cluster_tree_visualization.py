@@ -138,7 +138,6 @@ def _group_edges_for_sibling_style(
 def _map_nodes_to_clusters(
     cluster_assignments: Dict,
     label_to_node: Dict,
-    tree,
 ) -> Dict:
     """Map tree nodes to their cluster IDs."""
     node_to_cluster: Dict = {}
@@ -165,7 +164,6 @@ def _build_leaf_node_colors(
     leaf_nodes: list[object],
     node_to_cluster: Dict,
     cluster_id_to_color: Dict[int, str],
-    unassigned_color: str,
 ) -> list[str]:
     """Return leaf colors keyed by cluster assignment."""
     leaf_node_colors: list[str] = []
@@ -588,11 +586,10 @@ def plot_tree_with_clusters(
         num_clusters, base_cmap=colormap, unassigned_color=UNASSIGNED_NODE_COLOR
     )
     cluster_id_to_color = spec.id_to_color
-    unassigned_color = spec.unassigned_color
 
     label_to_node = _build_label_to_node(tree)
 
-    node_to_cluster = _map_nodes_to_clusters(cluster_assignments, label_to_node, tree)
+    node_to_cluster = _map_nodes_to_clusters(cluster_assignments, label_to_node)
 
     G = nx.DiGraph()
     G.add_nodes_from(tree.nodes())
@@ -605,7 +602,6 @@ def plot_tree_with_clusters(
         leaf_nodes,
         node_to_cluster,
         cluster_id_to_color,
-        unassigned_color,
     )
     pos = _resolve_layout(G, layout)
 

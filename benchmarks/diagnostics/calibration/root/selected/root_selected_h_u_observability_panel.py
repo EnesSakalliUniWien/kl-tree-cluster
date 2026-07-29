@@ -26,9 +26,9 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
 )
 
 SCHEMA_VERSION = "root_selected_h_u_observability_panel/v1"
@@ -148,7 +148,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _string_value(
+def string_value(
     row: pd.Series | dict[str, object],
     column: str,
     default: str = "",
@@ -161,18 +161,18 @@ def _string_value(
     return str(value)
 
 
-def _is_observed_target(row: pd.Series) -> bool:
+def is_observed_target(row: pd.Series) -> bool:
     return (
-        _string_value(row, "proposal_family") == "observed_target"
-        or _string_value(row, "calibration_role") == "observed_target_not_null_support"
-        or _string_value(row, "data_role") == "observed_target"
+        string_value(row, "proposal_family") == "observed_target"
+        or string_value(row, "calibration_role") == "observed_target_not_null_support"
+        or string_value(row, "data_role") == "observed_target"
     )
 
 
 def _has_finite(row: pd.Series, column: str, *, positive: bool = False) -> bool:
     if column not in row:
         return False
-    value = _finite_float(row[column])
+    value = finite_float(row[column])
     if not math.isfinite(value):
         return False
     return value > 0.0 if positive else True
@@ -210,7 +210,7 @@ def _parse_spectrum_count(value: object) -> int:
             break
     count = 0
     for part in parts:
-        if math.isfinite(_finite_float(part.strip())):
+        if math.isfinite(finite_float(part.strip())):
             count += 1
     return count
 
@@ -306,28 +306,28 @@ def build_root_selected_h_u_observability_rows(
         "population law requirement rows",
     )
     requirement_by_case = {
-        _string_value(row, "target_case_id"): row
+        string_value(row, "target_case_id"): row
         for _, row in population_law_requirement_rows.iterrows()
     }
     targets = joined_feasibility_rows[
-        joined_feasibility_rows.apply(_is_observed_target, axis=1)
+        joined_feasibility_rows.apply(is_observed_target, axis=1)
     ].copy()
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        case_id = _string_value(target, "case_id")
+        case_id = string_value(target, "case_id")
         requirement = requirement_by_case.get(case_id)
         required_status = (
-            _string_value(requirement, "required_population_law_status")
+            string_value(requirement, "required_population_law_status")
             if requirement is not None
             else "population_law_requirement_missing"
         )
         multiplier = (
-            _finite_float(requirement["required_mp_edge_multiplier"])
+            finite_float(requirement["required_mp_edge_multiplier"])
             if requirement is not None
             else math.nan
         )
         production_status = (
-            _string_value(requirement, "production_inference_status")
+            string_value(requirement, "production_inference_status")
             if requirement is not None
             else "fail_closed_h_u_requirement_missing"
         )

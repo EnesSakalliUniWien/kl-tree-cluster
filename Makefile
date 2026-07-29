@@ -1,6 +1,6 @@
-.PHONY: check lint test wiki-lint
+.PHONY: audit audit-quick audit-test check lint test wiki-lint
 
-check: lint wiki-lint test
+check: lint wiki-lint test audit-test
 
 lint:
 	uv run --no-sync ruff check .
@@ -10,3 +10,12 @@ test:
 
 wiki-lint:
 	python3 scripts/wiki/lint.py
+
+audit:
+	tbs-audit --mode map
+
+audit-quick:
+	tbs-audit --mode quick
+
+audit-test:
+	uv run --project tools/repository_audit pytest -q tools/repository_audit/tests

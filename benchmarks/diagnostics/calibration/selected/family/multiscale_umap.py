@@ -1,4 +1,4 @@
-"""Reusable multi-scale traversal overlays for existing UMAP coordinates."""
+"""Selected-family diagnostic overlays for existing UMAP coordinates."""
 
 from __future__ import annotations
 

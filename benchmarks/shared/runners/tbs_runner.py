@@ -5,7 +5,7 @@ Builds a PosetTree and performs TBS decomposition.
 
 from __future__ import annotations
 
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from time import perf_counter
 
 import numpy as np
@@ -26,10 +26,6 @@ from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils impo
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-)
-from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
-    DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-    annotate_distributional_action_split_filter,
 )
 from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
@@ -106,8 +102,6 @@ def run_tbs_on_distance(
         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
     ),
     neighborhood_bandwidth_profile: str | None = None,
-    distributional_action_split_filter_policy: str = DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-    distributional_action_split_filter_quantile: float = 0.0,
     branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
     branch_length_data_df: pd.DataFrame | None = None,
     branch_length_optimization_target_metric: str = (
@@ -189,9 +183,7 @@ def run_tbs_on_distance(
             }
         )
         branch_length_optimization_metadata["branch_length_geometry_source"] = (
-            "original_data"
-            if branch_length_data_df is data_df
-            else "aligned_geometry_embedding"
+            "original_data" if branch_length_data_df is data_df else "aligned_geometry_embedding"
         )
     elif branch_length_optimization_method != BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC:
         raise ValueError(
@@ -269,28 +261,6 @@ def run_tbs_on_distance(
     stage_timings.update(gate_annotation_bundle.stage_timings)
     resolved_gate_config = gate_annotation_bundle.metadata.config
 
-    distributional_action_start_sec = perf_counter()
-    filtered_annotations_df, distributional_action_metadata = (
-        annotate_distributional_action_split_filter(
-            tree,
-            gate_annotation_bundle.annotated_df,
-            data_df,
-            policy=distributional_action_split_filter_policy,
-            quantile=distributional_action_split_filter_quantile,
-        )
-    )
-    stage_timings["distributional_action_split_filter_sec"] = elapsed_since(
-        distributional_action_start_sec
-    )
-    gate_annotation_bundle = replace(
-        gate_annotation_bundle,
-        annotated_df=filtered_annotations_df,
-        edge_gate_result=replace(
-            gate_annotation_bundle.edge_gate_result,
-            annotated_df=filtered_annotations_df,
-        ),
-    )
-
     decomposer = TreeDecomposition(
         tree=tree,
         gate_annotation_bundle=gate_annotation_bundle,
@@ -321,9 +291,7 @@ def run_tbs_on_distance(
         "tree_builder": str(tree_builder),
         "tree_rooting": str(tree_rooting),
         "tree_build_diagnostics": asdict(tree_build.diagnostics),
-        "linkage_topology_only_branch_lengths": bool(
-            tree_build.topology_only_branch_lengths
-        ),
+        "linkage_topology_only_branch_lengths": bool(tree_build.topology_only_branch_lengths),
         "linkage_topology_only_reason": tree_build.topology_only_reason,
         "phylogenetic_rooting": tree_build.phylogenetic_rooting,
         "iqtree_metadata": tree_build.iqtree_metadata,
@@ -400,7 +368,6 @@ def run_tbs_on_distance(
             resolved_gate_config.spectral_transport_unmatched_mode_penalty
         ),
         **neighborhood_bandwidth_metadata,
-        **distributional_action_metadata,
     }
     if extra:
         duplicate_extra_keys = sorted(set(result_extra).intersection(extra))

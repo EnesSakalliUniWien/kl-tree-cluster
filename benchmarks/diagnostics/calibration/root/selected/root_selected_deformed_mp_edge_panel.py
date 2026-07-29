@@ -19,9 +19,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
 )
 
 SCHEMA_VERSION = "root_selected_deformed_mp_edge_panel/v1"
@@ -161,7 +161,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _string_value(
+def string_value(
     row: pd.Series | dict[str, object],
     column: str,
     default: str = "",
@@ -174,11 +174,11 @@ def _string_value(
     return str(value)
 
 
-def _is_observed_target(row: pd.Series) -> bool:
+def is_observed_target(row: pd.Series) -> bool:
     return (
-        _string_value(row, "proposal_family") == "observed_target"
-        or _string_value(row, "calibration_role") == "observed_target_not_null_support"
-        or _string_value(row, "data_role") == "observed_target"
+        string_value(row, "proposal_family") == "observed_target"
+        or string_value(row, "calibration_role") == "observed_target_not_null_support"
+        or string_value(row, "data_role") == "observed_target"
     )
 
 
@@ -287,7 +287,7 @@ def _bulk_spectrum(
 ) -> tuple[np.ndarray, int]:
     sorted_spectrum = np.sort(np.asarray(full_spectrum, dtype=np.float64))[::-1]
     sorted_spectrum = sorted_spectrum[np.isfinite(sorted_spectrum) & (sorted_spectrum > 0.0)]
-    raw_count = _finite_float(raw_mp_signal_count)
+    raw_count = finite_float(raw_mp_signal_count)
     if not math.isfinite(raw_count):
         raw_count = 0.0
     excluded = int(max(raw_count, 0.0))
@@ -338,8 +338,8 @@ def _deformed_edge_components(
         full_spectrum,
         raw_mp_signal_count=row.get("root_raw_mp_signal_count", 0),
     )
-    active_feature_count = _finite_float(row["root_active_feature_count"])
-    mp_rows = _finite_float(row["root_mp_threshold_rows"])
+    active_feature_count = finite_float(row["root_active_feature_count"])
+    mp_rows = finite_float(row["root_mp_threshold_rows"])
     aspect_ratio = (
         float(active_feature_count / mp_rows)
         if math.isfinite(active_feature_count)
@@ -348,7 +348,7 @@ def _deformed_edge_components(
         and mp_rows > 0.0
         else math.nan
     )
-    identity_edge = _finite_float(row.get("root_mp_upper_bound", math.nan))
+    identity_edge = finite_float(row.get("root_mp_upper_bound", math.nan))
     if not math.isfinite(identity_edge):
         identity_edge = _identity_mp_upper_edge(aspect_ratio=aspect_ratio)
     has_inputs = (
@@ -367,7 +367,7 @@ def _deformed_edge_components(
         if has_inputs and bulk.size >= int(minimum_bulk_eigenvalue_count)
         else math.nan
     )
-    identity_ratio = _finite_float(row["root_selected_eigenvalue_over_mp_upper_bound"])
+    identity_ratio = finite_float(row["root_selected_eigenvalue_over_mp_upper_bound"])
     selected_eigenvalue = (
         identity_ratio * identity_edge
         if math.isfinite(identity_ratio) and math.isfinite(identity_edge)
@@ -431,17 +431,17 @@ def build_root_selected_deformed_mp_edge_rows(
         "H_u observability rows",
     )
     h_u_by_case = {
-        _string_value(row, "target_case_id"): row for _, row in h_u_observability_rows.iterrows()
+        string_value(row, "target_case_id"): row for _, row in h_u_observability_rows.iterrows()
     }
     targets = joined_feasibility_rows[
-        joined_feasibility_rows.apply(_is_observed_target, axis=1)
+        joined_feasibility_rows.apply(is_observed_target, axis=1)
     ].copy()
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        case_id = _string_value(target, "case_id")
+        case_id = string_value(target, "case_id")
         h_u_row = h_u_by_case.get(case_id)
         h_u_status = (
-            _string_value(h_u_row, "h_u_observability_status")
+            string_value(h_u_row, "h_u_observability_status")
             if h_u_row is not None
             else "h_u_observability_missing"
         )
@@ -521,7 +521,7 @@ def build_root_support_deformed_mp_edge_rows(
         "joined feasibility rows",
     )
     candidates = joined_feasibility_rows[
-        ~joined_feasibility_rows.apply(_is_observed_target, axis=1)
+        ~joined_feasibility_rows.apply(is_observed_target, axis=1)
     ].copy()
     records: list[dict[str, object]] = []
     for _, row in candidates.sort_values("case_id").iterrows():
@@ -546,11 +546,11 @@ def build_root_support_deformed_mp_edge_rows(
             {
                 "schema_version": SCHEMA_VERSION,
                 "study_role": STUDY_ROLE,
-                "case_id": _string_value(row, "case_id"),
-                "data_role": _string_value(row, "data_role"),
-                "calibration_role": _string_value(row, "calibration_role"),
-                "proposal_family": _string_value(row, "proposal_family"),
-                "conditioning_target_case_id": _string_value(
+                "case_id": string_value(row, "case_id"),
+                "data_role": string_value(row, "data_role"),
+                "calibration_role": string_value(row, "calibration_role"),
+                "proposal_family": string_value(row, "proposal_family"),
+                "conditioning_target_case_id": string_value(
                     row,
                     "conditioning_target_case_id",
                 ),
@@ -577,7 +577,7 @@ def build_root_support_deformed_mp_edge_rows(
                 "support_deformed_mp_edge_status": status,
                 "production_inference_status": (
                     "diagnostic_only_not_selected_null_calibration"
-                    if _string_value(row, "calibration_role") != "external_null_support"
+                    if string_value(row, "calibration_role") != "external_null_support"
                     else "external_null_support_requires_same_stratum_tail_join"
                 ),
             }

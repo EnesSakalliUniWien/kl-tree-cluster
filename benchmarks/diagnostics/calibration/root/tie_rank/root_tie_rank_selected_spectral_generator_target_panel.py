@@ -19,12 +19,23 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    finite_int,
+    is_calibration_support,
+    is_observed_target,
+    require_columns,
+    safe_log1p,
+    spectral_excess_log,
+    string_value,
+)
 
 SCHEMA_VERSION = "root_tie_rank_selected_spectral_generator_target_panel/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_selected_spectral_generator_targets_not_calibration"
@@ -40,14 +51,6 @@ DEFAULT_PROPOSAL_FEASIBILITY_ROWS = (
 ROWS_OUTPUT = "root_tie_rank_selected_spectral_generator_target_rows.csv"
 SUMMARY_OUTPUT = "root_tie_rank_selected_spectral_generator_target_summary.csv"
 MANIFEST_OUTPUT = "manifest.json"
-
-CALIBRATION_SUPPORT_ROLES = {
-    "selected_null",
-    "selected_null_candidate_support",
-    "external_selected_null",
-    "external_null_support",
-    "calibration_null",
-}
 
 ROW_COLUMNS = (
     "schema_version",
@@ -124,93 +127,21 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootTieRankSelectedSpectralGeneratorTargetConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
-def _finite_int(value: object) -> int:
-    numeric = _finite_float(value)
-    return int(numeric) if math.isfinite(numeric) else 0
-
-
-def _string_value(
-    row: pd.Series | dict[str, object],
-    column: str,
-    default: str = "",
-) -> str:
-    if column not in row:
-        return default
-    value = row[column]
-    if pd.isna(value):
-        return default
-    return str(value)
-
-
-def _safe_log1p(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(math.log1p(max(numeric, 0.0)))
-
-
-def _spectral_excess_log(value: object) -> float:
-    numeric = _finite_float(value)
-    if not math.isfinite(numeric):
-        return math.nan
-    return float(max(math.log(max(numeric, 1e-12)), 0.0))
-
-
 def _action_edge_bottleneck(row: pd.Series) -> float:
-    tie = _finite_float(row.get("root_tie_rank_median_fraction", math.nan))
-    action = _safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
-    edge = _safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
+    tie = finite_float(row.get("root_tie_rank_median_fraction", math.nan))
+    action = safe_log1p(row.get("root_sibling_selected_ratio", math.nan))
+    edge = safe_log1p(row.get("root_edge_path_statistic_margin", math.nan))
     if not (math.isfinite(tie) and math.isfinite(action) and math.isfinite(edge)):
         return math.nan
     return float(tie * min(action, edge))
 
 
 def _is_observed_target(row: pd.Series) -> bool:
-    family = _string_value(row, "proposal_family")
-    role = _string_value(row, "calibration_role")
-    data_role = _string_value(row, "data_role")
-    return (
-        family == "observed_target"
-        or role == "observed_target_not_null_support"
-        or data_role == "observed_target"
-    )
-
-
-def _is_calibration_support(row: pd.Series) -> bool:
-    return (
-        _string_value(row, "data_role") in CALIBRATION_SUPPORT_ROLES
-        or _string_value(row, "calibration_role") in CALIBRATION_SUPPORT_ROLES
-    )
+    return is_observed_target(row)
 
 
 def _support_role(row: pd.Series) -> str:
-    if _is_calibration_support(row):
+    if is_calibration_support(row):
         return "selected_null_candidate_support"
     return "diagnostic_proposal_not_calibration"
 
@@ -218,7 +149,7 @@ def _support_role(row: pd.Series) -> str:
 def _proposal_role(family_rows: pd.DataFrame) -> str:
     if family_rows.empty:
         return "no_generated_rows"
-    support = family_rows.apply(_is_calibration_support, axis=1)
+    support = family_rows.apply(is_calibration_support, axis=1)
     if bool(support.all()):
         return "selected_null_candidate_support"
     if bool(support.any()):
@@ -227,7 +158,7 @@ def _proposal_role(family_rows: pd.DataFrame) -> str:
 
 
 def _is_neighborhood_measured(row: pd.Series) -> bool:
-    band = _string_value(row, "root_bandwidth_reopen_band")
+    band = string_value(row, "root_bandwidth_reopen_band")
     return bool(band) and band != "bandwidth_reopen_missing"
 
 
@@ -258,13 +189,13 @@ def _eligible_family_rows(
         return family_rows.iloc[0:0].copy()
     rows = family_rows.copy()
     if "conditioning_target_case_id" in rows.columns:
-        target_id = _string_value(target, "case_id")
+        target_id = string_value(target, "case_id")
         conditioning_target = rows["conditioning_target_case_id"].fillna("")
         rows = rows.loc[
             conditioning_target.astype(str).eq("") | conditioning_target.astype(str).eq(target_id)
         ].copy()
     rows["_spectral_excess_log"] = rows["root_selected_eigenvalue_over_mp_upper_bound"].map(
-        _spectral_excess_log
+        spectral_excess_log
     )
     rows["_action_edge_bottleneck"] = rows.apply(_action_edge_bottleneck, axis=1)
     rows["_tie_fraction"] = pd.to_numeric(
@@ -330,12 +261,12 @@ def _generator_target_record(
     min_action_edge_fraction: float,
     min_tie_fraction_floor: float,
 ) -> dict[str, object]:
-    target_spectral = _spectral_excess_log(
+    target_spectral = spectral_excess_log(
         target.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
     )
     target_bottleneck = _action_edge_bottleneck(target)
-    target_tie = _finite_float(target.get("root_tie_rank_median_fraction", math.nan))
-    target_band = _string_value(target, "root_bandwidth_reopen_band")
+    target_tie = finite_float(target.get("root_tie_rank_median_fraction", math.nan))
+    target_band = string_value(target, "root_bandwidth_reopen_band")
     eligible = _eligible_family_rows(
         target=target,
         family_rows=family_rows,
@@ -344,7 +275,7 @@ def _generator_target_record(
     )
     eligible_count = int(eligible.shape[0])
     calibration_mask = (
-        eligible.apply(_is_calibration_support, axis=1) if eligible_count else pd.Series(dtype=bool)
+        eligible.apply(is_calibration_support, axis=1) if eligible_count else pd.Series(dtype=bool)
     )
     calibration_count = int(calibration_mask.sum()) if eligible_count else 0
     best = _best_spectral_row(eligible)
@@ -356,12 +287,12 @@ def _generator_target_record(
         best_tie = math.nan
         best_band = ""
     else:
-        best_case_id = _string_value(best, "case_id")
+        best_case_id = string_value(best, "case_id")
         best_support_role = _support_role(best)
-        best_spectral = _finite_float(best.get("_spectral_excess_log", math.nan))
-        best_bottleneck = _finite_float(best.get("_action_edge_bottleneck", math.nan))
-        best_tie = _finite_float(best.get("_tie_fraction", math.nan))
-        best_band = _string_value(best, "root_bandwidth_reopen_band")
+        best_spectral = finite_float(best.get("_spectral_excess_log", math.nan))
+        best_bottleneck = finite_float(best.get("_action_edge_bottleneck", math.nan))
+        best_tie = finite_float(best.get("_tie_fraction", math.nan))
+        best_band = string_value(best, "root_bandwidth_reopen_band")
     if math.isfinite(target_spectral) and math.isfinite(best_spectral):
         lift_log = float(max(target_spectral - best_spectral, 0.0))
     else:
@@ -376,7 +307,7 @@ def _generator_target_record(
     return {
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
-        "target_case_id": _string_value(target, "case_id"),
+        "target_case_id": string_value(target, "case_id"),
         "proposal_family": family,
         "proposal_role": _proposal_role(family_rows),
         "target_spectral_excess_log": target_spectral,
@@ -401,16 +332,16 @@ def _generator_target_record(
             calibration_support_count=calibration_count,
         ),
         "generator_target_status": status,
-        "minimum_null_roots_for_alpha_resolution": _finite_int(
+        "minimum_null_roots_for_alpha_resolution": finite_int(
             target.get("alpha_resolution_required_null_count", 0)
         ),
-        "minimum_null_roots_for_tail_precision": _finite_int(
+        "minimum_null_roots_for_tail_precision": finite_int(
             target.get("tail_precision_required_null_count", 0)
         ),
-        "additional_null_roots_for_alpha_resolution": _finite_int(
+        "additional_null_roots_for_alpha_resolution": finite_int(
             target.get("additional_null_count_for_alpha_resolution", 0)
         ),
-        "additional_null_roots_for_tail_precision": _finite_int(
+        "additional_null_roots_for_tail_precision": finite_int(
             target.get("additional_null_count_for_tail_precision", 0)
         ),
         "next_generator_step": _next_generator_step(status),
@@ -424,7 +355,7 @@ def build_selected_spectral_generator_target_rows(
     min_tie_fraction_floor: float = 0.70,
 ) -> pd.DataFrame:
     """Return target-by-family spectral generator requirements."""
-    _require_columns(
+    require_columns(
         combined_feasibility_rows,
         {
             "case_id",
@@ -566,31 +497,22 @@ def run_selected_spectral_generator_target_panel(
     config: RootTieRankSelectedSpectralGeneratorTargetConfig,
 ) -> dict[str, Path]:
     """Run the selected spectral generator target panel and write outputs."""
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_selected_spectral_generator_target_panel(config)
-    paths = {
-        "rows": output_dir / ROWS_OUTPUT,
-        "summary": output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=Path(config.output_dir),
+        tables=tables,
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:

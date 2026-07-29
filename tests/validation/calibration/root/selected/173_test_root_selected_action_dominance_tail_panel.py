@@ -55,7 +55,6 @@ def test_action_dominating_support_does_not_become_production_p_value() -> None:
     assert row["next_mathematical_step"] == (
         "prove_or_reject_one_sided_action_spectral_tail_monotonicity"
     )
-    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_action_dominance_summary_counts_new_diagnostic_support() -> None:

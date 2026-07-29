@@ -4,8 +4,8 @@ Subpackages are organized by statistical responsibility:
 
 - ``projected_wald``: projected-test reference distributions, projection-basis
   construction, and the shared projected Wald kernel.
-- ``projection_dimension_estimation``: effective-rank and Marchenko-Pastur
-  projection-dimension estimators.
+- ``projection_dimension_estimation``: Marchenko-Pastur projection-dimension
+  estimators.
 - ``spectral``: per-node spectral decomposition over tree substructures.
 """
 
@@ -18,7 +18,6 @@ from .projected_wald import (
 )
 from .projection_dimension_estimation import (
     MarchenkoPasturDimensionEstimate,
-    effective_rank,
     estimate_marchenko_pastur_dimension,
     marchenko_pastur_signal_count,
 )
@@ -32,7 +31,6 @@ from .spectral.tree_helpers import (
 __all__ = [
     # projection_dimension_estimation
     "MarchenkoPasturDimensionEstimate",
-    "effective_rank",
     "estimate_marchenko_pastur_dimension",
     "marchenko_pastur_signal_count",
     # projected_wald

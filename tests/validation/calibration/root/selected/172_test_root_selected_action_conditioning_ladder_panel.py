@@ -55,7 +55,6 @@ def test_action_relaxed_level_finds_support_without_production_p_value() -> None
     assert relaxed["conditioning_gap_interpretation"] == (
         "selected_ratio_action_is_minimal_missing_coordinate"
     )
-    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_ladder_summary_counts_action_only_gap() -> None:

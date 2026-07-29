@@ -28,6 +28,13 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    is_calibration_support,
+    is_observed_target,
+    lookup_numeric_by_key,
+    root_tail_stratum_key,
+    tail_excess_for_case,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_deformed_mp_edge_panel import (
     ROWS_OUTPUT as DEFORMED_ROWS_OUTPUT,
 )
@@ -49,11 +56,6 @@ from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tai
     SUMMARY_OUTPUT as TAIL_SUMMARY_OUTPUT,
 )
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
-    _is_calibration_support,
-    _is_observed_target,
-    _lookup_numeric_by_key,
-    _root_tail_stratum_key,
-    _tail_excess_for_case,
     build_root_selected_spectral_tail_law_rows,
     summarize_root_selected_spectral_tail_law_rows,
 )
@@ -321,7 +323,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _finite_float(value: object) -> float:
+def finite_float(value: object) -> float:
     try:
         numeric = float(value)
     except (TypeError, ValueError):
@@ -329,7 +331,7 @@ def _finite_float(value: object) -> float:
     return numeric if math.isfinite(numeric) else math.nan
 
 
-def _string_value(
+def string_value(
     row: pd.Series | dict[str, object],
     column: str,
     default: str = "",
@@ -379,12 +381,12 @@ def _deformed_excess_by_case(
     deformed_support_rows: pd.DataFrame,
 ) -> dict[str, float]:
     return {
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             deformed_rows,
             key_column="target_case_id",
             value_column="s_root_deformed_excess_log",
         ),
-        **_lookup_numeric_by_key(
+        **lookup_numeric_by_key(
             deformed_support_rows,
             key_column="case_id",
             value_column="s_root_deformed_excess_log",
@@ -423,13 +425,13 @@ def _tail_admissible_joined_rows(
     if "tail_support_exclusion_reason" not in rows.columns:
         rows["tail_support_exclusion_reason"] = ""
     for index, row in rows.iterrows():
-        if _is_observed_target(row) or not _is_calibration_support(row):
+        if is_observed_target(row) or not is_calibration_support(row):
             continue
-        case_id = _string_value(row, "case_id")
+        case_id = string_value(row, "case_id")
         if case_id in computed_cases:
             continue
-        old_data_role = _string_value(row, "data_role")
-        old_calibration_role = _string_value(row, "calibration_role")
+        old_data_role = string_value(row, "data_role")
+        old_calibration_role = string_value(row, "calibration_role")
         rows.at[index, "data_role"] = f"{old_data_role}_h_u_missing_not_tail_support"
         rows.at[index, "calibration_role"] = f"{old_calibration_role}_h_u_missing_not_tail_support"
         rows.at[index, "tail_support_exclusion_reason"] = (
@@ -446,24 +448,24 @@ def _same_tail_support_rows(
 ) -> pd.DataFrame:
     if joined_rows.empty:
         return pd.DataFrame()
-    target_key = _string_value(target, "root_tail_stratum_key")
+    target_key = string_value(target, "root_tail_stratum_key")
     if not target_key:
-        target_key = _root_tail_stratum_key(
+        target_key = root_tail_stratum_key(
             target=target,
             h_u_population_law_status=h_u_population_law_status,
         )
-    candidates = joined_rows.loc[~joined_rows.apply(_is_observed_target, axis=1)].copy()
+    candidates = joined_rows.loc[~joined_rows.apply(is_observed_target, axis=1)].copy()
     if candidates.empty:
         return candidates
-    candidates["_root_tail_stratum_key"] = candidates.apply(
-        lambda row: _root_tail_stratum_key(
+    candidates["root_tail_stratum_key"] = candidates.apply(
+        lambda row: root_tail_stratum_key(
             target=row,
             h_u_population_law_status=h_u_population_law_status,
         ),
         axis=1,
     )
-    candidates = candidates.loc[candidates["_root_tail_stratum_key"].eq(target_key)]
-    return candidates.loc[candidates.apply(_is_calibration_support, axis=1)].copy()
+    candidates = candidates.loc[candidates["root_tail_stratum_key"].eq(target_key)]
+    return candidates.loc[candidates.apply(is_calibration_support, axis=1)].copy()
 
 
 def _generated_count_by_target(generated_rows: pd.DataFrame) -> dict[str, int]:
@@ -549,29 +551,29 @@ def build_same_geometry_external_support_attempt_rows(
         equation = equation_by_case.get(target_id)
         if tail is None:
             target_s = (
-                _finite_float(equation.get("target_s_h_u_excess_log", math.nan))
+                finite_float(equation.get("target_s_h_u_excess_log", math.nan))
                 if equation is not None
                 else math.nan
             )
             support = pd.DataFrame()
             target_key = (
-                _string_value(equation, "target_root_tail_stratum_key")
+                string_value(equation, "target_root_tail_stratum_key")
                 if equation is not None
                 else ""
             )
         else:
-            target_s = _finite_float(tail.get("s_root_deformed_excess_log", math.nan))
+            target_s = finite_float(tail.get("s_root_deformed_excess_log", math.nan))
             if not math.isfinite(target_s):
-                target_s = _finite_float(tail.get("s_root_spectral_excess_log", math.nan))
+                target_s = finite_float(tail.get("s_root_spectral_excess_log", math.nan))
             support = _same_tail_support_rows(
                 target=tail,
                 joined_rows=joined_rows,
                 h_u_population_law_status=h_u_population_law_status,
             )
-            target_key = _string_value(tail, "root_tail_stratum_key")
+            target_key = string_value(tail, "root_tail_stratum_key")
         support_s = (
             support.apply(
-                lambda row: _tail_excess_for_case(
+                lambda row: tail_excess_for_case(
                     row,
                     deformed_excess_by_case=deformed_lookup,
                 )[0],
@@ -597,7 +599,7 @@ def build_same_geometry_external_support_attempt_rows(
         same_tail_support_count = int(support.shape[0])
         new_support_count = int(np.sum(new_mask))
         tail_status = (
-            _string_value(tail, "root_tail_inference_status")
+            string_value(tail, "root_tail_inference_status")
             if tail is not None
             else "root_tail_panel_missing"
         )
@@ -629,7 +631,7 @@ def build_same_geometry_external_support_attempt_rows(
                 "target_case_id": target_id,
                 "target_root_tail_stratum_key": target_key,
                 "external_law_equation_status": (
-                    _string_value(equation, "external_law_equation_status")
+                    string_value(equation, "external_law_equation_status")
                     if equation is not None
                     else "external_law_equation_missing"
                 ),
@@ -647,24 +649,24 @@ def build_same_geometry_external_support_attempt_rows(
                     float(new_s.max()) if not new_s.empty else math.nan
                 ),
                 "tail_panel_support_count": int(
-                    _finite_float(tail.get("selected_null_support_count", 0))
+                    finite_float(tail.get("selected_null_support_count", 0))
                     if tail is not None
                     else 0
                 ),
                 "tail_panel_exceedance_count": int(
-                    _finite_float(tail.get("selected_null_exceedance_count", 0))
+                    finite_float(tail.get("selected_null_exceedance_count", 0))
                     if tail is not None
                     else 0
                 ),
                 "tail_panel_effective_sample_size": (
-                    _finite_float(
+                    finite_float(
                         tail.get("selected_null_importance_effective_sample_size", math.nan)
                     )
                     if tail is not None
                     else math.nan
                 ),
                 "tail_panel_conservative_p_value": (
-                    _finite_float(tail.get("conservative_spectral_tail_p_value", math.nan))
+                    finite_float(tail.get("conservative_spectral_tail_p_value", math.nan))
                     if tail is not None
                     else math.nan
                 ),

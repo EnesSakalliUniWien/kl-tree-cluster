@@ -101,7 +101,7 @@ routes, is maintained in [[tree-construction-method-map]].
 | Cluster colors | `ClusterColorSpec`, `build_cluster_color_spec()` | Stable discrete cluster/color mapping |
 | Tree rendering | `plot_tree_with_clusters()` | Rectangular/radial tree plots and gate annotations |
 | Image panels | `draw_image_panel()` | Reusable report-panel composition |
-| Multiscale UMAP | `load_overlay_data()`, `render_multiscale_umap_overlay()` | Existing-coordinate region overlays |
+| Selected-family multiscale UMAP | `benchmarks/diagnostics/calibration/selected/family/multiscale_umap.py` | Diagnostic existing-coordinate region overlays |
 | Benchmark plots | `benchmarks/shared/plots/` | Case/result-record covers, embeddings, runtime pages, and PDF export |
 | Application plots | `applications/*/plots/` or application pipelines | Dataset labels, layouts, and report composition |
 

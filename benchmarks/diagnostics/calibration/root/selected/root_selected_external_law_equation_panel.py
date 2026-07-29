@@ -25,10 +25,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, string_value
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
-    _string_value,
 )
 
 SCHEMA_VERSION = "root_selected_external_law_equation_panel/v1"
@@ -175,7 +174,7 @@ def _parse_json_dict(value: object) -> dict[str, float]:
         raw = value
     else:
         raw = {}
-    return {str(key): _finite_float(val) for key, val in raw.items()}
+    return {str(key): finite_float(val) for key, val in raw.items()}
 
 
 def _lookup_by_case(rows: pd.DataFrame, case_column: str) -> dict[str, pd.Series]:
@@ -233,9 +232,9 @@ def build_root_selected_external_law_equation_rows(
     min_support = _minimum_support_count(target_alpha)
     records: list[dict[str, object]] = []
     for _, target_row in external_law_target_rows.sort_values("target_case_id").iterrows():
-        case_id = _string_value(target_row, "target_case_id")
-        target_status = _string_value(target_row, "target_status")
-        required_axes = _string_value(target_row, "required_tilt_axes")
+        case_id = string_value(target_row, "target_case_id")
+        target_status = string_value(target_row, "target_status")
+        required_axes = string_value(target_row, "required_tilt_axes")
         if required_axes == "none":
             required_lookup = full_lookup
             checked_axes = "T,A,E,S_Hu"
@@ -260,7 +259,7 @@ def build_root_selected_external_law_equation_rows(
         gap_row = gap_lookup.get(case_id)
         edge_row = edge_lookup.get(case_id)
         current_status = (
-            _string_value(required_feasibility, "tilt_feasibility_status")
+            string_value(required_feasibility, "tilt_feasibility_status")
             if required_feasibility is not None
             else "missing_required_axes_feasibility_row"
         )
@@ -288,8 +287,8 @@ def build_root_selected_external_law_equation_rows(
                 "study_role": STUDY_ROLE,
                 "target_case_id": case_id,
                 "target_status": target_status,
-                "conditioning_event": _string_value(target_row, "conditioning_event"),
-                "target_root_tail_stratum_key": _string_value(
+                "conditioning_event": string_value(target_row, "conditioning_event"),
+                "target_root_tail_stratum_key": string_value(
                     target_row,
                     "target_root_tail_stratum_key",
                 ),
@@ -303,7 +302,7 @@ def build_root_selected_external_law_equation_rows(
                 ),
                 "target_moment_vector_json": _finite_json(target_moments),
                 "required_axes_residual_vector_json": (
-                    _string_value(
+                    string_value(
                         required_feasibility,
                         "moment_residual_vector_json",
                     )
@@ -311,7 +310,7 @@ def build_root_selected_external_law_equation_rows(
                     else "{}"
                 ),
                 "full_phi_residual_vector_json": (
-                    _string_value(full_feasibility, "moment_residual_vector_json")
+                    string_value(full_feasibility, "moment_residual_vector_json")
                     if full_feasibility is not None
                     else "{}"
                 ),
@@ -319,17 +318,17 @@ def build_root_selected_external_law_equation_rows(
                 "support_hull_max_s_h_u_excess_log": support_max,
                 "required_s_h_u_gap_to_support_hull": gap_to_hull,
                 "required_deformed_ratio_lower_bound": required_ratio,
-                "target_selected_root_deformed_ratio": _finite_float(
+                "target_selected_root_deformed_ratio": finite_float(
                     edge_row.get("selected_root_deformed_ratio", math.nan)
                     if edge_row is not None
                     else math.nan
                 ),
-                "target_deformed_mp_upper_edge": _finite_float(
+                "target_deformed_mp_upper_edge": finite_float(
                     edge_row.get("deformed_mp_upper_edge", math.nan)
                     if edge_row is not None
                     else math.nan
                 ),
-                "target_selected_root_eigenvalue": _finite_float(
+                "target_selected_root_eigenvalue": finite_float(
                     edge_row.get("selected_root_eigenvalue", math.nan)
                     if edge_row is not None
                     else math.nan
@@ -340,7 +339,7 @@ def build_root_selected_external_law_equation_rows(
                 "external_law_equation_status": equation_status,
                 "next_generator_requirement": next_step
                 if gap_row is None
-                else _string_value(gap_row, "required_external_law", next_step),
+                else string_value(gap_row, "required_external_law", next_step),
             }
         )
     return pd.DataFrame.from_records(records, columns=ROW_COLUMNS)

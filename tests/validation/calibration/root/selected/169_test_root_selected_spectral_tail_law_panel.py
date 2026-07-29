@@ -104,7 +104,6 @@ def test_root_spectral_tail_uses_conservative_empirical_support() -> None:
     assert tail["root_tail_inference_status"] == (
         "calibrated_selected_root_spectral_tail_available"
     )
-    assert "legacy_full_selected_null_legacy_false_split" not in tail.index
 
 
 def test_root_spectral_tail_uses_importance_weighted_external_support() -> None:

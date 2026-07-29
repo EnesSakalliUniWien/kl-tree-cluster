@@ -12,11 +12,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
-from tree_break_selection.plot import (
+
+from benchmarks.diagnostics.calibration.selected.family.multiscale_umap import (
     load_overlay_data,
     render_multiscale_umap_overlay,
 )
-
 from benchmarks.diagnostics.calibration.selected.family.selected_family_traversal_panel import (
     SCHEMA_VERSION,
     STUDY_ROLE,

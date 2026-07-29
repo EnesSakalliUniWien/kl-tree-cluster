@@ -1,104 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
-import pytest
 from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
-    DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-    DISTRIBUTIONAL_ACTION_SPLIT_FILTER_OPEN_SPLIT_QUANTILE,
-    annotate_distributional_action_split_filter,
     binary_split_distributional_action,
     binary_split_distributional_action_summary,
     edge_distributional_action,
     edge_distributional_action_summary,
     split_distributional_action_summary,
 )
-from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
-from tree_break_selection.tree.poset_tree import PosetTree
-
-
-def _unequal_mass_tree() -> tuple[PosetTree, pd.DataFrame]:
-    tree = PosetTree()
-    for node_id, is_leaf in [
-        ("root", False),
-        ("small", False),
-        ("large", False),
-        ("S0", True),
-        ("L0", True),
-        ("L1", True),
-        ("L2", True),
-    ]:
-        tree.add_node(node_id, is_leaf=is_leaf, label=node_id)
-    for parent, child in [
-        ("root", "small"),
-        ("root", "large"),
-        ("small", "S0"),
-        ("large", "L0"),
-        ("large", "L1"),
-        ("large", "L2"),
-    ]:
-        tree.add_edge(parent, child, branch_length=1.0)
-    tree.graph["root"] = "root"
-
-    leaf_data = pd.DataFrame(
-        {
-            "x": [0.0, 10.0, 10.0, 10.0],
-            "constant": [1.0, 1.0, 1.0, 1.0],
-        },
-        index=["S0", "L0", "L1", "L2"],
-    )
-    tree.populate_node_divergences(
-        leaf_data,
-        feature_space=continuous_feature_space_from_columns(tuple(leaf_data.columns)),
-    )
-    return tree, leaf_data
-
-
-def _child_parent_annotations(tree: PosetTree) -> pd.DataFrame:
-    annotations = tree.annotations_df.copy()
-    annotations["Child_Parent_Divergence_Significant"] = False
-    annotations.loc[["small", "large"], "Child_Parent_Divergence_Significant"] = True
-    return annotations
-
-
-def _two_split_action_tree() -> tuple[PosetTree, pd.DataFrame]:
-    tree = PosetTree()
-    for node_id, is_leaf in [
-        ("root", False),
-        ("high", False),
-        ("low", False),
-        ("H0", True),
-        ("H1", True),
-        ("L0", True),
-        ("L1", True),
-    ]:
-        tree.add_node(node_id, is_leaf=is_leaf, label=node_id)
-    for parent, child in [
-        ("root", "high"),
-        ("root", "low"),
-        ("high", "H0"),
-        ("high", "H1"),
-        ("low", "L0"),
-        ("low", "L1"),
-    ]:
-        tree.add_edge(parent, child, branch_length=1.0)
-    tree.graph["root"] = "root"
-    leaf_data = pd.DataFrame(
-        {"x": [0.0, 10.0, 5.0, 6.0]},
-        index=["H0", "H1", "L0", "L1"],
-    )
-    tree.populate_node_divergences(
-        leaf_data,
-        feature_space=continuous_feature_space_from_columns(tuple(leaf_data.columns)),
-    )
-    return tree, leaf_data
-
-
-def _two_split_annotations(tree: PosetTree) -> pd.DataFrame:
-    annotations = tree.annotations_df.copy()
-    annotations["Child_Parent_Divergence_Significant"] = False
-    annotations.loc[["H0", "H1", "L0", "L1"], "Child_Parent_Divergence_Significant"] = True
-    return annotations
 
 
 def test_binary_split_action_matches_child_parent_variance_identity() -> None:
@@ -264,71 +173,3 @@ def test_binary_split_summary_exposes_child_and_parent_masses() -> None:
         2,
         6,
     )
-
-
-def test_distributional_action_split_filter_none_annotates_without_changing_edge_gate() -> None:
-    tree, leaf_data = _unequal_mass_tree()
-    annotations = _child_parent_annotations(tree)
-
-    filtered, metadata = annotate_distributional_action_split_filter(
-        tree,
-        annotations,
-        leaf_data,
-        policy=DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-        quantile=0.5,
-    )
-
-    assert filtered["Child_Parent_Divergence_Significant"].equals(
-        annotations["Child_Parent_Divergence_Significant"]
-    )
-    assert (
-        filtered.loc["small", "Distributional_Action"]
-        > filtered.loc["large", "Distributional_Action"]
-    )
-    assert bool(filtered.loc["large", "Distributional_Split_Action_Filter_Passes"])
-    assert not bool(filtered.loc["large", "Distributional_Split_Action_Filtered"])
-    assert metadata["distributional_action_split_filter_policy"] == (
-        DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE
-    )
-    assert metadata["distributional_action_split_filter_filtered_parent_count"] == 0
-    assert metadata["distributional_action_split_filter_open_parent_count_before"] == 1
-    assert metadata["distributional_action_split_filter_open_parent_count_after"] == 1
-
-
-def test_uncalibrated_split_filter_policy_is_rejected() -> None:
-    tree, leaf_data = _unequal_mass_tree()
-    annotations = _child_parent_annotations(tree)
-
-    with pytest.raises(ValueError, match="diagnostic-only"):
-        annotate_distributional_action_split_filter(
-            tree,
-            annotations,
-            leaf_data,
-            policy=DISTRIBUTIONAL_ACTION_SPLIT_FILTER_OPEN_SPLIT_QUANTILE,
-            quantile=0.5,
-        )
-
-
-def test_distributional_action_annotation_does_not_close_low_action_splits() -> None:
-    tree, leaf_data = _two_split_action_tree()
-    annotations = _two_split_annotations(tree)
-
-    filtered, metadata = annotate_distributional_action_split_filter(
-        tree,
-        annotations,
-        leaf_data,
-        policy=DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-        quantile=0.5,
-    )
-
-    assert bool(filtered.loc["H0", "Child_Parent_Divergence_Significant"])
-    assert bool(filtered.loc["H1", "Child_Parent_Divergence_Significant"])
-    assert bool(filtered.loc["L0", "Child_Parent_Divergence_Significant"])
-    assert bool(filtered.loc["L1", "Child_Parent_Divergence_Significant"])
-    assert bool(filtered.loc["H0", "Distributional_Split_Action_Filter_Passes"])
-    assert bool(filtered.loc["L0", "Distributional_Split_Action_Filter_Passes"])
-    assert not bool(filtered.loc["L0", "Distributional_Split_Action_Filtered"])
-    assert metadata["distributional_action_split_filter_filtered_parent_count"] == 0
-    assert metadata["distributional_action_split_filter_filtered_edge_count"] == 0
-    assert metadata["distributional_action_split_filter_open_parent_count_before"] == 2
-    assert metadata["distributional_action_split_filter_open_parent_count_after"] == 2

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -66,7 +65,6 @@ from .annotation_bundle import (
     EdgeGateResult,
     GateAnnotationBundle,
     GateAnnotationConfigMetadata,
-    GateAnnotationLeafDataMetadata,
     GateAnnotationMetadata,
     GateMetadata,
 )
@@ -262,38 +260,6 @@ def build_gate_annotation_config_metadata(
     )
 
 
-def build_gate_annotation_leaf_data_metadata(
-    leaf_data: pd.DataFrame | None,
-    *,
-    feature_space: FeatureSpace | None = None,
-) -> GateAnnotationLeafDataMetadata:
-    """Capture enough leaf-data identity to validate reusable annotations."""
-    if leaf_data is None:
-        return GateAnnotationLeafDataMetadata(present=False)
-
-    content_hash = hashlib.sha256()
-    content_hash.update(str(tuple(leaf_data.shape)).encode("utf-8"))
-    content_hash.update(
-        pd.util.hash_pandas_object(pd.Index(leaf_data.index), index=False)
-        .to_numpy(dtype=np.uint64)
-        .tobytes()
-    )
-    content_hash.update(
-        pd.util.hash_pandas_object(pd.Index(leaf_data.columns), index=False)
-        .to_numpy(dtype=np.uint64)
-        .tobytes()
-    )
-    content_hash.update(
-        pd.util.hash_pandas_object(leaf_data, index=True).to_numpy(dtype=np.uint64).tobytes()
-    )
-    return GateAnnotationLeafDataMetadata(
-        present=True,
-        shape=(int(leaf_data.shape[0]), int(leaf_data.shape[1])),
-        content_hash=content_hash.hexdigest(),
-        feature_space_signature=(None if feature_space is None else feature_space.signature),
-    )
-
-
 def _resolve_sibling_gate_inputs(
     tree,
     edge_gate_result: EdgeGateResult,
@@ -350,9 +316,6 @@ def _resolve_fixed_sibling_gate_feature_space(
 def _resolve_edge_spectral_minimum_dimension(
     *,
     spectral_minimum_dimension: int,
-    sibling_gate_method: str,
-    feature_space: FeatureSpace | None,
-    leaf_data: pd.DataFrame | None,
 ) -> int:
     """Validate the edge projection floor.
 
@@ -519,9 +482,6 @@ def run_gate_annotation_pipeline(
         )
     effective_spectral_minimum_dimension = _resolve_edge_spectral_minimum_dimension(
         spectral_minimum_dimension=spectral_minimum_dimension,
-        sibling_gate_method=sibling_gate_method,
-        feature_space=feature_space,
-        leaf_data=leaf_data,
     )
     adaptive_projection_fraction = (
         None
@@ -754,10 +714,6 @@ def run_gate_annotation_pipeline(
             spectral_transport_block_log_tolerance=(spectral_transport_block_log_tolerance),
             spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
         ),
-        leaf_data=build_gate_annotation_leaf_data_metadata(
-            leaf_data,
-            feature_space=feature_space,
-        ),
     )
 
     stage_timings["edge_gate_sec"] = edge_gate_sec
@@ -777,7 +733,6 @@ __all__ = [
     "apply_root_selective_permutation_guard",
     "apply_root_stability_guard",
     "build_gate_annotation_config_metadata",
-    "build_gate_annotation_leaf_data_metadata",
     "compute_root_feature_subsample_stability",
     "resolve_effective_sibling_alpha",
     "resolve_sibling_gate_profile",

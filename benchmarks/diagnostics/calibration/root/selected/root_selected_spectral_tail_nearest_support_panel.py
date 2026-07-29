@@ -27,15 +27,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    action_band,
+    finite_float,
+    is_calibration_support,
+    is_observed_target,
+    root_tail_stratum_key,
+    safe_log1p,
+    spectral_excess_log,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _action_band,
-    _finite_float,
-    _is_calibration_support,
-    _is_observed_target,
-    _root_tail_stratum_key,
-    _safe_log1p,
-    _spectral_excess_log,
 )
 
 SCHEMA_VERSION = "root_selected_spectral_tail_nearest_support_panel/v1"
@@ -145,7 +147,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
+def string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
     if column not in row:
         return default
     value = row[column]
@@ -167,8 +169,8 @@ def _target_tail_lookup(root_tail_rows: pd.DataFrame) -> dict[str, pd.Series]:
 def _support_rows(joined_feasibility_rows: pd.DataFrame) -> pd.DataFrame:
     if joined_feasibility_rows.empty:
         return joined_feasibility_rows.copy()
-    support_mask = joined_feasibility_rows.apply(_is_calibration_support, axis=1)
-    target_mask = joined_feasibility_rows.apply(_is_observed_target, axis=1)
+    support_mask = joined_feasibility_rows.apply(is_calibration_support, axis=1)
+    target_mask = joined_feasibility_rows.apply(is_observed_target, axis=1)
     return joined_feasibility_rows.loc[support_mask & ~target_mask].copy()
 
 
@@ -178,15 +180,15 @@ def _conditioning_coordinates(
     h_u_population_law_status: str,
 ) -> dict[str, object]:
     return {
-        "tie": _finite_float(row.get("root_tie_rank_median_fraction", math.nan)),
-        "action": _safe_log1p(row.get("root_sibling_selected_ratio", math.nan)),
-        "edge": _safe_log1p(row.get("root_edge_path_statistic_margin", math.nan)),
-        "bandwidth": _string_value(row, "root_bandwidth_reopen_band", ""),
+        "tie": finite_float(row.get("root_tie_rank_median_fraction", math.nan)),
+        "action": safe_log1p(row.get("root_sibling_selected_ratio", math.nan)),
+        "edge": safe_log1p(row.get("root_edge_path_statistic_margin", math.nan)),
+        "bandwidth": string_value(row, "root_bandwidth_reopen_band", ""),
         "h_u": str(h_u_population_law_status),
-        "s_root": _spectral_excess_log(
+        "s_root": spectral_excess_log(
             row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
         ),
-        "stratum": _root_tail_stratum_key(
+        "stratum": root_tail_stratum_key(
             target=row,
             h_u_population_law_status=h_u_population_law_status,
         ),
@@ -195,8 +197,8 @@ def _conditioning_coordinates(
 
 def _pre_topology_match(target: dict[str, object], support: dict[str, object]) -> bool:
     return (
-        _action_band(float(target["action"])) == _action_band(float(support["action"]))
-        and _action_band(float(target["edge"])) == _action_band(float(support["edge"]))
+        action_band(float(target["action"])) == action_band(float(support["action"]))
+        and action_band(float(target["edge"])) == action_band(float(support["edge"]))
         and _tie_pre_band(float(target["tie"])) == _tie_pre_band(float(support["tie"]))
     )
 
@@ -305,12 +307,12 @@ def build_root_selected_spectral_tail_nearest_support_rows(
         rows["root_bandwidth_reopen_band"] = ""
     if "root_mixed_region_component" not in rows.columns:
         rows["root_mixed_region_component"] = "root_component_missing"
-    targets = rows.loc[rows.apply(_is_observed_target, axis=1)].copy()
+    targets = rows.loc[rows.apply(is_observed_target, axis=1)].copy()
     support = _support_rows(rows)
     tail_lookup = _target_tail_lookup(root_tail_rows)
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
-        case_id = _string_value(target, "case_id")
+        case_id = string_value(target, "case_id")
         tail = tail_lookup.get(case_id)
         nearest, components, target_coords, support_coords = _nearest_support(
             target=target,
@@ -319,7 +321,7 @@ def build_root_selected_spectral_tail_nearest_support_rows(
         )
         has_nearest = nearest is not None
         exact_support_count = int(
-            _finite_float(tail.get("selected_null_support_count", 0)) if tail is not None else 0
+            finite_float(tail.get("selected_null_support_count", 0)) if tail is not None else 0
         )
         if has_nearest:
             spectral_gap = float(support_coords["s_root"]) - float(target_coords["s_root"])
@@ -357,32 +359,32 @@ def build_root_selected_spectral_tail_nearest_support_rows(
                 "target_e_edge_margin_action_log1p": target_coords["edge"],
                 "target_b_bandwidth_topology_status": target_coords["bandwidth"],
                 "exact_selected_null_support_count": exact_support_count,
-                "tail_panel_inference_status": _string_value(
+                "tail_panel_inference_status": string_value(
                     tail if tail is not None else {},
                     "root_tail_inference_status",
                 ),
-                "tail_panel_p_value_status": _string_value(
+                "tail_panel_p_value_status": string_value(
                     tail if tail is not None else {},
                     "spectral_tail_p_value_status",
                 ),
-                "tail_panel_conservative_p_value": _finite_float(
+                "tail_panel_conservative_p_value": finite_float(
                     tail.get("conservative_spectral_tail_p_value", math.nan)
                     if tail is not None
                     else math.nan
                 ),
-                "nearest_support_case_id": _string_value(
+                "nearest_support_case_id": string_value(
                     nearest if nearest is not None else {},
                     "case_id",
                 ),
-                "nearest_support_data_role": _string_value(
+                "nearest_support_data_role": string_value(
                     nearest if nearest is not None else {},
                     "data_role",
                 ),
-                "nearest_support_calibration_role": _string_value(
+                "nearest_support_calibration_role": string_value(
                     nearest if nearest is not None else {},
                     "calibration_role",
                 ),
-                "nearest_support_proposal_family": _string_value(
+                "nearest_support_proposal_family": string_value(
                     nearest if nearest is not None else {},
                     "proposal_family",
                 ),

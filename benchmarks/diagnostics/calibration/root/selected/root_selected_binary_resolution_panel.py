@@ -28,10 +28,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, string_value
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
-    _string_value,
 )
 
 SCHEMA_VERSION = "root_selected_binary_resolution_panel/v1"
@@ -210,10 +209,10 @@ def build_root_selected_binary_resolution_rows(
     equation_lookup = _lookup_by_case(external_law_equation_rows)
     records: list[dict[str, object]] = []
     for _, tail in tail_rows.sort_values("target_case_id").iterrows():
-        case_id = _string_value(tail, "target_case_id")
-        t_rank = _finite_float(tail.get("t_selected_tie_rank_fraction", math.nan))
-        action = _finite_float(tail.get("a_selected_ratio_action_log1p", math.nan))
-        edge = _finite_float(tail.get("e_edge_margin_action_log1p", math.nan))
+        case_id = string_value(tail, "target_case_id")
+        t_rank = finite_float(tail.get("t_selected_tie_rank_fraction", math.nan))
+        action = finite_float(tail.get("a_selected_ratio_action_log1p", math.nan))
+        edge = finite_float(tail.get("e_edge_margin_action_log1p", math.nan))
         bottleneck = (
             min(action, edge) if math.isfinite(action) and math.isfinite(edge) else math.nan
         )
@@ -226,11 +225,11 @@ def build_root_selected_binary_resolution_rows(
         band = _resolution_band(strength)
         equation = equation_lookup.get(case_id)
         equation_status = (
-            _string_value(equation, "external_law_equation_status")
+            string_value(equation, "external_law_equation_status")
             if equation is not None
             else "external_law_equation_missing"
         )
-        tail_status = _string_value(tail, "root_tail_inference_status")
+        tail_status = string_value(tail, "root_tail_inference_status")
         inference_status, method_action, interpretation = _resolution_status(
             tail_status=tail_status,
             equation_status=equation_status,
@@ -250,15 +249,15 @@ def build_root_selected_binary_resolution_rows(
                 "root_binary_resolution_strength": strength,
                 "latent_multifurcation_risk_score": risk,
                 "root_binary_resolution_band": band,
-                "b_bandwidth_topology_status": _string_value(
+                "b_bandwidth_topology_status": string_value(
                     tail,
                     "b_bandwidth_topology_status",
                 ),
-                "h_u_population_law_status": _string_value(
+                "h_u_population_law_status": string_value(
                     tail,
                     "h_u_population_law_status",
                 ),
-                "s_root_deformed_excess_log": _finite_float(
+                "s_root_deformed_excess_log": finite_float(
                     tail.get("s_root_deformed_excess_log", math.nan)
                 ),
                 "root_tail_inference_status": tail_status,

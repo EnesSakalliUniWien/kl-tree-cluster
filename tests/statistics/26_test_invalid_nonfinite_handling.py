@@ -254,9 +254,6 @@ def test_resolve_sibling_projection_dimension_rejects_missing_edge_gate_dimensio
     with pytest.raises(ValueError, match="must be supplied by edge-gate context"):
         resolve_sibling_projection_dimension(
             projection_dimension_from_edge_comparisons=None,
-            left_sample_size=3.0,
-            right_sample_size=4.0,
-            n_features=5,
         )
 
 
@@ -394,18 +391,12 @@ def test_resolve_sibling_projection_dimension_rejects_negative_dimension() -> No
     with pytest.raises(ValueError, match="Invalid projection_dimension_from_edge_comparisons=-1"):
         resolve_sibling_projection_dimension(
             projection_dimension_from_edge_comparisons=-1,
-            left_sample_size=2.0,
-            right_sample_size=3.0,
-            n_features=4,
         )
 
 
 def test_resolve_sibling_projection_dimension_accepts_zero_dimension() -> None:
     resolved_k, source = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=0,
-        left_sample_size=2.0,
-        right_sample_size=3.0,
-        n_features=4,
     )
 
     assert resolved_k == 0
@@ -415,9 +406,6 @@ def test_resolve_sibling_projection_dimension_accepts_zero_dimension() -> None:
 def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimension() -> None:
     resolved_k, source = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=3,
-        left_sample_size=2.0,
-        right_sample_size=3.0,
-        n_features=4,
     )
 
     assert resolved_k == 3

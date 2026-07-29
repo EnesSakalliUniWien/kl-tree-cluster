@@ -1,64 +1,14 @@
-"""Tests for the three methodology fixes:
-
-1. Fix 1: spectral_k floor raised from 1 to 4
-2. Fix 2: Non-binary and leaf nodes marked as Sibling_Divergence_Skipped=True
-3. Fix 3: Shared projected chi-square helper (compute_projected_pvalue)
-"""
+"""Regression contracts for edge-gate spectral context construction."""
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.stats import chi2
-from tree_break_selection.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
-    compute_projected_pvalue,
-)
-
-# =============================================================================
-# Fix 3: Shared projected chi-square helper tests
-# =============================================================================
 
 
-class TestComputeProjectedPvalue:
-    """Tests for the shared compute_projected_pvalue helper."""
-
-    def test_rejects_missing_eigenvalues(self):
-        """Projected Wald calibration requires the PCA spectrum."""
-        rng = np.random.default_rng(42)
-        projected = rng.standard_normal(10)
-
-        with pytest.raises(ValueError, match="requires PCA eigenvalues"):
-            compute_projected_pvalue(projected, eigenvalues=None)
-
-    def test_rejects_empty_eigenvalues(self):
-        """An empty spectrum is malformed edge-gate PCA context."""
-        rng = np.random.default_rng(42)
-        projected = rng.standard_normal(5)
-
-        with pytest.raises(ValueError, match="same length"):
-            compute_projected_pvalue(projected, eigenvalues=np.array([]))
-
-    def test_projected_chi_square_calibration_uses_orthonormal_dimension(self):
-        """PCA eigenvalues select the basis but do not weight the null law."""
-        projected = np.array([1.0, 2.0, 3.0])
-        eigenvalues = np.array([2.0, 1.0, 0.5])
-        reference = compute_projected_pvalue(projected, eigenvalues=eigenvalues)
-        expected_stat = float(np.sum(projected**2))
-        expected_df = float(projected.shape[0])
-        assert abs(reference.statistic - expected_stat) < 1e-10
-        assert reference.reference_scale == 1.0
-        assert abs(reference.degrees_of_freedom - expected_df) < 1e-10
-        assert abs(reference.p_value - float(chi2.sf(expected_stat, df=expected_df))) < 1e-10
-
-
-# =============================================================================
-# Fix 1: spectral_k floor test
-# =============================================================================
-
-
-class TestSpectralKFloor:
-    """Verify the edge-gate spectral path uses its fixed small floor."""
+class TestSpectralContextRegressions:
+    """Verify edge-gate spectral context invariants."""
 
     def test_edge_gate_spectral_minimum_projection_dimension_is_fixed(self, monkeypatch):
         """The edge gate should pass the fixed spectral floor into the spectral estimator."""
@@ -300,93 +250,3 @@ class TestSpectralKFloor:
         with pytest.raises(ValueError):
             _get_n_jobs(16)
 
-
-# =============================================================================
-# Fix 2: Non-binary skipped flag tests
-# =============================================================================
-
-
-class TestNonBinarySkippedFlag:
-    """Verify non-binary and leaf nodes are marked as Sibling_Divergence_Skipped."""
-
-    def _build_simple_tree(self):
-        """Build a small tree with binary and non-binary structure.
-
-        Tree structure:
-            root (N4)
-           /         \\
-         N2           N3
-        /  \\         /  \\
-       L0   L1      L2   L3
-
-        All nodes are binary, all leaves are L0-L3.
-        Leaves should be marked as skipped.
-        """
-        import networkx as nx
-
-        tree = nx.DiGraph()
-        # Build tree
-        tree.add_edge("N4", "N2", branch_length=0.3)
-        tree.add_edge("N4", "N3", branch_length=0.3)
-        tree.add_edge("N2", "L0", branch_length=0.1)
-        tree.add_edge("N2", "L1", branch_length=0.1)
-        tree.add_edge("N3", "L2", branch_length=0.1)
-        tree.add_edge("N3", "L3", branch_length=0.1)
-
-        rng = np.random.default_rng(42)
-        d = 20
-        for node in ["L0", "L1", "L2", "L3"]:
-            tree.nodes[node]["distribution"] = rng.random(d) * 0.5
-            tree.nodes[node]["leaf_count"] = 1
-            tree.nodes[node]["label"] = node
-        for node in ["N2", "N3", "N4"]:
-            tree.nodes[node]["distribution"] = rng.random(d) * 0.5
-            tree.nodes[node]["leaf_count"] = 4 if node == "N4" else 2
-            tree.nodes[node]["label"] = node
-
-        return tree
-
-    def _make_base_df(self, tree):
-        """Create a base dataframe with edge test columns filled in."""
-        nodes = list(tree.nodes)
-        df = pd.DataFrame(index=nodes)
-        # Simulate: all children diverge from parent (edge-significant)
-        df["Child_Parent_Divergence_Significant"] = True
-        df["Child_Parent_Divergence_P_Value_BH"] = 0.01
-        df["Child_Parent_Divergence_P_Value"] = 0.01
-        df["Child_Parent_Divergence_Test_Statistic"] = 5.0
-        df["Child_Parent_Divergence_df"] = 1.0
-        df["Child_Parent_Divergence_Invalid"] = False
-        df["Child_Parent_Divergence_Tested"] = True
-        df["Child_Parent_Divergence_Ancestor_Blocked"] = False
-        df.loc[["L2", "L3"], "Child_Parent_Divergence_Significant"] = False
-        df.loc[["L2", "L3"], "Child_Parent_Divergence_P_Value_BH"] = 1.0
-        df.loc[["L2", "L3"], "Child_Parent_Divergence_P_Value"] = 1.0
-        return df
-
-    def test_inflated_projected_wald_marks_leaves_as_skipped(self):
-        """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
-            annotate_sibling_divergence,
-        )
-
-        tree = self._build_simple_tree()
-        df = self._make_base_df(tree)
-        sibling_parent_ids = ["N4", "N2", "N3"]
-        parent_pca = {parent: np.eye(20, dtype=float)[:1] for parent in sibling_parent_ids}
-        result = annotate_sibling_divergence(
-            tree,
-            df,
-            sibling_projection_dimensions_from_edge_comparisons={
-                parent: 1 for parent in sibling_parent_ids
-            },
-            parent_principal_component_projections=parent_pca,
-            parent_principal_component_eigenvalues={
-                parent: np.ones(1, dtype=float) for parent in sibling_parent_ids
-            },
-        )
-
-        for leaf in ["L0", "L1", "L2", "L3"]:
-            assert bool(result.loc[leaf, "Sibling_Divergence_Skipped"]), (
-                f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
-            )

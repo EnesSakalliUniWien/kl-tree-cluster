@@ -26,6 +26,17 @@ The matching tests live under `tests/validation/calibration/` with the same
 category path. Import modules from their owning category; the package roots do
 not re-export moved names.
 
+Shared diagnostic contracts remain at this package root:
+
+- `reporting.py` writes named table bundles and their manifest envelope.
+- `overlap/binary_threshold_scan.py` owns two-direction threshold scans for
+  binary truth/negative roles.
+- `root/root_tail_values.py` owns shared selected-root value parsing,
+  support-role classification, log-action transforms, spectral-excess
+  transforms, and T,A,E,B,H_u stratum keys.
+- `root/selected/root_tail_action_support.py` owns the common selected-root
+  action-support geometry used by the conditioning and dominance panels.
+
 ## Maintained runners
 
 - `selected/family/run_selected_family_matrix.py`
@@ -35,6 +46,5 @@ not re-export moved names.
 - `sibling/nulls/run_tree_bh_selection_conditioned_sibling_null.py`
 
 Multiscale UMAP rendering is owned by
-`tree_break_selection/plot/multiscale_umap.py` and is exercised by the
-selected-family matrix runner. Calibration diagnostics should use that engine
-instead of adding another plotting wrapper.
+`selected/family/multiscale_umap.py` beside the selected-family matrix runner.
+It is a calibration-specific overlay, not a production plotting interface.

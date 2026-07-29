@@ -18,66 +18,8 @@ from scipy.stats import norm, spearmanr
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
-from benchmarks.shared.result_records import RESULT_COLUMNS
+from benchmarks.shared.result_records import NUMERIC_RESULT_COLUMNS, RESULT_COLUMNS
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
-
-_NUMERIC_COLUMNS = (
-    "test_case",
-    "true_clusters",
-    "found_clusters",
-    "samples",
-    "features",
-    "noise",
-    "ari",
-    "nmi",
-    "ami",
-    "purity",
-    "homogeneity",
-    "completeness",
-    "v_measure",
-    "fowlkes_mallows",
-    "macro_recall",
-    "macro_f1",
-    "worst_cluster_recall",
-    "n_singleton_clusters",
-    "singleton_fraction",
-    "median_cluster_size",
-    "largest_cluster_fraction",
-    "effective_cluster_count",
-    "cluster_size_entropy",
-    "cluster_size_gini",
-    "noise_label_fraction",
-    "silhouette_score",
-    "davies_bouldin_index",
-    "calinski_harabasz_index",
-    "outlier_precision",
-    "outlier_recall",
-    "outlier_f1",
-    "singleton_outlier_isolated",
-    "grouped_outlier_cluster_recovered",
-    "cluster_count_abs_error",
-    "over_split",
-    "under_split",
-    "tree_build_sec",
-    "populate_divergences_sec",
-    "edge_gate_sec",
-    "edge_gate_contrast_covariance_sec",
-    "edge_gate_projection_sec",
-    "edge_gate_wald_statistic_sec",
-    "edge_gate_tree_bh_sec",
-    "spectral_context_sec",
-    "tangent_whitening_sec",
-    "eigensolve_sec",
-    "pca_projection_sec",
-    "sibling_gate_sec",
-    "sibling_gate_pair_record_collection_sec",
-    "sibling_gate_inflation_fit_sec",
-    "sibling_gate_adjusted_tests_sec",
-    "sibling_gate_fdr_sec",
-    "traversal_sec",
-    "labels_length",
-    "benchmark_repeat",
-)
 
 _OLD_RESULT_COLUMNS = frozenset(
     {
@@ -209,7 +151,7 @@ def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     for column in RESULT_COLUMNS:
         normalized[column] = df[column] if column in df.columns else np.nan
 
-    for col in _NUMERIC_COLUMNS:
+    for col in NUMERIC_RESULT_COLUMNS:
         normalized[col] = pd.to_numeric(normalized[col], errors="coerce")
 
     for col in (

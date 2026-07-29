@@ -8,6 +8,10 @@ import benchmarks.diagnostics.calibration.selected.family.selected_family_traver
 import networkx as nx
 import pandas as pd
 import pytest
+from benchmarks.diagnostics.calibration.selected.family.multiscale_umap import (
+    load_overlay_data,
+    render_multiscale_umap_overlay,
+)
 from benchmarks.diagnostics.calibration.selected.family.selected_family_traversal_panel import (
     BASELINE_METHOD_ID,
     SelectedFamilyTraversalPanelConfig,
@@ -15,10 +19,6 @@ from benchmarks.diagnostics.calibration.selected.family.selected_family_traversa
     build_selected_family_production_components,
     run_selected_family_traversal_panel,
     validate_methods,
-)
-from tree_break_selection.plot import (
-    load_overlay_data,
-    render_multiscale_umap_overlay,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
 

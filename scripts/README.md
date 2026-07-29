@@ -5,6 +5,8 @@ commands. It is not a home for reusable method code, dataset applications, or
 manuscript figure composition.
 
 - Wiki maintenance lives in `scripts/wiki/`.
+- Reusable repository hygiene orchestration lives in `tools/repository_audit/`
+  and is exposed through the global `tbs-audit` command.
 - Dataset-specific analysis and figure generators live beside their
   application, including `applications/scrna/analysis/` and
   `applications/scrna/plots/`.

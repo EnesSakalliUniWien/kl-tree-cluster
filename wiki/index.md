@@ -43,6 +43,10 @@ renamed, or promoted.
 
 ### Tools
 
+- [[repository-hygiene-audit]] - globally reachable evidence tool combining
+  Grimp import mapping, AST string-field tracing, calibration coverage
+  contexts, clone/dead-code checks, mutation testing, and Git/documentation
+  evidence without treating candidates as automatic deletions.
 - [[aws-selected-tail-equation-study]] - AWS Batch sharding and merge workflow
   for large selected-tail equation diagnostics, with row-level records and
   namespaced independent simulation ids.

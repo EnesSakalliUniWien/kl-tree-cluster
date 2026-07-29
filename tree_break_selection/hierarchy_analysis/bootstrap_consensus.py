@@ -253,9 +253,7 @@ def bootstrap_consensus(
     clade_support = {c: hits / n_boot for c, hits in clade_hits.items()}
 
     # Cluster stability (mean intra-cluster co-association)
-    cluster_stability = _compute_cluster_stability(
-        results_orig["cluster_assignments"], co_assoc_df, id_to_idx
-    )
+    cluster_stability = _compute_cluster_stability(results_orig["cluster_assignments"], co_assoc_df)
 
     result = {
         "co_association_matrix": co_assoc_df,
@@ -332,7 +330,6 @@ def _extract_clades(tree) -> Set[FrozenSet[str]]:
 def _compute_cluster_stability(
     cluster_assignments: Dict,
     co_assoc_df: pd.DataFrame,
-    id_to_idx: Dict[str, int],
 ) -> Dict[int, float]:
     """Mean pairwise co-association within each original cluster."""
     stability: Dict[int, float] = {}

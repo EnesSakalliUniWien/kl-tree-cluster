@@ -27,9 +27,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
 )
 
 SCHEMA_VERSION = "root_selected_population_law_requirement_panel/v1"
@@ -117,7 +117,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
+def string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
     if column not in row:
         return default
     value = row[column]
@@ -165,11 +165,11 @@ def build_root_selected_population_law_requirement_rows(
     )
     records: list[dict[str, object]] = []
     for _, row in action_dominance_rows.sort_values("target_case_id").iterrows():
-        target_s = _finite_float(row["target_s_root_spectral_excess_log"])
-        exact_count = int(_finite_float(row.get("exact_support_count", 0)))
-        action_count = int(_finite_float(row.get("action_dominating_support_count", 0)))
+        target_s = finite_float(row["target_s_root_spectral_excess_log"])
+        exact_count = int(finite_float(row.get("exact_support_count", 0)))
+        action_count = int(finite_float(row.get("action_dominating_support_count", 0)))
         support_count = action_count if action_count > 0 else exact_count
-        support_s = _finite_float(row.get("best_action_dominating_support_s_root_log", math.nan))
+        support_s = finite_float(row.get("best_action_dominating_support_s_root_log", math.nan))
         if support_count > 0 and math.isfinite(target_s) and math.isfinite(support_s):
             gap = max(float(target_s - support_s), 0.0)
             multiplier = float(math.exp(gap))
@@ -197,7 +197,7 @@ def build_root_selected_population_law_requirement_rows(
             {
                 "schema_version": SCHEMA_VERSION,
                 "study_role": STUDY_ROLE,
-                "target_case_id": _string_value(row, "target_case_id"),
+                "target_case_id": string_value(row, "target_case_id"),
                 "target_s_root_spectral_excess_log": target_s,
                 "support_reference_status": support_status,
                 "support_count": support_count,

@@ -25,9 +25,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
-    _finite_float,
 )
 
 SCHEMA_VERSION = "root_selected_deformed_external_law_target_panel/v1"
@@ -114,7 +114,7 @@ def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None
         raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
 
 
-def _string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
+def string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
     if column not in row:
         return default
     value = row[column]
@@ -125,10 +125,10 @@ def _string_value(row: pd.Series | dict[str, object], column: str, default: str 
 
 def _moment_vector(row: pd.Series, *, prefix: str) -> dict[str, float]:
     return {
-        "T": _finite_float(row.get(f"{prefix}_tie_fraction", math.nan)),
-        "A": _finite_float(row.get(f"{prefix}_action_log1p", math.nan)),
-        "E": _finite_float(row.get(f"{prefix}_edge_log1p", math.nan)),
-        "S_Hu": _finite_float(row.get(f"{prefix}_s_h_u_excess_log", math.nan)),
+        "T": finite_float(row.get(f"{prefix}_tie_fraction", math.nan)),
+        "A": finite_float(row.get(f"{prefix}_action_log1p", math.nan)),
+        "E": finite_float(row.get(f"{prefix}_edge_log1p", math.nan)),
+        "S_Hu": finite_float(row.get(f"{prefix}_s_h_u_excess_log", math.nan)),
     }
 
 
@@ -137,16 +137,16 @@ def _nearest_moment_vector(row: pd.Series) -> dict[str, float]:
         "T": math.nan,
         "A": math.nan,
         "E": math.nan,
-        "S_Hu": _finite_float(row.get("nearest_support_s_h_u_excess_log", math.nan)),
+        "S_Hu": finite_float(row.get("nearest_support_s_h_u_excess_log", math.nan)),
     }
 
 
 def _absolute_moment_gap(row: pd.Series) -> dict[str, float]:
     return {
-        "T": _finite_float(row.get("nearest_support_tie_gap", math.nan)),
-        "A": _finite_float(row.get("nearest_support_action_gap", math.nan)),
-        "E": _finite_float(row.get("nearest_support_edge_gap", math.nan)),
-        "S_Hu": _finite_float(row.get("required_s_h_u_gap_to_nearest_support", math.nan)),
+        "T": finite_float(row.get("nearest_support_tie_gap", math.nan)),
+        "A": finite_float(row.get("nearest_support_action_gap", math.nan)),
+        "E": finite_float(row.get("nearest_support_edge_gap", math.nan)),
+        "S_Hu": finite_float(row.get("required_s_h_u_gap_to_nearest_support", math.nan)),
     }
 
 
@@ -159,7 +159,7 @@ def _finite_json(values: dict[str, float]) -> str:
 
 
 def _required_axes(row: pd.Series) -> str:
-    dominant = _string_value(row, "dominant_conditioning_gap")
+    dominant = string_value(row, "dominant_conditioning_gap")
     axes = ["S_Hu"]
     if dominant == "selected_ratio_action":
         axes.insert(0, "A")
@@ -194,20 +194,20 @@ def build_root_selected_deformed_external_law_target_rows(
     )
     records: list[dict[str, object]] = []
     for _, row in support_gap_rows.sort_values("target_case_id").iterrows():
-        support_status = _string_value(row, "support_gap_status")
+        support_status = string_value(row, "support_gap_status")
         law_required = support_status != "exact_tail_support_available"
         target = _moment_vector(row, prefix="target")
         nearest = _nearest_moment_vector(row)
         gap = _absolute_moment_gap(row)
         conditioning_event = (
-            f"R_root_selected AND stratum={_string_value(row, 'target_root_tail_stratum_key')}"
+            f"R_root_selected AND stratum={string_value(row, 'target_root_tail_stratum_key')}"
         )
         records.append(
             {
                 "schema_version": SCHEMA_VERSION,
                 "study_role": STUDY_ROLE,
-                "target_case_id": _string_value(row, "target_case_id"),
-                "target_root_tail_stratum_key": _string_value(
+                "target_case_id": string_value(row, "target_case_id"),
+                "target_root_tail_stratum_key": string_value(
                     row,
                     "target_root_tail_stratum_key",
                 ),
@@ -219,10 +219,10 @@ def build_root_selected_deformed_external_law_target_rows(
                 "nearest_support_moment_vector_json": _finite_json(nearest),
                 "required_moment_gap_json": _finite_json(gap),
                 "required_tilt_axes": _required_axes(row) if law_required else "none",
-                "required_s_h_u_lift_multiplier": _finite_float(
+                "required_s_h_u_lift_multiplier": finite_float(
                     row.get("required_s_h_u_lift_multiplier", math.nan)
                 ),
-                "dominant_conditioning_gap": _string_value(
+                "dominant_conditioning_gap": string_value(
                     row,
                     "dominant_conditioning_gap",
                 ),

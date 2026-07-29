@@ -55,17 +55,29 @@ def _root_nodes(tree: nx.DiGraph) -> list[object]:
 
 
 def _sibling_gate_calibration_label(method_label: str) -> str:
-    if method_label in {"fixed_coordinate_bh", "fixed_block_bh"}:
-        return "fixed_subspace_bh"
-    if method_label == "fixed_global_chi_square":
-        return "fixed_subspace_chi_square"
+    supported_labels = {
+        "fixed_global_chi_square": "fixed_subspace_chi_square",
+        "fixed_coordinate_bh": "fixed_subspace_bh",
+        "fixed_coordinate_by": "fixed_subspace_by",
+        "fixed_coordinate_holm": "fixed_subspace_holm",
+        "fixed_coordinate_bonferroni": "fixed_subspace_bonferroni",
+        "fixed_block_bh": "fixed_subspace_bh",
+        "fixed_block_simes_bh": "fixed_subspace_simes_bh",
+        "global_chi_square": "data_independent_chi_square",
+        "coordinate_bonferroni": "data_independent_coordinate_bonferroni",
+        "coordinate_bh": "data_independent_coordinate_bh",
+        "block_bonferroni": "data_independent_block_bonferroni",
+        "block_bh": "data_independent_block_bh",
+    }
+    if method_label in supported_labels:
+        return supported_labels[method_label]
     if method_label == "zero_dimensional_sibling_record":
         return "degenerate_zero_dimensional"
     if method_label.startswith("external_selected_tail"):
         return "selected_tail_calibrated"
     if "empirical_null_inflation" in method_label:
         return "empirical_null_inflation"
-    return "method_specific_calibrated"
+    raise ValueError(f"Unsupported sibling test method label: {method_label!r}.")
 
 
 def _parent_passes_traversal_prerequisites(

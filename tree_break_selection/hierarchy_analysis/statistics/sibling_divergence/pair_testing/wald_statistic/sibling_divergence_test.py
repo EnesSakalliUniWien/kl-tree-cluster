@@ -43,7 +43,6 @@ def sibling_divergence_test(
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
 
-    n_features = int(z_scores.shape[0])
     if not np.isfinite(z_scores).all():
         raise ValueError(
             "Sibling Wald z-scores must be finite; "
@@ -52,9 +51,6 @@ def sibling_divergence_test(
 
     sibling_projection_dimension, _ = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
-        left_sample_size=left_sample_size,
-        right_sample_size=right_sample_size,
-        n_features=n_features,
     )
 
     z_scores = z_scores.astype(np.float64, copy=False)

@@ -19,9 +19,6 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
-from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
-    DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-)
 from tree_break_selection.tree.construction import DEFAULT_BINARY_TREE_DISTANCE_METRIC
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
@@ -390,15 +387,6 @@ def run_clustering_result(
                     )
                 ),
                 neighborhood_bandwidth_profile=params.get("neighborhood_bandwidth_profile"),
-                distributional_action_split_filter_policy=str(
-                    params.get(
-                        "distributional_action_split_filter_policy",
-                        DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-                    )
-                ),
-                distributional_action_split_filter_quantile=float(
-                    params.get("distributional_action_split_filter_quantile", 0.0)
-                ),
                 **_tbs_branch_length_optimization_kwargs(params),
                 allow_linkage_ultrametric_branch_time=bool(
                     params.get("allow_linkage_ultrametric_branch_time", False)

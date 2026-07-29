@@ -10,7 +10,7 @@ sources:
   - benchmarks/shared/runners/method_registry.py
   - tests/pipeline/51_test_dispatch_contract.py
   - tests/pipeline/52_test_method_execution_index_alignment.py
-  - tests/validation/191_test_guarded_legacy_rescue_contract.py
+  - tests/validation/191_test_neighborhood_support_contract.py
 tags:
   - source
   - benchmarks
@@ -53,7 +53,7 @@ into an explicit skip, preserving the fail-closed hard-negative contract.
   contract enforcement.
 - `51_test_dispatch_contract.py` covers dispatch forwarding and registry
   exposure for the internal support-threshold flag.
-- `191_test_guarded_legacy_rescue_contract.py` covers
+- `191_test_neighborhood_support_contract.py` covers
   `tbs_internal_filter_v1` on `overlap_extreme_4c__r1`, requiring a benchmark
   skip instead of the previous one-cluster OK row.
 - A local standard gate run over `overlap_extreme_4c` and the six registered

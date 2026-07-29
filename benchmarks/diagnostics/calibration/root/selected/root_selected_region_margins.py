@@ -34,9 +34,6 @@ from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence 
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
-from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
-    effective_rank,
-)
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
@@ -54,6 +51,9 @@ from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 
+from benchmarks.diagnostics.calibration.statistics.spectral_summary import (
+    effective_rank,
+)
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.tbs_tree_context import TbsTreeContext, build_tbs_tree_context
 

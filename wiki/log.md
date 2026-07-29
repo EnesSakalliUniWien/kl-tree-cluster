@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-07-28
+updated: 2026-07-29
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -5522,6 +5522,96 @@ verification, and maintenance events here in chronological order.
   7,175 duplicated lines to 353 pairs and 6,542 lines (3.58%). All 45 focused
   oracle/sibling tests and all 1,278 repository tests passed; Ruff, Vulture,
   wiki lint over 271 pages, and five command-interface smokes also passed.
+
+### 2026-07-29
+
+- Removed ten statically proven unused production parameters and their caller
+  arguments. Deleted the unconsumed gate leaf-data metadata contract and its
+  full-DataFrame SHA-256 work. Removed the impossible distributional-action
+  filter configuration without aliases: the statistical module now owns only
+  action formulas, while optional annotation enrichment lives under
+  `benchmarks/diagnostics/analysis/` and no longer runs during clustering.
+  Moved its diagnostic annotation tests out of the statistics suite into the
+  matching validation-diagnostics category, and added the previously omitted
+  15 endotype application tests to the ordered repository gate. Split the
+  ambiguous root `test_methodology_fixes.py` collection into spectral-context,
+  projected-Wald reference-law, and sibling-skip contracts under
+  `tests/statistics/`; no test logic remains at the suite root. Ruff, Vulture,
+  wiki lint over 271 pages, all 1,277 ordered tests, the 14-case smoke benchmark,
+  and the 17-row regression gate passed.
+- Removed five proven redundant test cases. Deleted the pipeline gate-annotation
+  module that was AST-identical to the maintained core contract; deleted three
+  lower-level `TreeDecomposition` validation cases already covered through the
+  core interface, including one assertion against private state; and folded
+  the duplicate support-profile registry contract into the pipeline registry
+  test. Removed repeated negative assertions for retired legacy identifiers.
+  The ordered gate now contains 1,272 cases. The 12-line/80-token test clone
+  scan fell from 53 pairs and 1,175 duplicated lines immediately before this
+  tranche to 51 pairs and 1,084 duplicated lines. All 1,272 ordered tests,
+  Ruff, and wiki lint over 271 pages passed.
+- Added the standalone `tools/repository_audit/` package and globally installed
+  its `tbs-audit` interface. The tool isolates Coverage.py, Grimp, mutmut,
+  pytest-cov, pytest-deadfixtures, pytest-testmon, Ruff, Semgrep, and Vulture
+  behind `map`, `quick`, `evidence`, and explicit `mutation` modes; jscpd is
+  installed globally. Its evidence model excludes package initializers from
+  study counts, distinguishes imports from standalone execution, traces
+  dictionary/DataFrame string fields, and joins documentation and Git history
+  before labeling a module unresolved. Added 19 focused tool tests and Make
+  targets. The first map found 132 calibration implementation modules, 76
+  test-only imports, and 8 statically unimported modules, but zero automatically
+  unresolved modules after documentation and entry-point evidence. The quick
+  adapter smoke and all 19 tool tests passed.
+- Applied the coverage-context evidence to production boundaries. Moved the
+  selected-family UMAP renderer from `tree_break_selection/plot/` to its
+  diagnostic family, removed its public lazy exports without aliases, and
+  moved the calibration-only effective-rank summary from the projection API to
+  calibration statistics. Replaced the sibling-gate calibration catch-all with
+  exhaustive fixed-subspace, data-independent, selected-tail, empirical-null,
+  and degenerate labels; unknown methods now fail explicitly. Calibration-only
+  production coverage fell from 79 lines to 2 retained worker-selection
+  branches in the live spectral estimator; 21,936 remaining lines are confined
+  to benchmark/diagnostic modules. The compact audit deletes raw coverage
+  databases. Ruff, 19 audit-tool tests, wiki lint over 272 pages, all 1,290
+  purpose-ordered tests, and the 14-case canonical benchmark smoke passed.
+- Corrected the quick audit's dead-fixture environment boundary. It previously
+  invoked pytest from the isolated audit-tool environment, where application
+  dependencies such as `pypdf` were unavailable and a collection error could
+  be hidden behind the plugin's successful exit. The adapter now launches the
+  repository's locked application environment through `uv run --no-sync` and
+  adds only `pytest-deadfixtures` as a transient overlay. The twentieth audit
+  tool test protects this command boundary; the corrected quick audit collected
+  all fixtures without import errors.
+- Applied the first structured clone-removal tranche, filtering
+  production/application and benchmark clones separately. Consolidated four
+  scRNA R renderers behind one application plotting module for branch display,
+  edge-table-to-phylo construction, descendant traversal, cluster branch
+  metadata, palettes, root markers, and MRCA audits. Centralized benchmark
+  result numeric-column ownership, derived detailed logging from the canonical
+  result schema, shared overlap binary threshold scans, shared selected-root
+  action-support geometry, and introduced a common diagnostic table/manifest
+  writer. No legacy imports or aliases were added. The combined jscpd scan fell
+  from 492 clone groups and 8,753 duplicated lines (3.71%) to 473 groups and
+  8,178 lines (3.47%); the production/application slice fell from 46 groups and
+  831 lines (1.89%) to 35 groups and 507 lines (1.16%), and the benchmark slice
+  fell from 361 groups and 6,388 lines (4.43%) to 353 groups and 6,139 lines
+  (4.26%). All 1,295 purpose-ordered tests, 20 audit-tool tests, Ruff, R parser
+  checks for all four renderers plus the shared module, and wiki lint over 272
+  pages passed.
+- Continued the benchmark clone cleanup by moving selected-root diagnostic
+  value parsing, support-role classification, log-action transforms,
+  spectral-excess transforms, root-tail stratum keys, and deformed tail-excess
+  lookup to `benchmarks/diagnostics/calibration/root/root_tail_values.py`.
+  Rewired selected-root spectral-tail, action-support, nearest-support,
+  deformed-law, validity, conditional-tilt, binary-resolution, H_u
+  observability, kernel-tail, population-law, and tie-rank generator/spectral
+  lift panels to import from that owner instead of the spectral-tail panel's
+  private helpers. The selected spectral-tail and generator-target panels now
+  use the common diagnostic table/manifest writer. Removed the duplicate
+  method-proof trace-column list by importing the maintained math-trace schema.
+  The benchmark jscpd slice fell from 353 groups and 6,139 duplicated lines
+  (4.26%) to 345 groups and 5,808 lines (4.03%). The selected-root and tie-rank
+  validation subsets, focused spectral/generator/reporting tests, math-trace
+  inference test, targeted Ruff checks, and import checks passed.
 
 ## Evidence
 
