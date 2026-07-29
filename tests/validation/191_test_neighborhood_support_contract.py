@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import benchmarks.shared.util.method_execution as method_execution
 import networkx as nx
 import numpy as np
+import pytest
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.util import method_execution
 from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
     CoherentSupportDecision,
@@ -19,17 +20,25 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neigh
 )
 
 
-def test_branch_length_distance_cache_uses_weighted_paths_and_mean_fallback() -> None:
+def test_branch_length_distance_cache_uses_weighted_paths() -> None:
+    tree = nx.DiGraph()
+    tree.add_edge("root", "left", branch_length=2.0)
+    tree.add_edge("root", "right", branch_length=3.0)
+
+    cache = build_branch_length_distance_cache(tree)
+
+    assert cache.status == "branch_length_observed"
+    assert cache.distance("left", "right") == 5.0
+    assert cache.distance("left", "left") == 0.0
+
+
+def test_branch_length_distance_cache_rejects_missing_lengths() -> None:
     tree = nx.DiGraph()
     tree.add_edge("root", "left", branch_length=2.0)
     tree.add_edge("root", "right")
 
-    cache = build_branch_length_distance_cache(tree)
-
-    assert cache.status == "branch_length_with_mean_fallback"
-    assert cache.fallback_edge_length == 2.0
-    assert cache.distance("left", "right") == 4.0
-    assert cache.distance("left", "left") == 0.0
+    with pytest.raises(ValueError, match="requires explicit finite non-negative branch_length"):
+        build_branch_length_distance_cache(tree)
 
 
 def test_selected_signal_like_rows_do_not_calibrate_empirical_null() -> None:
@@ -41,6 +50,19 @@ def test_selected_signal_like_rows_do_not_calibrate_empirical_null() -> None:
     assert not role_allows_empirical_null_calibration(excluded)
     assert role_allows_empirical_null_calibration(SupportRole.NULL_ANCHOR)
     assert role_allows_empirical_null_calibration(SupportRole.STOPPED_EDGE_NULL_ANCHOR)
+
+
+def test_invalid_explicit_support_role_fails_closed() -> None:
+    with pytest.raises(ValueError, match="Invalid explicit support role"):
+        classify_support_role(
+            {
+                "support_role": "typo_signal_anchor",
+                "data_role": "null",
+            }
+        )
+
+    with pytest.raises(ValueError, match="Invalid support role"):
+        role_allows_empirical_null_calibration("typo_signal_anchor")
 
 
 def test_tau_region_shrinks_sparse_regions_to_parent() -> None:
@@ -119,28 +141,21 @@ def test_internal_filter_hard_overlap_r1_fails_closed() -> None:
     data_df, labels, original, metadata = generate_case_data(case)
 
     params = METHOD_SPECS["tbs_internal_filter_v1"].param_grid[0]
-    result_row, computed_result, method_audit = method_execution.run_single_method_once(
-        method_id="tbs_internal_filter_v1",
-        spec=METHOD_SPECS["tbs_internal_filter_v1"],
-        params=params,
-        case_idx=1,
-        case_name=str(case["name"]),
-        tc_seed=case["seed"],
-        significance_level=0.01,
-        edge_alpha=0.001,
-        data_t=data_df,
-        y_t=labels,
-        x_original=original,
-        meta=metadata,
-        distance_matrix=None,
-        distance_condensed=pdist(data_df.values, metric=params["tree_distance_metric"]),
-        matrix_audit=False,
-    )
-
-    assert result_row.status.value == "skip"
-    assert result_row.found_clusters == 0
-    assert result_row.labels_length == 0
-    assert result_row.skip_reason is not None
-    assert "internal support" in result_row.skip_reason
-    assert computed_result is None
-    assert method_audit is None
+    with pytest.raises(ValueError, match="internal support guard"):
+        method_execution.run_single_method_once(
+            method_id="tbs_internal_filter_v1",
+            spec=METHOD_SPECS["tbs_internal_filter_v1"],
+            params=params,
+            case_idx=1,
+            case_name=str(case["name"]),
+            tc_seed=case["seed"],
+            significance_level=0.01,
+            edge_alpha=0.001,
+            data_t=data_df,
+            y_t=labels,
+            x_original=original,
+            meta=metadata,
+            distance_matrix=None,
+            distance_condensed=pdist(data_df.values, metric=params["tree_distance_metric"]),
+            matrix_audit=False,
+        )

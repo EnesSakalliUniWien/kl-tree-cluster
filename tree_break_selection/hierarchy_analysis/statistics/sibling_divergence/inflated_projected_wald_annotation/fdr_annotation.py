@@ -73,8 +73,6 @@ def _sibling_gate_calibration_label(method_label: str) -> str:
         return supported_labels[method_label]
     if method_label == "zero_dimensional_sibling_record":
         return "degenerate_zero_dimensional"
-    if method_label.startswith("external_selected_tail"):
-        return "selected_tail_calibrated"
     if "empirical_null_inflation" in method_label:
         return "empirical_null_inflation"
     raise ValueError(f"Unsupported sibling test method label: {method_label!r}.")

@@ -545,12 +545,7 @@ def run_commands(commands: list[list[str]]) -> None:
 
 
 def strict_failures(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    failure_statuses = {"missing", "alias_mismatch", "alias_target_missing"}
-    return [
-        row
-        for row in rows
-        if row["status"] in failure_statuses and row["role"] in {"canonical", "alias"}
-    ]
+    return [row for row in rows if row["status"] == "missing" and row["role"] == "canonical"]
 
 
 def main() -> None:

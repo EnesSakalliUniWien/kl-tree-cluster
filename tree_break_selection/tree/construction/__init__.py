@@ -13,7 +13,6 @@ from tree_break_selection.tree.construction.defaults import (
 )
 from tree_break_selection.tree.construction.hierarchical import (
     tree_from_linkage,
-    tree_from_linkage_topology,
 )
 
 __all__ = [
@@ -25,5 +24,4 @@ __all__ = [
     "TreeBuilderName",
     "build_tree",
     "tree_from_linkage",
-    "tree_from_linkage_topology",
 ]

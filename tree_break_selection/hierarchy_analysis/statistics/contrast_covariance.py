@@ -780,7 +780,7 @@ def _tree_time_variance_multiplier(
 
     The multiplier keeps finite-sample variance as the baseline and allows
     longer tree time to explain more contrast under the null. Missing or zero
-    time preserves the legacy sampling-only variance.
+    time preserves the sampling-only variance baseline.
     """
     if tree_time is None:
         return 1.0

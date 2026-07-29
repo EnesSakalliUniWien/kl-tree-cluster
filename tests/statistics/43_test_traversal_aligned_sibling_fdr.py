@@ -120,7 +120,6 @@ def test_nodes_with_closed_edge_gate_keep_raw_sibling_stat_but_no_fdr_decision()
         ("block_bonferroni", "data_independent_block_bonferroni"),
         ("block_bh", "data_independent_block_bh"),
         ("zero_dimensional_sibling_record", "degenerate_zero_dimensional"),
-        ("external_selected_tail_scalar", "selected_tail_calibrated"),
         (
             "context_weighted_supported_empirical_null_inflation:local_kernel",
             "empirical_null_inflation",

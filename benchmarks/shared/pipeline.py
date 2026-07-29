@@ -60,6 +60,7 @@ def benchmark_cluster_algorithm(
     include_cover_pages: bool = True,
     include_validation_page: bool = True,
     tree_consensus_label_dir: str | Path | None = None,
+    strict: bool = False,
 ):
     """
     Benchmark the cluster decomposition algorithm across multiple test cases.
@@ -136,9 +137,11 @@ def benchmark_cluster_algorithm(
     )
 
     if (plot_umap or plot_manifold) and not concat_plots_pdf:
-        logger.warning(
-            "plot_umap/plot_manifold requested without concat_plots_pdf; skipping plot generation."
+        raise ValueError(
+            "plot_umap/plot_manifold require concat_plots_pdf=True and a PDF output path; "
+            "plot requests are no longer converted into skipped plot metadata."
         )
+    plot_generation_status = "pdf_requested" if concat_plots_pdf else "not_requested"
 
     # PDF-only plotting mode.
     stream_pdf = bool(concat_plots_pdf)
@@ -179,6 +182,7 @@ def benchmark_cluster_algorithm(
                 matrix_audit=matrix_audit,
                 verbose=verbose,
                 tree_consensus_label_dir=tree_consensus_label_dir,
+                strict=strict,
             )
             result_rows.extend(case_result_rows)
             computed_results.extend(case_computed_results)
@@ -187,6 +191,8 @@ def benchmark_cluster_algorithm(
             log_validation_completion(total_runs, len(test_cases))
 
         df_results = benchmark_rows_to_dataframe(result_rows)
+        df_results.attrs["strict"] = bool(strict)
+        df_results.attrs["plot_generation_status"] = plot_generation_status
 
         should_generate_plots = bool(concat_plots_pdf)
         if not should_generate_plots:
@@ -211,6 +217,7 @@ def benchmark_cluster_algorithm(
             **plot_kwargs,
         )
 
+        df_results.attrs["plot_generation_status"] = "pdf_generated"
         return df_results, fig
 
     finally:

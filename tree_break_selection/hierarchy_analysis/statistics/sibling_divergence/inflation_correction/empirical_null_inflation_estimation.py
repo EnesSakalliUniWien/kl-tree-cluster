@@ -7,7 +7,6 @@ from scipy.special import logsumexp
 from scipy.stats import chi2
 
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
-from .external_selected_tail_calibration import ExternalSelectedTailCalibrationModel
 from .types.inflation_model import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationDecision,
@@ -370,30 +369,12 @@ def _adjusted_p_value(record: SiblingPairRecord, inflation_factor: float) -> flo
     return float(chi2.sf(adjusted_statistic, df=float(record.degrees_of_freedom)))
 
 
-def _with_external_selected_tail_fallback(
-    internal_decision: CalibrationDecision,
-    record: SiblingPairRecord,
-    *,
-    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None,
-    external_selected_tail_context: dict[str, object] | None,
-) -> CalibrationDecision:
-    if external_selected_tail_model is None:
-        return internal_decision
-    return external_selected_tail_model.decision_for(
-        record,
-        external_context=external_selected_tail_context,
-        internal_decision=internal_decision,
-    )
-
-
 def decide_empirical_null_calibration(
     model: EmpiricalNullInflationModel,
     record: SiblingPairRecord,
     *,
     enforce_support_thresholds: bool = False,
     support_thresholds: CalibrationSupportThresholds = DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
-    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
-    external_selected_tail_context: dict[str, object] | None = None,
 ) -> CalibrationDecision:
     """Return the focal empirical-null calibration decision for one sibling record."""
     exact_context = _decision_context(record)
@@ -416,7 +397,7 @@ def decide_empirical_null_calibration(
             f"for empirical-null inflation prediction; parent={record.parent!r}."
         )
     if model.n_calibration == 0:
-        decision = CalibrationDecision(
+        return CalibrationDecision(
             status="undefined_no_internal_support",
             c_hat=None,
             p_value=None,
@@ -424,12 +405,6 @@ def decide_empirical_null_calibration(
             support=_decision_support(model=model, record=record),
             exact_context=exact_context,
             descriptive_strata={"reason": "empty_calibration_model"},
-        )
-        return _with_external_selected_tail_fallback(
-            decision,
-            record,
-            external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context=external_selected_tail_context,
         )
     if record.feature_family not in {"bernoulli", "categorical", "continuous", "mixed"}:
         raise ValueError(
@@ -446,7 +421,7 @@ def decide_empirical_null_calibration(
         dtype=bool,
     )
     if not np.any(family_mask):
-        decision = CalibrationDecision(
+        return CalibrationDecision(
             status="undefined_no_family_support",
             c_hat=None,
             p_value=None,
@@ -458,12 +433,6 @@ def decide_empirical_null_calibration(
             ),
             exact_context=exact_context,
             descriptive_strata={"reason": "no_matching_feature_family"},
-        )
-        return _with_external_selected_tail_fallback(
-            decision,
-            record,
-            external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context=external_selected_tail_context,
         )
     family_reference_expectations = (
         model.sample_reference_scales[family_mask] * model.sample_degrees_of_freedom[family_mask]
@@ -502,7 +471,7 @@ def decide_empirical_null_calibration(
             thresholds=support_thresholds,
         )
         if enforce_support_thresholds and failures:
-            decision = CalibrationDecision(
+            return CalibrationDecision(
                 status="undefined_sparse_context",
                 c_hat=None,
                 p_value=None,
@@ -513,12 +482,6 @@ def decide_empirical_null_calibration(
                     **descriptive_strata,
                     "reason": "internal_support_thresholds_failed",
                 },
-            )
-            return _with_external_selected_tail_fallback(
-                decision,
-                record,
-                external_selected_tail_model=external_selected_tail_model,
-                external_selected_tail_context=external_selected_tail_context,
             )
         return CalibrationDecision(
             status="internal_admissible",
@@ -552,7 +515,7 @@ def decide_empirical_null_calibration(
     log_kernel_weights = log_kernel_weights - float(np.max(log_kernel_weights))
     local_weights = family_weights * np.exp(log_kernel_weights)
     if float(np.sum(local_weights)) <= 0.0:
-        decision = CalibrationDecision(
+        return CalibrationDecision(
             status="undefined_sparse_context",
             c_hat=None,
             p_value=None,
@@ -568,12 +531,6 @@ def decide_empirical_null_calibration(
                 **descriptive_strata,
                 "reason": "zero_local_calibration_weight",
             },
-        )
-        return _with_external_selected_tail_fallback(
-            decision,
-            record,
-            external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context=external_selected_tail_context,
         )
 
     reference_expectations = family_reference_expectations
@@ -593,7 +550,7 @@ def decide_empirical_null_calibration(
         thresholds=support_thresholds,
     )
     if enforce_support_thresholds and failures:
-        decision = CalibrationDecision(
+        return CalibrationDecision(
             status="undefined_sparse_context",
             c_hat=None,
             p_value=None,
@@ -604,12 +561,6 @@ def decide_empirical_null_calibration(
                 **descriptive_strata,
                 "reason": "internal_support_thresholds_failed",
             },
-        )
-        return _with_external_selected_tail_fallback(
-            decision,
-            record,
-            external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context=external_selected_tail_context,
         )
     return CalibrationDecision(
         status="internal_admissible",

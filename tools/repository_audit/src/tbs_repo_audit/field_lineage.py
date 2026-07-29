@@ -31,12 +31,31 @@ FIELD_READ_FUNCTIONS = {
     "annotation_bool",
     "column_present_and_true",
 }
+ENV_READ_FUNCTIONS = {"getenv"}
+CONFIG_ROOT_NAMES = {
+    "config",
+    "metadata",
+    "params",
+    "payload",
+    "recorded_run_params",
+    "run_params",
+}
+GRAPH_ROOT_NAMES = {
+    "attrs",
+    "edge_attrs",
+    "graph",
+    "rooted",
+    "tree",
+    "weighted",
+}
+GRAPH_KEYS = {"weight", "length", "branch_length", "linkage_branch_length"}
 
 
 @dataclass(frozen=True)
 class FieldFunctionUse:
     key: str
     operation: str
+    access_kind: str
     path: str
     line: int
     scope: str
@@ -108,6 +127,54 @@ def _call_name(node: cst.BaseExpression) -> str | None:
     return None
 
 
+def _expression_name(node: cst.CSTNode) -> str | None:
+    if isinstance(node, cst.Name):
+        return node.value
+    if isinstance(node, cst.Attribute):
+        base = _expression_name(node.value)
+        return f"{base}.{node.attr.value}" if base else node.attr.value
+    return None
+
+
+def _root_name(expression_name: str | None) -> str:
+    return "" if not expression_name else expression_name.split(".", 1)[0]
+
+
+def _is_schema_assignment_name(name: str) -> bool:
+    lowered = name.lower()
+    return (
+        name.endswith("COLUMNS")
+        or name.endswith("_COLS")
+        or name.endswith("_FIELDS")
+        or name.endswith("_SCHEMA")
+        or lowered
+        in {
+            "display_cols",
+            "display_columns",
+            "export_columns",
+            "keep_columns",
+            "output_cols",
+            "output_columns",
+            "required_columns",
+        }
+    )
+
+
+def _access_kind_for_expression(expression_name: str | None) -> str:
+    root = _root_name(expression_name)
+    if expression_name in {"os.environ"} or expression_name == "os.environ":
+        return "environment"
+    if expression_name and expression_name.endswith(".environ"):
+        return "environment"
+    if expression_name and (".graph" in expression_name or expression_name.endswith(".es")):
+        return "graph"
+    if root in GRAPH_ROOT_NAMES:
+        return "graph"
+    if root in CONFIG_ROOT_NAMES or (expression_name and "config" in expression_name.lower()):
+        return "configuration"
+    return "field"
+
+
 class _FieldFunctionVisitor(cst.CSTVisitor):
     METADATA_DEPENDENCIES = (PositionProvider, ParentNodeProvider)
 
@@ -123,11 +190,19 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
     def _line(self, node: cst.CSTNode) -> int:
         return int(self.get_metadata(PositionProvider, node).start.line)
 
-    def _record(self, *, key: str, operation: str, node: cst.CSTNode) -> None:
+    def _record(
+        self,
+        *,
+        key: str,
+        operation: str,
+        node: cst.CSTNode,
+        access_kind: str = "field",
+    ) -> None:
         self.uses.append(
             FieldFunctionUse(
                 key=key,
                 operation=operation,
+                access_kind=access_kind,
                 path=str(self.relative),
                 line=self._line(node),
                 scope=self._scope(),
@@ -155,9 +230,18 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
             for target in node.targets
             if isinstance(target.target, cst.Name)
         ]
-        if any(name.endswith("COLUMNS") or name.endswith("_FIELDS") for name in target_names):
+        if any(_is_schema_assignment_name(name) for name in target_names):
             for key in _schema_literal_strings(node.value):
-                self._record(key=key, operation="schema", node=node)
+                self._record(key=key, operation="schema", node=node, access_kind="schema")
+        return True
+
+    def visit_Dict(self, node: cst.Dict) -> bool | None:
+        for element in node.elements:
+            if not isinstance(element, cst.DictElement):
+                continue
+            key = _literal_string(element.key)
+            if key is not None:
+                self._record(key=key, operation="schema", node=element, access_kind="schema")
         return True
 
     def visit_Subscript(self, node: cst.Subscript) -> bool | None:
@@ -165,6 +249,7 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         if not keys:
             return True
         operation = "read"
+        access_kind = _access_kind_for_expression(_expression_name(node.value))
         parent = self.get_metadata(ParentNodeProvider, node, None)
         if isinstance(parent, cst.AssignTarget) and parent.target is node:
             operation = "write"
@@ -175,11 +260,21 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         elif isinstance(parent, cst.Del):
             operation = "delete"
         for key in keys:
-            self._record(key=key, operation=operation, node=node)
+            self._record(key=key, operation=operation, node=node, access_kind=access_kind)
         return True
 
     def visit_Call(self, node: cst.Call) -> bool | None:
         method = _call_name(node.func)
+        if method in ENV_READ_FUNCTIONS and node.args:
+            key = _literal_string(node.args[0].value)
+            if key is not None:
+                self._record(
+                    key=key,
+                    operation="read",
+                    node=node,
+                    access_kind="environment",
+                )
+            return True
         if method in FIELD_READ_FUNCTIONS:
             for argument in node.args:
                 key = _literal_string(argument.value)
@@ -195,7 +290,8 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         key = _literal_string(node.args[0].value)
         if key is not None:
             operation = "read" if method == "get" else method
-            self._record(key=key, operation=operation, node=node)
+            access_kind = _access_kind_for_expression(_expression_name(node.func.value))
+            self._record(key=key, operation=operation, node=node, access_kind=access_kind)
         return True
 
 
@@ -233,6 +329,30 @@ def _field_reuse(uses: list[FieldFunctionUse]) -> str:
     return "read_only_or_schema"
 
 
+def _cleanup_classification(uses: list[FieldFunctionUse]) -> str:
+    writers = [use for use in uses if use.operation == "write"]
+    readers = [use for use in uses if use.operation in READ_OPERATIONS]
+    schemas = [use for use in uses if use.operation == "schema"]
+    access_kinds = {use.access_kind for use in uses if use.access_kind != "schema"}
+    key = uses[0].key if uses else ""
+
+    if schemas:
+        return "output_schema_column"
+    if access_kinds and access_kinds <= {"environment"}:
+        return "environment_key"
+    if access_kinds and access_kinds <= {"configuration"}:
+        return "configuration_key"
+    if access_kinds and access_kinds <= {"graph"}:
+        return "graph_key"
+    if key in GRAPH_KEYS and any(use.access_kind == "graph" for use in uses):
+        return "graph_key"
+    if writers and not readers:
+        return "dead_write_candidate"
+    if readers:
+        return "used_field"
+    return "review_required"
+
+
 def build_field_lineage(repo: Path) -> dict[str, object]:
     """Build LibCST-backed field/function lineage evidence."""
     repo = repo.resolve()
@@ -250,7 +370,11 @@ def build_field_lineage(repo: Path) -> dict[str, object]:
             {
                 "key": key,
                 "reuse": _field_reuse(key_uses),
+                "cleanup_classification": _cleanup_classification(key_uses),
                 "operations": dict(sorted(Counter(use.operation for use in key_uses).items())),
+                "access_kinds": dict(
+                    sorted(Counter(use.access_kind for use in key_uses).items())
+                ),
                 "surfaces": dict(sorted(Counter(use.surface for use in key_uses).items())),
                 "writer_scopes": sorted(
                     {f"{use.path}::{use.scope}" for use in writers}
@@ -271,6 +395,9 @@ def build_field_lineage(repo: Path) -> dict[str, object]:
         "field_count": len(fields),
         "parse_errors": parse_errors,
         "reuse_counts": dict(sorted(Counter(field["reuse"] for field in fields).items())),
+        "cleanup_classification_counts": dict(
+            sorted(Counter(field["cleanup_classification"] for field in fields).items())
+        ),
         "fields": fields,
     }
 
@@ -288,6 +415,7 @@ def build_field_lineage_graph(lineage: dict[str, object]) -> nx.DiGraph:
             kind="field",
             label=key,
             reuse=str(field["reuse"]),
+            cleanup_classification=str(field["cleanup_classification"]),
             surfaces=json.dumps(field["surfaces"], sort_keys=True),
         )
         graph.add_edge("fields", field_id, kind="contains")
@@ -327,22 +455,39 @@ def write_field_lineage_outputs(
         if field["reuse"] == "no_reader_dead_candidate"
         and "production" in field["surfaces"]
     ]
+    production_cleanup_candidates = [
+        field
+        for field in production_dead
+        if field["cleanup_classification"] == "dead_write_candidate"
+    ]
     lines = [
         "# Field Function Lineage",
         "",
         "Static source: LibCST. Graph model/export: NetworkX GraphML.",
         "",
         f"- Fields: `{lineage['field_count']}`",
-        f"- Production no-reader candidates: `{len(production_dead)}`",
+        f"- Production no-reader raw candidates: `{len(production_dead)}`",
+        (
+            "- Production cleanup candidates excluding graph/env/config/schema: "
+            f"`{len(production_cleanup_candidates)}`"
+        ),
         "",
         "## Reuse Counts",
         "",
     ]
     for reuse, count in lineage["reuse_counts"].items():
         lines.append(f"- `{reuse}`: `{count}`")
-    lines.extend(["", "## Production No-Reader Candidates", ""])
-    for field in production_dead:
+    lines.extend(["", "## Cleanup Classifications", ""])
+    for cleanup_classification, count in lineage["cleanup_classification_counts"].items():
+        lines.append(f"- `{cleanup_classification}`: `{count}`")
+    lines.extend(["", "## Production Cleanup Candidates", ""])
+    for field in production_cleanup_candidates:
         lines.append(f"- `{field['key']}`")
+        for scope in field["writer_scopes"]:
+            lines.append(f"  - writes: `{scope}`")
+    lines.extend(["", "## Production No-Reader Raw Candidates", ""])
+    for field in production_dead:
+        lines.append(f"- `{field['key']}` — `{field['cleanup_classification']}`")
         for scope in field["writer_scopes"]:
             lines.append(f"  - writes: `{scope}`")
         for scope in field["schema_scopes"]:

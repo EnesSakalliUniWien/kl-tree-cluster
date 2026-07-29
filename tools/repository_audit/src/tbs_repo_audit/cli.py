@@ -376,7 +376,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "Fields: "
             f"{lineage['field_count']} total; "
             f"{lineage['reuse_counts'].get('no_reader_dead_candidate', 0)} "
-            "no-reader candidates"
+            "raw no-reader candidates; "
+            f"{lineage['cleanup_classification_counts'].get('dead_write_candidate', 0)} "
+            "cleanup candidates after graph/env/config/schema filtering"
         )
         return 0
 

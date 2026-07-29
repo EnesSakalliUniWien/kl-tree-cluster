@@ -177,8 +177,11 @@ def _sorted_children(G: nx.DiGraph, node: object) -> list[object]:
     children = list(G.successors(node))
     try:
         return sorted(children)
-    except TypeError:
-        return sorted(children, key=lambda x: str(x))
+    except TypeError as exc:
+        raise ValueError(
+            "Tree visualization requires mutually orderable child node identifiers; "
+            f"node={node!r}, children={children!r}."
+        ) from exc
 
 
 def _rectangular_tree_layout(

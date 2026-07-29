@@ -966,6 +966,7 @@ def rebuild_snapshots(
                 distance_matrix=inputs.distance_matrix,
                 distance_condensed=inputs.distance_condensed,
                 matrix_audit=False,
+                strict=True,
             )
             if row.status == BenchmarkRunStatus.OK and computed is not None:
                 snapshots.append(

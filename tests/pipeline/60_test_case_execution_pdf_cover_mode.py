@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import benchmarks.shared.util.case_execution as case_execution
 import pandas as pd
-from benchmarks.shared.util import case_execution
 
 
 def test_run_case_worker_defaults_to_file_safe_matplotlib_backend(monkeypatch):

@@ -557,8 +557,8 @@ def _method_connection_text(method: str) -> tuple[str, str]:
             "Baseline guarded TBS; path-conditioned burden measures what the current traversal already avoids or tolerates.",
         ),
         "tbs_current": (
-            "current_reference_alias",
-            "Direct-run alias for current TBS in the guarded smoke; should match tbs unless dispatch configuration differs.",
+            "current_reference_replicate",
+            "Direct current-TBS rerun in the guarded smoke; should match tbs unless dispatch configuration differs.",
         ),
         "tbs_internal_filter_v1": (
             "internal_support_filter",

@@ -83,13 +83,13 @@ def _surface(path: Path) -> str:
 def _imports(tree: ast.AST) -> Iterable[tuple[str, int]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                yield alias.name, node.lineno
+            for imported_name in node.names:
+                yield imported_name.name, node.lineno
         elif isinstance(node, ast.ImportFrom) and node.module:
             yield node.module, node.lineno
-            for alias in node.names:
-                if alias.name != "*":
-                    yield f"{node.module}.{alias.name}", node.lineno
+            for imported_name in node.names:
+                if imported_name.name != "*":
+                    yield f"{node.module}.{imported_name.name}", node.lineno
 
 
 def _string_key(node: ast.AST) -> str | None:

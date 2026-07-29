@@ -64,8 +64,6 @@ class GateAnnotationConfigMetadata:
     root_selective_permutation_guard_tree_linkage_method: str = "average"
     enforce_internal_support_thresholds: bool = False
     internal_support_thresholds_signature: tuple[tuple[str, float | int], ...] = ()
-    external_selected_tail_calibration_enabled: bool = False
-    external_selected_tail_rule_count: int = 0
     spectral_transport_passthrough_guard: bool = False
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST
     spectral_transport_require_mp_blocks: bool = True

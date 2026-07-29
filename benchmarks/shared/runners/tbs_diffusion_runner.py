@@ -412,6 +412,7 @@ def _run_tbs_diffusion_method(
     branch_length_optimization_random_state: int = 0,
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
+    branch_length_optimization_apply_nonconverged: bool = False,
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 ) -> MethodRunResult:
     """Run TBS decomposition on a Hamming nearest-neighbor diffusion tree."""
@@ -437,6 +438,9 @@ def _run_tbs_diffusion_method(
         branch_length_optimization_random_state=branch_length_optimization_random_state,
         branch_length_optimization_solver_tolerance=(branch_length_optimization_solver_tolerance),
         branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
+        branch_length_optimization_apply_nonconverged=(
+            branch_length_optimization_apply_nonconverged
+        ),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "hamming_nn_diffusion",
@@ -477,6 +481,7 @@ def _run_tbs_diffusion_graphtools_method(
     branch_length_optimization_random_state: int = 0,
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
+    branch_length_optimization_apply_nonconverged: bool = False,
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 ) -> MethodRunResult:
     """Run TBS decomposition on a graphtools kernel diffusion tree."""
@@ -521,6 +526,9 @@ def _run_tbs_diffusion_graphtools_method(
         branch_length_optimization_random_state=branch_length_optimization_random_state,
         branch_length_optimization_solver_tolerance=(branch_length_optimization_solver_tolerance),
         branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
+        branch_length_optimization_apply_nonconverged=(
+            branch_length_optimization_apply_nonconverged
+        ),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "graphtools_kernel_diffusion",
@@ -565,6 +573,7 @@ def _run_tbs_diffusion_adaptive_method(
     branch_length_optimization_random_state: int = 0,
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
+    branch_length_optimization_apply_nonconverged: bool = False,
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 ) -> MethodRunResult:
     """Run TBS decomposition on an adaptive variable-bandwidth diffusion tree."""
@@ -596,6 +605,9 @@ def _run_tbs_diffusion_adaptive_method(
         branch_length_optimization_random_state=branch_length_optimization_random_state,
         branch_length_optimization_solver_tolerance=(branch_length_optimization_solver_tolerance),
         branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
+        branch_length_optimization_apply_nonconverged=(
+            branch_length_optimization_apply_nonconverged
+        ),
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "adaptive_pydiffmap_diffusion",

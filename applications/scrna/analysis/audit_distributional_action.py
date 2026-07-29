@@ -729,14 +729,7 @@ def main() -> None:
             )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message=(
-                "The behavior of DataFrame concatenation with empty or all-NA "
-                "entries is deprecated.*"
-            ),
-            category=FutureWarning,
-        )
+        warnings.simplefilter("ignore", FutureWarning)
         edges = pd.concat(edge_tables, ignore_index=True)
     summary = pd.DataFrame.from_records(
         [

@@ -111,6 +111,7 @@ def run_tbs_on_distance(
     branch_length_optimization_random_state: int = 0,
     branch_length_optimization_solver_tolerance: float = 1e-6,
     branch_length_optimization_max_iterations: int | None = None,
+    branch_length_optimization_apply_nonconverged: bool = False,
     allow_linkage_ultrametric_branch_time: bool = False,
     passthrough: bool = True,
     trace_level: str = "compact",
@@ -141,9 +142,6 @@ def run_tbs_on_distance(
         builder=tree_builder,
         rooting=tree_rooting,
         linkage_method=tree_linkage_method,
-        allow_topology_only_linkage=(
-            branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
-        ),
         iqtree_executable=iqtree_executable,
         iqtree_model=iqtree_model,
         iqtree_threads=iqtree_threads,
@@ -174,6 +172,7 @@ def run_tbs_on_distance(
             random_state=branch_length_optimization_random_state,
             solver_tolerance=branch_length_optimization_solver_tolerance,
             max_iterations=branch_length_optimization_max_iterations,
+            apply_nonconverged=branch_length_optimization_apply_nonconverged,
         )
         stage_timings["branch_length_optimization_sec"] = optimization_result.elapsed_sec
         branch_length_optimization_metadata.update(
@@ -185,6 +184,14 @@ def run_tbs_on_distance(
         branch_length_optimization_metadata["branch_length_geometry_source"] = (
             "original_data" if branch_length_data_df is data_df else "aligned_geometry_embedding"
         )
+        if not optimization_result.applied_to_tree:
+            raise ValueError(
+                "Fixed-topology NNLS branch-length optimization did not apply branch lengths "
+                f"(status={optimization_result.status!r}). Refusing to run an NNLS benchmark "
+                "with unrefit topology-only/linkage branch lengths. Set "
+                "branch_length_optimization_apply_nonconverged=True only for an explicit "
+                "non-converged diagnostic run."
+            )
     elif branch_length_optimization_method != BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC:
         raise ValueError(
             f"Unsupported branch_length_optimization_method {branch_length_optimization_method!r}."
@@ -196,7 +203,6 @@ def run_tbs_on_distance(
         neighborhood_bandwidth_metadata = {
             "neighborhood_bandwidth_profile": str(neighborhood_bandwidth_profile),
             "neighborhood_distance_status": distance_cache.status,
-            "neighborhood_distance_fallback_edge_length": (distance_cache.fallback_edge_length),
             "neighborhood_distance_pair_count": len(distance_cache.distances),
             "neighborhood_bandwidth_action": "support_regularizer_only_no_pvalue_rescue",
         }
@@ -291,8 +297,6 @@ def run_tbs_on_distance(
         "tree_builder": str(tree_builder),
         "tree_rooting": str(tree_rooting),
         "tree_build_diagnostics": asdict(tree_build.diagnostics),
-        "linkage_topology_only_branch_lengths": bool(tree_build.topology_only_branch_lengths),
-        "linkage_topology_only_reason": tree_build.topology_only_reason,
         "phylogenetic_rooting": tree_build.phylogenetic_rooting,
         "iqtree_metadata": tree_build.iqtree_metadata,
         "stage_timings": stage_timings,

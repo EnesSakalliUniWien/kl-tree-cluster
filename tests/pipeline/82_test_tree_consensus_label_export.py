@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import benchmarks.shared.util.case_execution as case_execution
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,7 +14,6 @@ from benchmarks.shared.tree_consensus import (
     export_tree_consensus_label_files,
     write_tree_consensus_artifacts,
 )
-from benchmarks.shared.util import case_execution
 from benchmarks.shared.util.case_run import run_single_case
 
 

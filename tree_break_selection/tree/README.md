@@ -45,7 +45,7 @@ The durable, cross-application audit is in
 | --- | --- |
 | `construction/build.py` | Explicit dispatch over linkage, neighbor joining, and IQ-TREE; validates builder/rooting combinations and returns construction evidence |
 | `construction/defaults.py` | Immutable canonical binary-distance and linkage defaults; callers pass alternatives explicitly |
-| `construction/hierarchical.py` | Promote linkage merge output into `PosetTree`; provide topology-only fallback before NNLS |
+| `construction/hierarchical.py` | Promote monotone linkage merge output into `PosetTree`; non-monotone heights fail closed |
 | `construction/phylogenetic.py` | Neighbor joining, IQ-TREE execution/Newick import, MAD rooting, and promotion of unrooted metric trees |
 | `poset_tree.py` | Stable rooted-tree representation and hierarchy operations |
 | `branch_lengths.py` | Convert monotone linkage heights to normalized ultrametric edge lengths |

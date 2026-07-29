@@ -189,6 +189,37 @@ def test_grid_writes_all_evidence_artifacts(
     assert set(cells["tree_inference"]) == set(TOPOLOGIES)
     assert cells["status"].eq("ok").all()
     assert cells["nnls_target"].eq("squared_euclidean").all()
+    assert {
+        "nnls_status",
+        "nnls_applied_to_tree",
+        "nnls_apply_nonconverged",
+        "nnls_normalized_residual_rmse",
+        "nnls_design_density",
+        "nnls_design_nnz",
+        "nnls_zero_design_columns",
+        "nnls_zero_design_column_fraction",
+    }.issubset(cells.columns)
+
+
+def test_grid_is_strict_by_default_for_runner_exceptions(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    def fake_runner(*_args: object, **_kwargs: object) -> MethodRunResult:
+        raise RuntimeError("forced nnls grid failure")
+
+    monkeypatch.setattr(
+        "benchmarks.validation.sweeps.family_metric_nnls_grid._run_tbs_diffusion_graphtools_method",
+        fake_runner,
+    )
+
+    with pytest.raises(RuntimeError, match="forced nnls grid failure"):
+        run_family_metric_nnls_grid(
+            output_dir=tmp_path,
+            case_names=("binary_low_noise_4c",),
+            topologies=("average",),
+            branch_modes=("none",),
+        )
 
 
 def test_graphtools_runner_forwards_explicit_graph_and_branch_geometry(

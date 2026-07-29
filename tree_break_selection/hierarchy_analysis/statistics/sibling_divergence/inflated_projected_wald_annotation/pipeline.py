@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import MutableMapping
 from time import perf_counter
 
 import networkx as nx
@@ -21,9 +21,6 @@ from tree_break_selection.tree.feature_space import FeatureSpace
 from ..inflation_correction.empirical_null_inflation_estimation import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     fit_empirical_null_inflation_model,
-)
-from ..inflation_correction.external_selected_tail_calibration import (
-    ExternalSelectedTailCalibrationModel,
 )
 from ..inflation_correction.inflation_adjusted_sibling_tests import (
     compute_inflation_adjusted_sibling_tests,
@@ -73,8 +70,6 @@ def annotate_sibling_divergence(
     ),
     enforce_support_thresholds: bool = False,
     support_thresholds: CalibrationSupportThresholds = DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
-    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
-    external_selected_tail_context_by_parent: Mapping[object, Mapping[str, object]] | None = None,
     adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
@@ -129,12 +124,7 @@ def annotate_sibling_divergence(
         return result_df
 
     inflation_fit_start_sec = perf_counter()
-    try:
-        model = fit_empirical_null_inflation_model(records)
-    except ValueError:
-        if external_selected_tail_model is None:
-            raise
-        model = None
+    model = fit_empirical_null_inflation_model(records)
     if stage_timings is not None:
         stage_timings["sibling_gate_inflation_fit_sec"] = float(
             stage_timings.get("sibling_gate_inflation_fit_sec", 0.0)
@@ -150,8 +140,6 @@ def annotate_sibling_divergence(
         model=model,
         enforce_support_thresholds=enforce_support_thresholds,
         support_thresholds=support_thresholds,
-        external_selected_tail_model=external_selected_tail_model,
-        external_selected_tail_context_by_parent=external_selected_tail_context_by_parent,
     )
     if stage_timings is not None:
         stage_timings["sibling_gate_adjusted_tests_sec"] = float(

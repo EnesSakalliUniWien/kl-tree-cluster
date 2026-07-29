@@ -137,7 +137,7 @@ def _continuous_leaf_data() -> pd.DataFrame:
 
 
 def test_populate_node_divergences_stores_categorical_blocks_for_one_hot_columns() -> None:
-    """Flat one-hot columns are one categorical block contract, not Bernoulli aliases."""
+    """Flat one-hot columns are one categorical block contract, not Bernoulli blocks."""
     tree = _simple_binary_tree()
     leaf_data = _categorical_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))

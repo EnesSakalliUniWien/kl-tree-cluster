@@ -580,7 +580,6 @@ def apply_root_stability_guard(
         "Root_Stability_Subsample_Mean_ARI",
         "Root_Stability_Subsample_Median_ARI",
         "Root_Stability_Subsample_Q10_ARI",
-        "Root_Stability_Guard_Threshold",
     ):
         out[column] = np.nan
     out["Root_Stability_Guard_Blocked"] = False
@@ -599,8 +598,6 @@ def apply_root_stability_guard(
         "root_stability_subsample_q10_ari",
         np.nan,
     )
-    out.loc[root, "Root_Stability_Guard_Threshold"] = threshold_value
-
     root_gate_open = bool(out.loc[root, "Sibling_BH_Different"])
     should_block = bool(np.isfinite(mean_ari) and mean_ari < threshold_value)
     if root_gate_open and should_block:
@@ -715,13 +712,8 @@ def apply_root_selective_permutation_guard(
     )
     out = annotations_df.copy()
     root_columns = (
-        "Root_Selective_Permutation_Observed_P_Value",
         "Root_Selective_Permutation_P_Value",
-        "Root_Selective_Permutation_Null_Min_P_Value",
-        "Root_Selective_Permutation_Null_Q05_P_Value",
         "Root_Selective_Permutation_Guard_Alpha",
-        "Root_Selective_Permutation_Guard_Replicates",
-        "Root_Selective_Permutation_Guard_Seed",
     )
     generic_columns = (
         "Selective_Permutation_Observed_P_Value",
@@ -794,19 +786,8 @@ def apply_root_selective_permutation_guard(
             out.loc[node, "Sibling_BH_Same"] = True
             out.loc[node, "Selective_Permutation_Guard_Blocked"] = True
         if node == root:
-            out.loc[root, "Root_Selective_Permutation_Observed_P_Value"] = result[
-                "root_observed_p_value"
-            ]
             out.loc[root, "Root_Selective_Permutation_P_Value"] = result["root_selective_p_value"]
-            out.loc[root, "Root_Selective_Permutation_Null_Min_P_Value"] = result[
-                "root_selective_null_min_p_value"
-            ]
-            out.loc[root, "Root_Selective_Permutation_Null_Q05_P_Value"] = result[
-                "root_selective_null_q05_p_value"
-            ]
             out.loc[root, "Root_Selective_Permutation_Guard_Alpha"] = float(alpha)
-            out.loc[root, "Root_Selective_Permutation_Guard_Replicates"] = int(bootstrap_replicates)
-            out.loc[root, "Root_Selective_Permutation_Guard_Seed"] = int(seed) + seed_offset
             out.loc[root, "Root_Selective_Permutation_Guard_Would_Block"] = would_block
             out.loc[root, "Root_Selective_Permutation_Guard_Blocked"] = bool(
                 out.loc[root, "Selective_Permutation_Guard_Blocked"]

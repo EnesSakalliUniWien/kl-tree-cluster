@@ -8,7 +8,10 @@ The modes deliberately escalate in cost:
 
 - `tbs-audit --mode map` builds read-only import, field-use, and history evidence.
 - `tbs-audit --mode fields` builds LibCST field/function lineage and exports a
-  NetworkX GraphML graph for pandas/dictionary field cleanup review.
+  NetworkX GraphML graph for pandas/dictionary field cleanup review. It keeps
+  raw read/write reuse evidence separate from cleanup classification, excluding
+  graph, environment, configuration, and known output-schema keys from true
+  dead-write candidates.
 - `tbs-audit --mode quick` also runs Ruff, Vulture, jscpd, and
   pytest-deadfixtures. Test collection runs through the repository's locked
   application environment, with the plugin added as a transient overlay, so

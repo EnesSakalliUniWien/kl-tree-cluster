@@ -48,8 +48,14 @@ class BranchLengthOptimizationResult:
     n_edges: int
     n_pairs_total: int
     n_pairs_used: int
+    design_nnz: int
+    design_density: float
+    n_zero_design_columns: int
+    zero_design_column_fraction: float
     pair_sample_size: int | None
     random_state: int
+    applied_to_tree: bool
+    apply_nonconverged: bool
     elapsed_sec: float
     cost: float
     optimality: float
@@ -60,6 +66,8 @@ class BranchLengthOptimizationResult:
     fitted_median: float
     residual_rmse: float
     residual_mae: float
+    residual_rmse_to_target_mean: float
+    residual_mae_to_target_mean: float
     branch_length_mean: float
     branch_length_median: float
     branch_length_min: float
@@ -228,6 +236,7 @@ def fit_fixed_topology_nnls_branch_lengths(
     random_state: int = 0,
     solver_tolerance: float = 1e-6,
     max_iterations: int | None = None,
+    apply_nonconverged: bool = False,
 ) -> BranchLengthOptimizationResult:
     """Fit non-negative edge lengths on a fixed tree topology.
 
@@ -265,6 +274,10 @@ def fit_fixed_topology_nnls_branch_lengths(
     else:
         targets = _squared_euclidean_targets(continuous_data, left, right)
     design = _path_incidence_matrix(root_path_sets, left, right, n_edges)
+    design_nnz = int(design.nnz)
+    design_density = float(design_nnz / (design.shape[0] * design.shape[1]))
+    column_nonzero_counts = np.asarray(design.getnnz(axis=0), dtype=np.int64)
+    n_zero_design_columns = int(np.count_nonzero(column_nonzero_counts == 0))
 
     solution = lsq_linear(
         design,
@@ -279,43 +292,70 @@ def fit_fixed_topology_nnls_branch_lengths(
     lengths = np.asarray(solution.x, dtype=float)
     fitted = np.asarray(design @ lengths, dtype=float)
     residuals = fitted - targets
+    solver_converged = bool(solution.success)
+    applied_to_tree = solver_converged or bool(apply_nonconverged)
 
-    edge_by_index = {index: edge for edge, index in edge_index_by_pair.items()}
-    for index, length in enumerate(lengths):
-        parent, child = edge_by_index[index]
-        attrs = tree.edges[parent, child]
-        if "branch_length" in attrs and "linkage_branch_length" not in attrs:
-            attrs["linkage_branch_length"] = attrs["branch_length"]
-        attrs["branch_length"] = float(length)
-        attrs["branch_length_source"] = BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
+    if applied_to_tree:
+        edge_by_index = {index: edge for edge, index in edge_index_by_pair.items()}
+        for index, length in enumerate(lengths):
+            parent, child = edge_by_index[index]
+            attrs = tree.edges[parent, child]
+            if "branch_length" in attrs and "linkage_branch_length" not in attrs:
+                attrs["linkage_branch_length"] = attrs["branch_length"]
+            attrs["branch_length"] = float(length)
+            attrs["branch_length_source"] = BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
 
     tree.graph["branch_length_optimization"] = {
         "method": BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
         "target_metric": target_metric,
+        "status": "ok" if solver_converged else "solver_not_converged",
         "pair_sample_size": None if pair_sample_size is None else int(pair_sample_size),
         "random_state": int(random_state),
+        "applied_to_tree": bool(applied_to_tree),
+        "apply_nonconverged": bool(apply_nonconverged),
     }
+    target_mean = float(np.mean(targets))
+    residual_rmse = float(np.sqrt(np.mean(residuals * residuals)))
+    residual_mae = float(np.mean(np.abs(residuals)))
+    residual_rmse_to_target_mean = (
+        float(residual_rmse / target_mean)
+        if np.isfinite(target_mean) and target_mean > 0.0
+        else float("nan")
+    )
+    residual_mae_to_target_mean = (
+        float(residual_mae / target_mean)
+        if np.isfinite(target_mean) and target_mean > 0.0
+        else float("nan")
+    )
 
     return BranchLengthOptimizationResult(
         method=BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
         target_metric=target_metric,
-        status="ok" if bool(solution.success) else "solver_not_converged",
+        status="ok" if solver_converged else "solver_not_converged",
         n_leaves=len(leaf_nodes),
         n_edges=n_edges,
         n_pairs_total=total_pairs,
         n_pairs_used=len(left),
+        design_nnz=design_nnz,
+        design_density=design_density,
+        n_zero_design_columns=n_zero_design_columns,
+        zero_design_column_fraction=float(n_zero_design_columns / n_edges),
         pair_sample_size=None if pair_sample_size is None else int(pair_sample_size),
         random_state=int(random_state),
+        applied_to_tree=bool(applied_to_tree),
+        apply_nonconverged=bool(apply_nonconverged),
         elapsed_sec=perf_counter() - start_sec,
         cost=float(solution.cost),
         optimality=float(solution.optimality),
         iterations=int(solution.nit),
-        target_mean=float(np.mean(targets)),
+        target_mean=target_mean,
         target_median=float(np.median(targets)),
         fitted_mean=float(np.mean(fitted)),
         fitted_median=float(np.median(fitted)),
-        residual_rmse=float(np.sqrt(np.mean(residuals * residuals))),
-        residual_mae=float(np.mean(np.abs(residuals))),
+        residual_rmse=residual_rmse,
+        residual_mae=residual_mae,
+        residual_rmse_to_target_mean=residual_rmse_to_target_mean,
+        residual_mae_to_target_mean=residual_mae_to_target_mean,
         branch_length_mean=float(np.mean(lengths)),
         branch_length_median=float(np.median(lengths)),
         branch_length_min=float(np.min(lengths)),

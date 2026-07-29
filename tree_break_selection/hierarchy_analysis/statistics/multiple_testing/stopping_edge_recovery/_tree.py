@@ -32,9 +32,6 @@ def build_tree_distance_resolver(tree: nx.DiGraph) -> Callable[[str, str], float
     def tree_distance(node_a: str, node_b: str) -> float:
         if node_a == node_b:
             return 0.0
-        try:
-            return float(nx.shortest_path_length(tree_undirected, node_a, node_b))
-        except nx.NetworkXNoPath:
-            return float("inf")
+        return float(nx.shortest_path_length(tree_undirected, node_a, node_b))
 
     return tree_distance

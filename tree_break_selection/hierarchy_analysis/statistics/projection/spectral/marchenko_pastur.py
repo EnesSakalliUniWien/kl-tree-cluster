@@ -73,8 +73,8 @@ def _process_node(
     Parameters
     ----------
     spectral_task
-        Per-node task payload with descendant leaf rows and, in the legacy
-        diagnostic path, descendant internal barycenter rows.
+        Per-node task payload with descendant leaf rows and optional descendant
+        internal barycenter rows.
     full_feature_matrix
         Full data matrix shared across threads (read-only view).
     """

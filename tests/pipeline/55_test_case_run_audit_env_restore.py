@@ -5,10 +5,10 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import benchmarks.shared.util.case_run as case_run
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.shared.util import case_run
 from benchmarks.shared.util.case_inputs import PreparedCaseInputs
 
 

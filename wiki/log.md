@@ -5650,6 +5650,64 @@ verification, and maintenance events here in chronological order.
   17 rows, 11 ok, 6 skip, mean ARI `0.595706`, median ARI `0.680293`, exact-K
   `4/17`. The quick subset reported exact-K `8/14`, mean ARI `0.898`, and
   median ARI `0.970`.
+- Deepened `tbs-audit --mode fields` by separating raw LibCST read/write reuse
+  from cleanup classification. The audit now classifies graph attributes,
+  environment keys, configuration keys, and output-schema/dict-literal columns
+  separately from true dead-write candidates. Regenerated field lineage now
+  reports 8,216 fields, 144 raw no-reader candidates, 139 cleanup candidates
+  after filtering, 9 production raw no-reader candidates, and 6 production
+  cleanup candidates; graph keys such as `weight`, `linkage_branch_length`, and
+  `branch_length_optimization` are excluded from pandas cleanup.
+- Removed the 6 remaining production cleanup candidates from root guard output:
+  root-only selected-permutation observed/null/seed/replicate mirrors and the
+  root-stability threshold mirror. Regenerated field lineage now reports 8,210
+  fields, 138 raw no-reader candidates, 133 cleanup candidates after filtering,
+  3 production raw no-reader candidates, and 0 production cleanup candidates;
+  the remaining production raw candidates are graph keys.
+- Hardened fixed-topology NNLS branch-length optimization in
+  `tree_break_selection/tree/optimized_branch_lengths.py`. The fitter now
+  records sparse design diagnostics, residual ratios, and whether fitted
+  lengths were actually applied to the `PosetTree`; non-converged solver output
+  no longer mutates edge branch lengths unless
+  `branch_length_optimization_apply_nonconverged=True` is explicitly forwarded.
+  Added tests for fail-closed mutation, explicit non-converged application, and
+  dense `scipy.optimize.nnls` comparator parity on tiny leaf-pair distances.
+- Updated benchmark handling for the hardened NNLS contract. The shared TBS
+  runner now refuses to continue an NNLS benchmark row when the fitter did not
+  apply branch lengths, preventing rows labeled NNLS branch-time from using
+  topology-only/linkage placeholder branch lengths. The family-metric NNLS grid
+  now exports solver status, applied/non-converged flags, sparse design
+  diagnostics, and normalized residual columns. The quick smoke subset still
+  reports exact-K `8/14`, mean ARI `0.898`, and median ARI `0.970`.
+- Added strict benchmark execution hardening. Dispatch and per-method execution
+  re-raise method exceptions instead of treating them as benchmark skip rows.
+  Strict regression immediately exposes the existing TBS empirical-null
+  calibration failure instead of recording it as a skip row. Remaining shared
+  benchmark string-boolean parameters now use strict parsing, and invalid
+  explicit support-role metadata fails closed.
+- Removed maintained production/benchmark fallback paths. Method dispatch and
+  per-method execution no longer convert exceptions into skip rows; regression
+  and the family-metric NNLS grid no longer expose tolerant CLI modes. Linkage
+  construction no longer builds topology-only placeholder branch lengths for
+  non-monotone heights, branch-length neighborhood distances no longer impute
+  missing edge lengths, mixed-type sample labels no longer sort via
+  type/`repr`, disconnected stopping-edge distances no longer map to infinity,
+  and external selected-tail calibration rescue was removed from the production
+  sibling empirical-null seam.
+- Removed live alias/legacy surfaces from maintained code. Root package,
+  plotting package, and `benchmarks.shared.util` no longer provide lazy
+  compatibility-style attribute exports; callers and tests use direct
+  purpose-specific module imports. Remaining legacy wording in production
+  docstrings was replaced with current-method terminology, and the repository
+  audit import scanner no longer uses `alias` as a variable name for AST import
+  entries.
+- Rechecked alias/legacy surfaces across maintained code and applications.
+  Removed stale scRNA plot-manifest alias failure statuses, renamed the
+  path-conditioned diagnostic `tbs_current` relation from alias to replicate,
+  and removed non-method deprecation wording from the scRNA distributional-action
+  audit warning filter. A full Python scan now leaves only vendor
+  BranchArchitect compatibility terms, wiki-schema/test policy wording, and
+  diagnostic metric-compatibility terminology outside maintained TBS aliases.
 
 ## Evidence
 

@@ -37,7 +37,7 @@ def selected_neighborhood_kernel_weights(
     tau: float,
     h_k: float,
 ) -> np.ndarray:
-    """Return the guarded legacy neighborhood kernel weights."""
+    """Return the guarded neighborhood kernel weights."""
 
     return tree_exponential_kernel(distances, tau) * structural_log_dimension_kernel(
         source_log_k,

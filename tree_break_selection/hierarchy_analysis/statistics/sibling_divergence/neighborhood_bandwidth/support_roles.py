@@ -29,8 +29,8 @@ def role_allows_empirical_null_calibration(role: SupportRole | str) -> bool:
 
     try:
         support_role = SupportRole(str(role))
-    except ValueError:
-        return False
+    except ValueError as exc:
+        raise ValueError(f"Invalid support role: {role!r}.") from exc
     return support_role in NULL_CALIBRATION_ROLES
 
 
@@ -52,8 +52,10 @@ def classify_support_role(row: Mapping[str, object]) -> SupportRole:
             continue
         try:
             return SupportRole(str(explicit_value))
-        except ValueError:
-            pass
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid explicit support role in {explicit_column}: {explicit_value!r}."
+            ) from exc
 
     if _truthy(row.get("is_null_like")) or str(row.get("data_role", "")).lower() == "null":
         return SupportRole.NULL_ANCHOR

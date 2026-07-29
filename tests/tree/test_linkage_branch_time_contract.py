@@ -6,6 +6,7 @@ import pytest
 from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from scipy.spatial.distance import pdist
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
+from tree_break_selection.tree.optimized_branch_lengths import BranchLengthOptimizationResult
 
 
 def _small_continuous_frame() -> pd.DataFrame:
@@ -15,6 +16,43 @@ def _small_continuous_frame() -> pd.DataFrame:
             "y": [0.0, 0.2, 2.9, 3.2],
         },
         index=["L0", "L1", "L2", "L3"],
+    )
+
+
+def _branch_length_result(*, status: str, applied_to_tree: bool) -> BranchLengthOptimizationResult:
+    return BranchLengthOptimizationResult(
+        method="fixed_topology_nnls",
+        target_metric="squared_standardized_euclidean",
+        status=status,
+        n_leaves=4,
+        n_edges=6,
+        n_pairs_total=6,
+        n_pairs_used=6,
+        design_nnz=20,
+        design_density=20.0 / 36.0,
+        n_zero_design_columns=0,
+        zero_design_column_fraction=0.0,
+        pair_sample_size=None,
+        random_state=0,
+        applied_to_tree=applied_to_tree,
+        apply_nonconverged=applied_to_tree and status != "ok",
+        elapsed_sec=0.01,
+        cost=1.0,
+        optimality=1.0,
+        iterations=1,
+        target_mean=1.0,
+        target_median=1.0,
+        fitted_mean=1.0,
+        fitted_median=1.0,
+        residual_rmse=1.0,
+        residual_mae=1.0,
+        residual_rmse_to_target_mean=1.0,
+        residual_mae_to_target_mean=1.0,
+        branch_length_mean=1.0,
+        branch_length_median=1.0,
+        branch_length_min=1.0,
+        branch_length_max=1.0,
+        solver_message="test",
     )
 
 
@@ -65,11 +103,10 @@ def test_linkage_branch_time_raw_heights_are_explicit_diagnostic_only(
     assert "called" not in captured
 
 
-def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
+def test_fixed_topology_nnls_rejects_nonmonotone_linkage_topology(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     data = _small_continuous_frame()
-    captured: dict[str, object] = {}
 
     def fake_linkage(*args: object, **kwargs: object) -> np.ndarray:
         return np.array(
@@ -81,20 +118,12 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
             dtype=float,
         )
 
-    def fake_fit(tree: object, *args: object, **kwargs: object) -> None:
-        captured["edge_lengths"] = [attrs["branch_length"] for _, _, attrs in tree.edges(data=True)]
-        raise RuntimeError("stop after topology-only tree construction")
-
     monkeypatch.setattr(
         "tree_break_selection.tree.construction.build.linkage",
         fake_linkage,
     )
-    monkeypatch.setattr(
-        "benchmarks.shared.runners.tbs_runner.fit_fixed_topology_nnls_branch_lengths",
-        fake_fit,
-    )
 
-    with pytest.raises(RuntimeError, match="topology-only tree construction"):
+    with pytest.raises(ValueError, match="nondecreasing"):
         run_tbs_on_distance(
             data,
             pdist(data.to_numpy(), metric="euclidean"),
@@ -105,8 +134,6 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
             branch_length_optimization_method="fixed_topology_nnls",
             branch_length_data_df=data,
         )
-
-    assert captured["edge_lengths"] == [1.0] * 6
 
 
 def test_fixed_topology_nnls_rejects_implicit_branch_geometry() -> None:
@@ -169,5 +196,30 @@ def test_fixed_topology_nnls_rejects_misaligned_branch_geometry() -> None:
             tree_linkage_method="average",
             feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
             branch_length_data_df=geometry,
+            branch_length_optimization_method="fixed_topology_nnls",
+        )
+
+
+def test_fixed_topology_nnls_runner_rejects_non_applied_solver_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data = _small_continuous_frame()
+
+    monkeypatch.setattr(
+        "benchmarks.shared.runners.tbs_runner.fit_fixed_topology_nnls_branch_lengths",
+        lambda *_args, **_kwargs: _branch_length_result(
+            status="solver_not_converged",
+            applied_to_tree=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="did not apply branch lengths"):
+        run_tbs_on_distance(
+            data,
+            pdist(data.to_numpy(), metric="euclidean"),
+            0.01,
+            tree_linkage_method="average",
+            feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
+            branch_length_data_df=data,
             branch_length_optimization_method="fixed_topology_nnls",
         )

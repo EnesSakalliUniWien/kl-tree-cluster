@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import benchmarks.shared.util.method_execution as method_execution
 import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.types import MethodRunResult, MethodSpec
-from benchmarks.shared.util import method_execution
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
@@ -419,7 +419,7 @@ def test_run_single_method_once_requires_complete_tbs_stage_timings(monkeypatch)
         )
 
 
-def test_run_single_method_once_records_runner_exception_as_skip(monkeypatch):
+def test_run_single_method_once_reraises_runner_exception(monkeypatch):
     data_t = pd.DataFrame(
         [[0, 1], [1, 0], [0, 0], [1, 1]],
         index=["S0", "S1", "S2", "S3"],
@@ -437,31 +437,24 @@ def test_run_single_method_once_records_runner_exception_as_skip(monkeypatch):
     )
 
     spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
-    result_row, computed_result, method_audit = method_execution.run_single_method_once(
-        method_id="tbs",
-        spec=spec,
-        params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
-        case_idx=1,
-        case_name="unsupported_calibration_case",
-        tc_seed=42,
-        significance_level=0.05,
-        edge_alpha=DEFAULT_EDGE_ALPHA,
-        data_t=data_t,
-        y_t=y_t,
-        x_original=data_t.values.astype(float),
-        meta=_benchmark_meta(name="unsupported_calibration_case"),
-        distance_matrix=None,
-        distance_condensed=None,
-        matrix_audit=False,
-    )
-
-    assert result_row.status.value == "skip"
-    assert result_row.skip_reason == "strict calibration support missing"
-    assert result_row.found_clusters == 0
-    assert result_row.labels_length == 0
-    assert np.isnan(result_row.ari)
-    assert computed_result is None
-    assert method_audit is None
+    with pytest.raises(ValueError, match="strict calibration support missing"):
+        method_execution.run_single_method_once(
+            method_id="tbs",
+            spec=spec,
+            params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
+            case_idx=1,
+            case_name="unsupported_calibration_case",
+            tc_seed=42,
+            significance_level=0.05,
+            edge_alpha=DEFAULT_EDGE_ALPHA,
+            data_t=data_t,
+            y_t=y_t,
+            x_original=data_t.values.astype(float),
+            meta=_benchmark_meta(name="unsupported_calibration_case"),
+            distance_matrix=None,
+            distance_condensed=None,
+            matrix_audit=False,
+        )
 
 
 def test_run_single_method_once_rejects_report_index_not_sample_ids(monkeypatch):

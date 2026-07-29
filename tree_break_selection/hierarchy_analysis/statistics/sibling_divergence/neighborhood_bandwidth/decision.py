@@ -1,4 +1,4 @@
-"""Guarded final decision object for legacy-stabilized neighborhood evidence."""
+"""Guarded final decision object for neighborhood support evidence."""
 
 from __future__ import annotations
 

@@ -66,9 +66,12 @@ tbs-audit --mode mutation --mutation-target tree_break_selection/tree
 
 `fields` builds a LibCST-backed field/function lineage map and exports JSON,
 Markdown, and NetworkX GraphML. This mode is the static source cleanup path for
-pandas and dictionary result fields. OpenLineage is intentionally not part of
-this mode because its standard role is runtime job, dataset, and run lineage
-metadata for executed pipelines.
+pandas and dictionary result fields. It reports raw read/write reuse separately
+from cleanup classification so graph attributes, environment keys,
+configuration keys, and known output-schema columns are not treated as true
+dead writes. OpenLineage is intentionally not part of this mode because its
+standard role is runtime job, dataset, and run lineage metadata for executed
+pipelines.
 
 `evidence` adds per-test calibration coverage contexts through a transient
 pytest-cov overlay on the repository's locked environment. It records the
@@ -97,7 +100,8 @@ The repository also exposes `make audit`, `make audit-quick`, and
 - `tools/repository_audit/src/tbs_repo_audit/field_lineage.py` uses LibCST for
   lossless static Python parsing and NetworkX GraphML export so pandas and
   dictionary fields can be reviewed by writer scope, reader scope, schema
-  declaration, and surface before deletion.
+  declaration, access kind, cleanup classification, and surface before
+  deletion.
 - Calibration package initializers are excluded from study-module counts.
 - Statically unimported files are separated from unresolved files because
   command runners and documented reproducibility artifacts can be valid without
@@ -121,9 +125,9 @@ The repository also exposes `make audit`, `make audit-quick`, and
   that count to 2. The two retained lines choose sequential or all-core
   execution in the production spectral worker resolver. The remaining 21,936
   calibration-only lines are confined to benchmark and diagnostic modules.
-- The tool package has 24 focused tests, including compact coverage-set
+- The tool package has 27 focused tests, including compact coverage-set
   comparison, punctuation-insensitive documentation matching, and LibCST
-  field-lineage read/write classification.
+  field-lineage read/write and cleanup-bucket classification.
 - The first responsibility-aware clone tranche split application/production
   and benchmark scans before editing. The combined scan fell from 492 groups
   and 8,753 duplicated lines (3.71%) to 473 groups and 8,178 lines (3.47%).

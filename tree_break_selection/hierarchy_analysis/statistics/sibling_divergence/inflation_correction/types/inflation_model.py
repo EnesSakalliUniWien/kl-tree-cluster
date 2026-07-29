@@ -9,10 +9,7 @@ import numpy as np
 
 CalibrationDecisionStatus = Literal[
     "internal_admissible",
-    "external_admissible_scalar",
-    "external_admissible_tail_law",
     "undefined_no_internal_support",
-    "undefined_external_not_admissible",
     "undefined_no_family_support",
     "undefined_sparse_context",
 ]

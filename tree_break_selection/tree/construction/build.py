@@ -15,7 +15,6 @@ from scipy.spatial.distance import squareform
 
 from tree_break_selection.tree.construction.hierarchical import (
     tree_from_linkage,
-    tree_from_linkage_topology,
 )
 from tree_break_selection.tree.construction.phylogenetic import (
     MadRootResult,
@@ -59,8 +58,6 @@ class TreeBuildResult:
     linkage_matrix: np.ndarray | None = None
     phylogenetic_rooting: MadRootResult | None = None
     iqtree_metadata: dict[str, object] | None = None
-    topology_only_branch_lengths: bool = False
-    topology_only_reason: str | None = None
 
 
 def _validate_condensed_distance(
@@ -99,23 +96,11 @@ def _canonical_sample_order(labels: list[object]) -> list[int]:
 
     try:
         return sorted(range(len(labels)), key=labels.__getitem__)
-    except TypeError:
-        pass
-
-    keys = [
-        (
-            type(label).__module__,
-            type(label).__qualname__,
-            repr(label),
-        )
-        for label in labels
-    ]
-    if len(set(keys)) != len(keys):
+    except TypeError as exc:
         raise ValueError(
-            "Mixed-type sample labels must have distinct stable type/repr keys for "
-            "deterministic tree construction."
-        )
-    return sorted(range(len(labels)), key=keys.__getitem__)
+            "Sample labels must be mutually orderable, or all strings, for deterministic "
+            "tree construction. Normalize mixed-type labels before building the tree."
+        ) from exc
 
 
 def _reorder_condensed_distance(
@@ -233,7 +218,6 @@ def build_tree(
     builder: str,
     rooting: str,
     linkage_method: str,
-    allow_topology_only_linkage: bool = False,
     iqtree_executable: str = "iqtree3",
     iqtree_model: str = "JC2",
     iqtree_threads: int = 1,
@@ -256,8 +240,6 @@ def build_tree(
     linkage_matrix: np.ndarray | None = None
     phylogenetic_rooting: MadRootResult | None = None
     iqtree_metadata: dict[str, object] | None = None
-    topology_only_branch_lengths = False
-    topology_only_reason: str | None = None
     expected_leaf_labels: list[object]
     original_labels = data.index.tolist()
     canonical_order = _canonical_sample_order(original_labels)
@@ -275,21 +257,10 @@ def build_tree(
         )
         distances = _reorder_condensed_distance(distances, canonical_order)
         linkage_matrix = linkage(distances, method=linkage_method)
-        try:
-            tree = tree_from_linkage(
-                linkage_matrix,
-                leaf_names=canonical_data.index.tolist(),
-            )
-        except ValueError as exc:
-            if not allow_topology_only_linkage or "nondecreasing" not in str(exc):
-                raise
-            tree = tree_from_linkage_topology(
-                linkage_matrix,
-                leaf_names=canonical_data.index.tolist(),
-                fallback_branch_length=1.0,
-            )
-            topology_only_branch_lengths = True
-            topology_only_reason = str(exc)
+        tree = tree_from_linkage(
+            linkage_matrix,
+            leaf_names=canonical_data.index.tolist(),
+        )
         expected_leaf_labels = canonical_data.index.tolist()
     else:
         if rooting != "mad":
@@ -341,8 +312,6 @@ def build_tree(
         linkage_matrix=linkage_matrix,
         phylogenetic_rooting=phylogenetic_rooting,
         iqtree_metadata=iqtree_metadata,
-        topology_only_branch_lengths=topology_only_branch_lengths,
-        topology_only_reason=topology_only_reason,
     )
 
 

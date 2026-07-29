@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.shared.runners.dispatch import run_clustering_result
+from benchmarks.shared.runners.dispatch import (
+    _tbs_branch_length_optimization_kwargs,
+    run_clustering_result,
+)
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.types.method_spec import MethodSpec
@@ -51,7 +54,7 @@ def test_dispatch_result_rejects_invalid_spectral_params():
         )
 
 
-def test_dispatch_result_records_unexpected_exception_as_skip(monkeypatch):
+def test_dispatch_result_reraises_unexpected_exception(monkeypatch):
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("boom")
 
@@ -66,16 +69,13 @@ def test_dispatch_result_records_unexpected_exception_as_skip(monkeypatch):
     )
 
     df = _toy_dataframe()
-    result = run_clustering_result(
-        data_df=df,
-        method_id="kmeans",
-        params={"n_clusters": 2},
-        seed=42,
-    )
-
-    assert result.status == "skip"
-    assert result.labels is None
-    assert result.skip_reason == "boom"
+    with pytest.raises(RuntimeError, match="boom"):
+        run_clustering_result(
+            data_df=df,
+            method_id="kmeans",
+            params={"n_clusters": 2},
+            seed=42,
+        )
 
 
 def test_run_clustering_result_uses_provided_tbs_distance_condensed():
@@ -569,6 +569,78 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
         graphtools_adaptive_nnls_neighbor_joining_params["branch_length_optimization_method"]
         == "fixed_topology_nnls"
     )
+
+
+def test_branch_length_optimization_apply_nonconverged_param_is_strict_bool():
+    assert (
+        _tbs_branch_length_optimization_kwargs(
+            {"branch_length_optimization_apply_nonconverged": "false"}
+        )["branch_length_optimization_apply_nonconverged"]
+        is False
+    )
+    assert (
+        _tbs_branch_length_optimization_kwargs(
+            {"branch_length_optimization_apply_nonconverged": "true"}
+        )["branch_length_optimization_apply_nonconverged"]
+        is True
+    )
+
+    with pytest.raises(ValueError, match="branch_length_optimization_apply_nonconverged"):
+        _tbs_branch_length_optimization_kwargs(
+            {"branch_length_optimization_apply_nonconverged": "maybe"}
+        )
+
+
+def test_tbs_dispatch_bool_params_do_not_treat_false_strings_as_true(monkeypatch):
+    captured = {}
+
+    def _capture_runner(*args, **kwargs):
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs",
+        MethodSpec(
+            name="TBS",
+            runner=_capture_runner,
+            param_grid=[{}],
+        ),
+    )
+    df = _toy_dataframe()
+
+    run_clustering_result(
+        data_df=df,
+        method_id="tbs",
+        params={
+            "tree_distance_metric": "euclidean",
+            "tree_linkage_method": "average",
+            "spectral_include_internal_barycenters": "false",
+            "enforce_internal_support_thresholds": "false",
+            "spectral_transport_passthrough_guard": "false",
+            "spectral_transport_require_mp_blocks": "false",
+            "allow_linkage_ultrametric_branch_time": "false",
+            "passthrough": "false",
+        },
+        seed=42,
+    )
+
+    for key in (
+        "spectral_include_internal_barycenters",
+        "enforce_internal_support_thresholds",
+        "spectral_transport_passthrough_guard",
+        "spectral_transport_require_mp_blocks",
+        "allow_linkage_ultrametric_branch_time",
+        "passthrough",
+    ):
+        assert captured["kwargs"][key] is False
 
 
 def test_run_clustering_result_forwards_adaptive_nnls_branch_time_params(monkeypatch):

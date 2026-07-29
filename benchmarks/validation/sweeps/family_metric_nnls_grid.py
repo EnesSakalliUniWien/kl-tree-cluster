@@ -314,6 +314,11 @@ def _root_child_fraction(tree: object) -> float:
 
 
 def _normalized_branch_residual(extra: Mapping[str, object]) -> float:
+    normalized = float(
+        extra.get("branch_length_optimization_residual_rmse_to_target_mean", math.nan)
+    )
+    if math.isfinite(normalized):
+        return normalized
     rmse = float(extra.get("branch_length_optimization_residual_rmse", math.nan))
     target_mean = float(extra.get("branch_length_optimization_target_mean", math.nan))
     if not math.isfinite(rmse) or not math.isfinite(target_mean) or target_mean <= 0.0:
@@ -463,6 +468,7 @@ def _result_row(
                 "davies_bouldin_index": math.nan,
                 "calinski_harabasz_index": math.nan,
                 "largest_cluster_fraction": math.nan,
+                "singleton_fraction": math.nan,
             }
         )
         return base, []
@@ -520,9 +526,28 @@ def _result_row(
             "labels_length": int(len(labels)),
             **asdict(metrics),
             "root_smaller_child_fraction": _root_child_fraction(extra.get("tree")),
+            "nnls_status": extra.get("branch_length_optimization_status", ""),
+            "nnls_applied_to_tree": extra.get(
+                "branch_length_optimization_applied_to_tree",
+                math.nan,
+            ),
+            "nnls_apply_nonconverged": extra.get(
+                "branch_length_optimization_apply_nonconverged",
+                math.nan,
+            ),
             "nnls_normalized_residual_rmse": _normalized_branch_residual(extra),
             "nnls_residual_rmse": extra.get("branch_length_optimization_residual_rmse", math.nan),
             "nnls_target_mean": extra.get("branch_length_optimization_target_mean", math.nan),
+            "nnls_design_density": extra.get("branch_length_optimization_design_density", math.nan),
+            "nnls_design_nnz": extra.get("branch_length_optimization_design_nnz", math.nan),
+            "nnls_zero_design_columns": extra.get(
+                "branch_length_optimization_n_zero_design_columns",
+                math.nan,
+            ),
+            "nnls_zero_design_column_fraction": extra.get(
+                "branch_length_optimization_zero_design_column_fraction",
+                math.nan,
+            ),
             "nnls_zero_branch_fraction": (
                 float(
                     sum(
@@ -805,62 +830,52 @@ def run_family_metric_nnls_grid(
         for branch_mode in branch_modes:
             for topology in topologies:
                 start = perf_counter()
-                try:
-                    result = _run_tbs_diffusion_graphtools_method(
-                        inputs.data,
-                        0.01,
-                        k_neighbors=10,
-                        diffusion_time=3,
-                        n_components=30,
-                        metric="euclidean",
-                        decay=40,
-                        anisotropy=0.0,
-                        kernel_symm="+",
-                        random_state=0,
-                        adaptive_neighbor_profile="fragmentation_guard",
-                        adaptive_neighbor_grid=(5, 10, 15, 25, 40, 80, 160),
-                        feature_space=feature_space,
-                        graph_data_df=geometry.embedding,
-                        branch_length_data_df=geometry.embedding,
-                        branch_length_optimization_method=(
-                            BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
-                        ),
-                        branch_length_optimization_target_metric=(
-                            BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN
-                        ),
-                        branch_length_optimization_pair_sample_size=50_000,
-                        branch_length_optimization_random_state=0,
-                        branch_length_optimization_solver_tolerance=1e-5,
-                        branch_length_optimization_max_iterations=300,
-                        edge_branch_length_variance_policy=branch_mode,
-                        **_topology_parameters(topology),
-                    )
-                    row, labels = _result_row(
-                        case_number=case_number,
-                        case=case,
-                        geometry=geometry,
-                        topology=topology,
-                        branch_mode=branch_mode,
-                        result=result,
-                        elapsed_sec=perf_counter() - start,
-                    )
-                except Exception as exc:
-                    row, labels = _result_row(
-                        case_number=case_number,
-                        case=case,
-                        geometry=geometry,
-                        topology=topology,
-                        branch_mode=branch_mode,
-                        result=None,
-                        elapsed_sec=perf_counter() - start,
-                        error=f"{type(exc).__name__}: {exc}",
-                    )
+                result = _run_tbs_diffusion_graphtools_method(
+                    inputs.data,
+                    0.01,
+                    k_neighbors=10,
+                    diffusion_time=3,
+                    n_components=30,
+                    metric="euclidean",
+                    decay=40,
+                    anisotropy=0.0,
+                    kernel_symm="+",
+                    random_state=0,
+                    adaptive_neighbor_profile="fragmentation_guard",
+                    adaptive_neighbor_grid=(5, 10, 15, 25, 40, 80, 160),
+                    feature_space=feature_space,
+                    graph_data_df=geometry.embedding,
+                    branch_length_data_df=geometry.embedding,
+                    branch_length_optimization_method=(
+                        BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
+                    ),
+                    branch_length_optimization_target_metric=(
+                        BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN
+                    ),
+                    branch_length_optimization_pair_sample_size=50_000,
+                    branch_length_optimization_random_state=0,
+                    branch_length_optimization_solver_tolerance=1e-5,
+                    branch_length_optimization_max_iterations=300,
+                    edge_branch_length_variance_policy=branch_mode,
+                    **_topology_parameters(topology),
+                )
+                row, labels = _result_row(
+                    case_number=case_number,
+                    case=case,
+                    geometry=geometry,
+                    topology=topology,
+                    branch_mode=branch_mode,
+                    result=result,
+                    elapsed_sec=perf_counter() - start,
+                )
                 cell_rows.append(row)
                 label_rows.extend(labels)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     cells = pd.DataFrame.from_records(cell_rows)
     labels = pd.DataFrame.from_records(label_rows)
+    if labels.empty:
+        raise ValueError("Family metric NNLS grid produced no label assignments.")
     cells_path = output_dir / "family_metric_nnls_cells.csv"
     labels_path = output_dir / "family_metric_nnls_labels.csv"
     cells.to_csv(cells_path, index=False)

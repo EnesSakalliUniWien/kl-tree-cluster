@@ -461,6 +461,20 @@ TBS variants, while the default full benchmark uses the method subset in
 | `optics`            | OPTICS               | —                 | —        | Density-based, xi=0.05              |
 | `hdbscan`           | HDBSCAN              | —                 | —        | Density-based, min_cluster=5        |
 
+NNLS branch-time methods fail closed if fixed-topology branch-length fitting
+does not apply fitted lengths to the `PosetTree`. Non-converged solver output is
+not allowed to continue with topology-only/linkage branch lengths unless
+`branch_length_optimization_apply_nonconverged=True` is set for an explicit
+diagnostic run. NNLS benchmark output should retain the solver status,
+`applied_to_tree`, design density/nonzero counts, zero design-column counts, and
+normalized residual columns so quality comparisons can distinguish topology
+effects from failed branch-time fitting.
+
+Benchmark dispatch is fail-fast for method exceptions. A runner may still return
+an explicit `status=skip` result for a known unsupported method/case contract,
+but unexpected exceptions are not converted into benchmark rows. Regression and
+maintained validation/NNLS grids therefore stop at the first execution error.
+
 ## Adding New Benchmark Suites
 
 ### 1. Create Directory Structure

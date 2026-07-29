@@ -79,14 +79,10 @@ def test_hamming_diffusion_rejects_continuous_benchmark_input():
         for case in get_default_test_cases()
         if case["name"] == "gauss_clear_medium_continuous"
     )
-    df_results, _ = benchmark_cluster_algorithm(
-        test_cases=[case],
-        verbose=False,
-        plot_umap=False,
-        methods=["tbs_diffusion"],
-    )
-
-    row = df_results.iloc[0]
-    assert row["method"] == "tbs_diffusion"
-    assert row["status"] == "skip"
-    assert "requires binary or one-hot" in row["skip_reason"]
+    with pytest.raises(ValueError, match="requires binary or one-hot"):
+        benchmark_cluster_algorithm(
+            test_cases=[case],
+            verbose=False,
+            plot_umap=False,
+            methods=["tbs_diffusion"],
+        )

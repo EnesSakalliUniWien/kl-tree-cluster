@@ -1093,11 +1093,10 @@ one parent-size bin, so no parent-size holdout is possible. This creates a
 narrow context-specific diagnostic path, but it is still not a production
 external calibration branch until rerun on a production-scale row-level panel
 and supplied as a promoted external selected-tail rule. On 2026-06-13 the
-runtime wiring gap was narrowed: `ExternalSelectedTailCalibrationModel` can now
-return `external_admissible_scalar` only for exact predeclared context matches,
-and otherwise returns `undefined_external_not_admissible`. This is production
-plumbing for future promoted rows, not validation that the three diagnostic
-candidates are production-admissible.
+runtime wiring gap was narrowed for an experimental production-side external
+rule path, but the path was removed again on 2026-07-29 during fallback cleanup.
+Selected-tail candidates are therefore diagnostic evidence only unless a future
+implementation reintroduces them as a non-fallback primary calibration method.
 The 2026-06-05 promotion-gate debug explains the remaining evidence gap. The
 selected-tail promotion table has six context-level candidates that satisfy
 support, context-law admissibility, tail precision, and absolute-tail-error

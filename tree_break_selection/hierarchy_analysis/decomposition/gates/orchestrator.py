@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
 
@@ -48,9 +47,6 @@ from ...statistics.sibling_divergence.inflated_projected_wald_annotation.pipelin
 )
 from ...statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
-)
-from ...statistics.sibling_divergence.inflation_correction.external_selected_tail_calibration import (
-    ExternalSelectedTailCalibrationModel,
 )
 from ...statistics.sibling_divergence.inflation_correction.types.inflation_model import (
     CalibrationSupportThresholds,
@@ -179,7 +175,6 @@ def build_gate_annotation_config_metadata(
     internal_support_thresholds: CalibrationSupportThresholds = (
         DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
     ),
-    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
     spectral_transport_passthrough_guard: bool = False,
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     spectral_transport_require_mp_blocks: bool = True,
@@ -245,12 +240,6 @@ def build_gate_annotation_config_metadata(
         enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
         internal_support_thresholds_signature=_support_thresholds_signature(
             internal_support_thresholds
-        ),
-        external_selected_tail_calibration_enabled=(external_selected_tail_model is not None),
-        external_selected_tail_rule_count=(
-            0
-            if external_selected_tail_model is None
-            else int(len(external_selected_tail_model.rules))
         ),
         spectral_transport_passthrough_guard=bool(spectral_transport_passthrough_guard),
         spectral_transport_max_cost=float(spectral_transport_max_cost),
@@ -367,8 +356,6 @@ def run_gate_annotation_pipeline(
     internal_support_thresholds: CalibrationSupportThresholds = (
         DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
     ),
-    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
-    external_selected_tail_context_by_parent: Mapping[object, Mapping[str, object]] | None = None,
     spectral_transport_passthrough_guard: bool = False,
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     spectral_transport_require_mp_blocks: bool = True,
@@ -557,8 +544,6 @@ def run_gate_annotation_pipeline(
             adaptive_projection_dimension_energy_fraction=adaptive_projection_fraction,
             enforce_support_thresholds=enforce_internal_support_thresholds,
             support_thresholds=internal_support_thresholds,
-            external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context_by_parent=(external_selected_tail_context_by_parent),
             stage_timings=stage_timings,
         )
     else:
@@ -707,7 +692,6 @@ def run_gate_annotation_pipeline(
             ),
             enforce_internal_support_thresholds=enforce_internal_support_thresholds,
             internal_support_thresholds=internal_support_thresholds,
-            external_selected_tail_model=external_selected_tail_model,
             spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
             spectral_transport_max_cost=spectral_transport_max_cost,
             spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,

@@ -216,11 +216,12 @@ modules or aliases remain at the old paths.
 ### Redundancy and locality findings
 
 The three registered topology algorithms each have one implementation. The
-main runner now crosses one deep construction interface that owns validation,
-topology-only fallback, and construction metadata. Direct `tree_from_linkage`
-calls remain only where applications or analyses already own a prepared
-linkage matrix; they share representation conversion without hiding their
-distinct geometry preparation or output contracts.
+main runner now crosses one deep construction interface that owns validation
+and construction metadata. Non-monotone linkage heights fail closed instead of
+building topology-only placeholder branch lengths. Direct `tree_from_linkage`
+calls remain only where applications or analyses already own a prepared linkage
+matrix; they share representation conversion without hiding their distinct
+geometry preparation or output contracts.
 
 The `tree_linkage_method` field remains present in neighbor-joining and
 IQ-TREE method configurations. It does not control those topology builders,
@@ -297,7 +298,7 @@ superiority.
 - Exact repository search found the application, bootstrap, diagnostic, and
   plot-only direct-linkage call sites summarized above, and no live internal
   callers for the two dormant public adapters.
-- Tests cover linkage representations, topology-only fallback, phylogenetic
+- Tests cover linkage representations, fail-closed non-monotone heights, phylogenetic
   builders/rooting, diffusion runners, registry dispatch, consensus selection,
   application contracts, and plotting reconstruction.
 - The focused construction/diffusion/dispatch tranche passed, the complete
