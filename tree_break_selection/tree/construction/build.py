@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass
-from typing import Literal
 
 import networkx as nx
 import numpy as np
@@ -13,6 +12,14 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
+from tree_break_selection.tree.construction.defaults import (
+    DEFAULT_LINKAGE_TREE_ROOTING,
+    DEFAULT_PHYLOGENETIC_TREE_ROOTING,
+    LINKAGE_TREE_BUILDER,
+    NEIGHBOR_JOINING_TREE_BUILDER,
+    SUPPORTED_TREE_BUILDERS,
+    TreeBuilderName,
+)
 from tree_break_selection.tree.construction.hierarchical import (
     tree_from_linkage,
 )
@@ -22,13 +29,6 @@ from tree_break_selection.tree.construction.phylogenetic import (
     neighbor_joining_tree_from_distance,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
-
-TreeBuilderName = Literal["linkage", "neighbor_joining", "iqtree3"]
-SUPPORTED_TREE_BUILDERS: tuple[TreeBuilderName, ...] = (
-    "linkage",
-    "neighbor_joining",
-    "iqtree3",
-)
 
 
 @dataclass(frozen=True)
@@ -245,8 +245,8 @@ def build_tree(
     canonical_order = _canonical_sample_order(original_labels)
     canonical_data = data.iloc[canonical_order]
 
-    if builder == "linkage":
-        if rooting != "linkage_root":
+    if builder == LINKAGE_TREE_BUILDER:
+        if rooting != DEFAULT_LINKAGE_TREE_ROOTING:
             raise ValueError("Linkage trees require rooting='linkage_root'.")
         if distance_condensed is None:
             raise ValueError("Linkage tree construction requires distance_condensed.")
@@ -263,7 +263,7 @@ def build_tree(
         )
         expected_leaf_labels = canonical_data.index.tolist()
     else:
-        if rooting != "mad":
+        if rooting != DEFAULT_PHYLOGENETIC_TREE_ROOTING:
             raise ValueError(f"{builder} trees require rooting='mad'.")
 
         expected_leaf_labels = canonical_data.index.astype(str).tolist()
@@ -272,7 +272,7 @@ def build_tree(
                 "Phylogenetic tree construction requires sample labels that remain unique "
                 "after string conversion."
             )
-        if builder == "neighbor_joining":
+        if builder == NEIGHBOR_JOINING_TREE_BUILDER:
             if distance_condensed is None:
                 raise ValueError("Neighbor-joining tree construction requires distance_condensed.")
             distances = _validate_condensed_distance(
