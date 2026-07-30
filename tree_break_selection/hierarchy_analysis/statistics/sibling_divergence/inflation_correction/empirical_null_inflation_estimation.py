@@ -35,6 +35,12 @@ def _validate_calibration_record(record: SiblingPairRecord) -> None:
             "Sibling inflation calibration requires finite positive reference_scale; "
             f"parent={record.parent!r}."
         )
+    if not np.isclose(record.reference_scale, 1.0, rtol=1e-12, atol=1e-12):
+        raise ValueError(
+            "Sibling empirical-null inflation currently requires unit reference_scale "
+            "from the orthonormal projected-Wald reference law; "
+            f"parent={record.parent!r}, reference_scale={record.reference_scale!r}."
+        )
     if record.stat < 0:
         raise ValueError(
             "Sibling inflation calibration requires non-negative statistics; "

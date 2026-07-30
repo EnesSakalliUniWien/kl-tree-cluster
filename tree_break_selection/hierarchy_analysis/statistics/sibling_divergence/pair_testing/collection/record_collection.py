@@ -39,6 +39,78 @@ from .pair_observations import (
 from .sibling_pair_record_building import build_sibling_pair_record
 
 
+def _parent_spectral_summary(
+    eigenvalues: np.ndarray,
+    *,
+    projection_dimension: float,
+) -> dict[str, float]:
+    """Return compact parent-spectrum summaries for selected-law diagnostics."""
+    values = np.asarray(eigenvalues, dtype=float)
+    finite = values[np.isfinite(values)]
+    positive = finite[finite > 0.0]
+    if positive.size == 0:
+        return {
+            "parent_spectral_eigenvalue_count": float(finite.size),
+            "parent_positive_eigenvalue_count": 0.0,
+            "parent_spectral_rank": 0.0,
+            "parent_eigenvalue_sum": 0.0,
+            "parent_top_eigenvalue": 0.0,
+            "parent_top_eigenvalue_share": 0.0,
+            "parent_spectral_entropy": 0.0,
+            "parent_effective_rank": 0.0,
+            "parent_retained_eigenvalue_sum": 0.0,
+            "parent_retained_eigenvalue_share": 0.0,
+            "parent_top_spectral_gap": 0.0,
+            "parent_eigengap_at_projection_dimension": 0.0,
+            "parent_spectral_gap_at_projection_dimension": 0.0,
+            "parent_spectral_pseudodeterminant": 0.0,
+            "parent_spectral_log_pseudodeterminant": 0.0,
+            "parent_spectral_geometric_mean": 0.0,
+        }
+
+    positive = np.sort(positive)[::-1]
+    eigenvalue_sum = float(np.sum(positive))
+    log_pseudodeterminant = float(np.sum(np.log(positive)))
+    pseudodeterminant = float(np.prod(positive))
+    geometric_mean = float(np.exp(log_pseudodeterminant / positive.size))
+    weights = positive / eigenvalue_sum
+    entropy = float(-np.sum(weights * np.log(weights)))
+    retained_count = 0
+    if np.isfinite(projection_dimension):
+        retained_count = min(
+            max(int(np.floor(float(projection_dimension))), 0),
+            int(positive.size),
+        )
+    retained_sum = float(np.sum(positive[:retained_count])) if retained_count else 0.0
+    top_spectral_gap = float(positive[0] - positive[1]) if positive.size > 1 else 0.0
+    eigengap = 0.0
+    spectral_gap = 0.0
+    if retained_count > 0 and retained_count < positive.size:
+        next_value = float(positive[retained_count])
+        spectral_gap = float(max(positive[retained_count - 1] - next_value, 0.0))
+        if next_value > 0.0:
+            eigengap = float(positive[retained_count - 1] / next_value)
+
+    return {
+        "parent_spectral_eigenvalue_count": float(finite.size),
+        "parent_positive_eigenvalue_count": float(positive.size),
+        "parent_spectral_rank": float(positive.size),
+        "parent_eigenvalue_sum": eigenvalue_sum,
+        "parent_top_eigenvalue": float(positive[0]),
+        "parent_top_eigenvalue_share": float(positive[0] / eigenvalue_sum),
+        "parent_spectral_entropy": entropy,
+        "parent_effective_rank": float(np.exp(entropy)),
+        "parent_retained_eigenvalue_sum": retained_sum,
+        "parent_retained_eigenvalue_share": float(retained_sum / eigenvalue_sum),
+        "parent_top_spectral_gap": top_spectral_gap,
+        "parent_eigengap_at_projection_dimension": eigengap,
+        "parent_spectral_gap_at_projection_dimension": spectral_gap,
+        "parent_spectral_pseudodeterminant": pseudodeterminant,
+        "parent_spectral_log_pseudodeterminant": log_pseudodeterminant,
+        "parent_spectral_geometric_mean": geometric_mean,
+    }
+
+
 def collect_sibling_pair_records(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
@@ -132,6 +204,10 @@ def collect_sibling_pair_records(
                 adaptive_projection_dimension_energy_fraction
             ),
         )
+        parent_spectral_summary = _parent_spectral_summary(
+            parent_principal_component_eigenvalues_for_parent,
+            projection_dimension=float(degrees_of_freedom),
+        )
 
         is_edge_blocked = determine_whether_sibling_pair_is_edge_blocked(
             left_child_id,
@@ -167,6 +243,7 @@ def collect_sibling_pair_records(
                 is_edge_blocked=is_edge_blocked,
                 sibling_null_weight=sibling_null_weight,
                 sibling_projection_dimension=float(degrees_of_freedom),
+                **parent_spectral_summary,
                 feature_family=(
                     "bernoulli" if feature_space is None else feature_space.family_label
                 ),

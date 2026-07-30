@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 import pytest
+from scipy.optimize import minimize_scalar
+from scipy.stats import gamma
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     CalibrationSupportThresholds,
     decide_empirical_null_calibration,
@@ -132,18 +135,60 @@ def test_fit_empirical_null_inflation_model_rejects_selected_nonnull_only_suppor
         fit_empirical_null_inflation_model(records)
 
 
-def test_fit_empirical_null_inflation_model_uses_reference_scale_in_inflation_denominator() -> None:
+def _numeric_unit_scale_inflation_mle(records: list[SiblingPairRecord]) -> float:
+    statistics = np.array([record.stat for record in records], dtype=float)
+    degrees_of_freedom = np.array([record.degrees_of_freedom for record in records], dtype=float)
+    weights = np.array([record.sibling_null_weight for record in records], dtype=float)
+
+    def negative_log_likelihood(inflation_factor: float) -> float:
+        if inflation_factor <= 0.0:
+            return float("inf")
+        return -float(
+            np.sum(
+                weights
+                * gamma.logpdf(
+                    statistics,
+                    a=degrees_of_freedom / 2.0,
+                    loc=0.0,
+                    scale=2.0 * inflation_factor,
+                )
+            )
+        )
+
+    result = minimize_scalar(
+        negative_log_likelihood,
+        bounds=(1e-9, 100.0),
+        method="bounded",
+    )
+    assert result.success
+    return float(result.x)
+
+
+def test_fit_empirical_null_inflation_model_matches_numeric_unit_scale_mle() -> None:
+    records = [
+        _make_record("p0", stat=2.0, degrees_of_freedom=1.0, sibling_null_weight=1.0),
+        _make_record("p1", stat=9.0, degrees_of_freedom=3.0, sibling_null_weight=0.5),
+        _make_record("p2", stat=20.0, degrees_of_freedom=5.0, sibling_null_weight=0.75),
+    ]
+
+    model = fit_empirical_null_inflation_model(records)
+    numeric_mle = _numeric_unit_scale_inflation_mle(records)
+
+    assert math.isclose(
+        model.baseline_empirical_inflation_factor,
+        numeric_mle,
+        rel_tol=1e-6,
+    )
+
+
+def test_fit_empirical_null_inflation_model_rejects_non_unit_reference_scale() -> None:
     records = [
         _make_record("p0", stat=4.0, reference_scale=2.0, degrees_of_freedom=1.0),
         _make_record("p1", stat=12.0, reference_scale=3.0, degrees_of_freedom=2.0),
     ]
 
-    model = fit_empirical_null_inflation_model(records)
-
-    assert math.isclose(
-        model.baseline_empirical_inflation_factor,
-        (4.0 + 12.0) / ((2.0 * 1.0) + (3.0 * 2.0)),
-    )
+    with pytest.raises(ValueError, match="unit reference_scale"):
+        fit_empirical_null_inflation_model(records)
 
 
 def test_fit_empirical_null_inflation_model_uses_context_weighted_inflation() -> None:

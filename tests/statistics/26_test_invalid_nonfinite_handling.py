@@ -349,7 +349,9 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         annotations_df,
         sibling_projection_dimensions_from_edge_comparisons={"root": 2},
         parent_principal_component_projections={"root": np.eye(2, dtype=float)},
-        parent_principal_component_eigenvalues={"root": np.ones(2, dtype=float)},
+        parent_principal_component_eigenvalues={
+            "root": np.array([4.0, 1.0], dtype=float),
+        },
     )
 
     assert "root" not in non_binary
@@ -361,9 +363,49 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
     )
     np.testing.assert_array_equal(
         captured["parent_principal_component_eigenvalues"],
-        np.ones(2, dtype=float),
+        np.array([4.0, 1.0], dtype=float),
     )
     assert records[0].sibling_projection_dimension == records[0].degrees_of_freedom == 1.0
+    assert records[0].parent_spectral_eigenvalue_count == 2.0
+    assert records[0].parent_positive_eigenvalue_count == 2.0
+    assert records[0].parent_spectral_rank == 2.0
+    assert records[0].parent_eigenvalue_sum == 5.0
+    assert records[0].parent_top_eigenvalue == 4.0
+    assert records[0].parent_top_eigenvalue_share == pytest.approx(0.8)
+    expected_entropy = float(-(0.8 * np.log(0.8) + 0.2 * np.log(0.2)))
+    assert records[0].parent_spectral_entropy == pytest.approx(expected_entropy)
+    assert records[0].parent_effective_rank == pytest.approx(float(np.exp(expected_entropy)))
+    assert records[0].parent_retained_eigenvalue_sum == 4.0
+    assert records[0].parent_retained_eigenvalue_share == pytest.approx(0.8)
+    assert records[0].parent_top_spectral_gap == 3.0
+    assert records[0].parent_eigengap_at_projection_dimension == 4.0
+    assert records[0].parent_spectral_gap_at_projection_dimension == 3.0
+    assert records[0].parent_spectral_pseudodeterminant == 4.0
+    assert records[0].parent_spectral_log_pseudodeterminant == pytest.approx(float(np.log(4.0)))
+    assert records[0].parent_spectral_geometric_mean == pytest.approx(2.0)
+
+
+def test_collect_sibling_pair_records_uses_unit_projected_wald_reference_scale() -> None:
+    tree, annotations_df = _make_sibling_tree()
+
+    records, non_binary = collect_sibling_pair_records(
+        tree,
+        annotations_df,
+        sibling_projection_dimensions_from_edge_comparisons={"root": 2, "cal": 2},
+        parent_principal_component_projections={
+            "root": np.eye(2, dtype=float),
+            "cal": np.eye(2, dtype=float),
+        },
+        parent_principal_component_eigenvalues={
+            "root": np.ones(2, dtype=float),
+            "cal": np.ones(2, dtype=float),
+        },
+    )
+
+    assert "root" not in non_binary
+    assert "cal" not in non_binary
+    assert len(records) == 2
+    assert {record.reference_scale for record in records} == {1.0}
 
 
 def test_annotate_sibling_divergence_persists_projection_dimension() -> None:
