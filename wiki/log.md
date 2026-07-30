@@ -5792,6 +5792,16 @@ verification, and maintenance events here in chronological order.
   `/Users/berksakalli/.local/bin/tbs-audit` entrypoint exposes the mode, so it
   is reachable from other worktrees via `--repo /path/to/repo`.
 
+### 2026-07-30
+
+- Generated the all-method topology/diffusion PDF-CDF and p-value audit under
+  `reports/audits/generated/all_topology_spectral_pdf_cdf_relationships/`.
+  The audit covered 18 successful construction/diffusion/branch-source groups,
+  found raw sibling projected-Wald statistics best fit by scaled chi-square,
+  exponential, or gamma families rather than plain fixed-subspace chi-square,
+  and recorded the selected-quadratic-form interpretation in
+  [[topology-diffusion-pdf-cdf-spectral-relationship-audit-20260730]].
+
 ## Evidence
 
 - `raw/inbox/wiki-construction-brief.md` records the requested scaffold.

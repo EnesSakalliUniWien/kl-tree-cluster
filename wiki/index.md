@@ -788,6 +788,11 @@ renamed, or promoted.
 
 ### Analyses
 
+- [[topology-diffusion-pdf-cdf-spectral-relationship-audit-20260730]] -
+  all-method construction/diffusion PDF-CDF audit showing raw sibling
+  projected-Wald statistics are selected, scaled quadratic forms rather than
+  plain fixed-subspace chi-square draws; diffusion groups are closest to
+  exponential fits while spectral terms are real but not a universal law.
 - [[repository-hygiene-and-completion-audit-20260727]] - current repository
   health and completion assessment: `dev` is published and only `main` and
   `dev` remain, while unenforced benchmark acceptance, open calibration
