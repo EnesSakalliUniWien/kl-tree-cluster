@@ -1,0 +1,2 @@
+"""Generator-level benchmark diagnostics."""
+

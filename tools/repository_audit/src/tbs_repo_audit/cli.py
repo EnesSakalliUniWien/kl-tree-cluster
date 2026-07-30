@@ -31,6 +31,12 @@ DEFAULT_FIELD_GRAPHML_OUTPUT = Path(
 DEFAULT_FIELD_MARKDOWN_OUTPUT = Path(
     "reports/audits/generated/field-function-lineage.md"
 )
+DEFAULT_GENERATOR_GEOMETRY_OUTPUT = Path(
+    "reports/audits/generated/generator-geometry.csv"
+)
+DEFAULT_GENERATOR_GEOMETRY_MARKDOWN_OUTPUT = Path(
+    "reports/audits/generated/generator-geometry.md"
+)
 CHECK_COMMANDS = {
     "ruff": ["ruff", "check", "."],
     "vulture": [
@@ -269,9 +275,34 @@ def _run_mutation(repo: Path, target: Path) -> CheckResult:
             config.unlink(missing_ok=True)
 
 
+def _run_generator_geometry_audit(
+    repo: Path,
+    *,
+    output: Path,
+    markdown_output: Path,
+) -> CheckResult:
+    """Run the benchmark generator-geometry audit in the repository environment."""
+    return _run_check(
+        "generator-geometry",
+        [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "benchmarks.diagnostics.generators.case_geometry_audit",
+            "--output",
+            str(output),
+            "--markdown-output",
+            str(markdown_output),
+        ],
+        repo,
+    )
+
+
 def _summary(inventory: dict[str, object], output: Path) -> None:
     calibration = inventory["calibration"]
     fields = inventory["fields"]
+    field_lineage_summary = inventory.get("field_lineage_summary", {})
     print(f"Audit inventory: {output}")
     print(
         "Calibration modules: "
@@ -280,12 +311,21 @@ def _summary(inventory: dict[str, object], output: Path) -> None:
         f"{calibration['statically_unimported_count']} statically unimported, "
         f"{calibration['unresolved_count']} unresolved"
     )
-    print(
-        "String fields: "
-        f"{fields['key_count']} total, "
-        f"{fields['diagnostic_only_count']} diagnostic-only, "
-        f"{fields['write_only_count']} write-only"
-    )
+    if field_lineage_summary:
+        print(
+            "String fields: "
+            f"{fields['key_count']} total, "
+            f"{fields['diagnostic_only_count']} diagnostic-only, "
+            f"{fields['write_only_count']} raw write-only, "
+            f"{field_lineage_summary['dead_write_candidate_count']} filtered cleanup candidates"
+        )
+    else:
+        print(
+            "String fields: "
+            f"{fields['key_count']} total, "
+            f"{fields['diagnostic_only_count']} diagnostic-only, "
+            f"{fields['write_only_count']} write-only"
+        )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -303,12 +343,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=("map", "fields", "duplicates", "quick", "evidence", "mutation"),
+        choices=(
+            "map",
+            "fields",
+            "duplicates",
+            "generators",
+            "quick",
+            "evidence",
+            "mutation",
+        ),
         default="map",
         help=(
             "map: static evidence; fields: LibCST field/function lineage; "
-            "duplicates: classified jscpd cleanup report; quick: add linters/clones/fixtures; "
-            "evidence: add calibration coverage contexts; mutation: add mutmut"
+            "duplicates: classified jscpd cleanup report; "
+            "generators: generated-data geometry and scientific-assumption audit; "
+            "quick: add linters/clones/fixtures; evidence: add calibration coverage contexts; "
+            "mutation: add mutmut"
         ),
     )
     parser.add_argument(
@@ -354,6 +404,18 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_FIELD_MARKDOWN_OUTPUT,
         help="Markdown field-lineage path, relative to the repository",
+    )
+    parser.add_argument(
+        "--generator-geometry-output",
+        type=Path,
+        default=DEFAULT_GENERATOR_GEOMETRY_OUTPUT,
+        help="CSV generator-geometry audit path, relative to the repository",
+    )
+    parser.add_argument(
+        "--generator-geometry-markdown-output",
+        type=Path,
+        default=DEFAULT_GENERATOR_GEOMETRY_MARKDOWN_OUTPUT,
+        help="Markdown generator-geometry audit path, relative to the repository",
     )
     parser.add_argument(
         "--mutation-target",
@@ -429,6 +491,27 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{summary['duplicated_percent']}%"
         )
         return 0
+    if args.mode == "generators":
+        output = (
+            args.generator_geometry_output
+            if args.generator_geometry_output.is_absolute()
+            else repo / args.generator_geometry_output
+        )
+        markdown_output = (
+            args.generator_geometry_markdown_output
+            if args.generator_geometry_markdown_output.is_absolute()
+            else repo / args.generator_geometry_markdown_output
+        )
+        result = _run_generator_geometry_audit(
+            repo,
+            output=output,
+            markdown_output=markdown_output,
+        )
+        if result.stdout:
+            print(result.stdout, end="")
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, end="")
+        return result.returncode
 
     mutation_target = (
         _mutation_target(repo, args.mutation_target)
@@ -437,6 +520,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     output = args.output if args.output.is_absolute() else repo / args.output
     inventory = build_inventory(repo)
+    if args.mode in {"quick", "evidence", "mutation"}:
+        lineage = build_field_lineage(repo)
+        inventory["field_lineage_summary"] = {
+            "field_count": lineage["field_count"],
+            "raw_no_reader_candidate_count": lineage["reuse_counts"].get(
+                "no_reader_dead_candidate",
+                0,
+            ),
+            "dead_write_candidate_count": lineage["cleanup_classification_counts"].get(
+                "dead_write_candidate",
+                0,
+            ),
+            "cleanup_classification_counts": lineage["cleanup_classification_counts"],
+        }
 
     checks: list[CheckResult] = []
     if args.mode in {"quick", "evidence", "mutation"}:

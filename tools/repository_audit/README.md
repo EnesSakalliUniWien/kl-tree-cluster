@@ -16,10 +16,17 @@ The modes deliberately escalate in cost:
   path and writes a classified duplicate-cleanup report. Scopes are repeatable,
   default to `applications`, and can be used from another worktree with
   `--repo /absolute/path/to/repo`.
+- `tbs-audit --mode generators` runs the benchmark generator-geometry audit in
+  the repository environment. It records resolved feature families, duplicate
+  burden, within/between distance signal, nearest-neighbor label purity, and
+  scientific-assumption warnings before benchmark method results are interpreted.
 - `tbs-audit --mode quick` also runs Ruff, Vulture, jscpd, and
   pytest-deadfixtures. Test collection runs through the repository's locked
   application environment, with the plugin added as a transient overlay, so
-  application dependencies are available without changing the project lock.
+  application dependencies are available without changing the project lock. It
+  also records a LibCST field-lineage summary so terminal output separates raw
+  write-only string keys from filtered cleanup candidates after graph,
+  environment, configuration, and output-schema keys are excluded.
 - `tbs-audit --mode evidence` also executes calibration tests with per-test
   coverage contexts through a transient pytest-cov overlay on the repository's
   locked environment. Raw per-test coverage exports are deleted after the
@@ -43,6 +50,9 @@ The duplicate-cleanup mode writes
 classified as production, benchmark, plot/report, analysis-methodological,
 test-helper, bootstrap/structural, application, or uncategorized, with a risk
 label and cleanup recommendation for each group.
+The generator-geometry mode writes
+`reports/audits/generated/generator-geometry.csv` and
+`reports/audits/generated/generator-geometry.md` by default.
 Run
 `tbs-audit --doctor` to verify that all adapters are reachable.
 

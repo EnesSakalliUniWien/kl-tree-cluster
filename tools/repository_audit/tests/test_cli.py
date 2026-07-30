@@ -10,6 +10,7 @@ from tbs_repo_audit.cli import (
     _coverage_json_command,
     _mutation_target,
     _repo_root,
+    _run_generator_geometry_audit,
     _run_mutation,
     main,
 )
@@ -145,6 +146,38 @@ def test_fields_mode_writes_json_markdown_and_graphml(tmp_path: Path) -> None:
     assert (tmp_path / "reports/fields.md").exists()
 
 
+def test_quick_mode_records_filtered_field_lineage_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "tree_break_selection/result.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        'def build():\n'
+        "    row = {}\n"
+        '    row["dead_field"] = 1\n'
+        "    return row\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(cli, "CHECK_COMMANDS", {})
+
+    result = main(
+        [
+            "--repo",
+            str(tmp_path),
+            "--mode",
+            "quick",
+            "--output",
+            "reports/audit.json",
+        ]
+    )
+
+    assert result == 0
+    inventory = json.loads((tmp_path / "reports/audit.json").read_text(encoding="utf-8"))
+    assert inventory["field_lineage_summary"]["dead_write_candidate_count"] == 1
+
+
 def test_duplicates_mode_writes_json_and_markdown(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -185,3 +218,64 @@ def test_duplicates_mode_writes_json_and_markdown(
     assert result == 0
     assert (tmp_path / "reports/duplicates.json").exists()
     assert (tmp_path / "reports/duplicates.md").exists()
+
+
+def test_generator_geometry_audit_runs_in_repository_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[str, list[str], Path]] = []
+
+    def fake_run_check(name: str, command: list[str], repo: Path) -> CheckResult:
+        calls.append((name, command, repo))
+        return CheckResult(name, command, 0, "ok\n", "")
+
+    monkeypatch.setattr(cli, "_run_check", fake_run_check)
+
+    result = _run_generator_geometry_audit(
+        tmp_path,
+        output=tmp_path / "reports/generator.csv",
+        markdown_output=tmp_path / "reports/generator.md",
+    )
+
+    assert result.returncode == 0
+    name, command, repo = calls[0]
+    assert name == "generator-geometry"
+    assert repo == tmp_path
+    assert command[:4] == ["uv", "run", "python", "-m"]
+    assert "benchmarks.diagnostics.generators.case_geometry_audit" in command
+    assert "--output" in command
+    assert "--markdown-output" in command
+
+
+def test_generators_mode_forwards_audit_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / ".git").mkdir()
+
+    def fake_generator_audit(
+        repo: Path,
+        *,
+        output: Path,
+        markdown_output: Path,
+    ) -> CheckResult:
+        assert repo == tmp_path.resolve()
+        assert output == tmp_path.resolve() / "reports/generator.csv"
+        assert markdown_output == tmp_path.resolve() / "reports/generator.md"
+        return CheckResult("generator-geometry", ["uv"], 0, "ok\n", "")
+
+    monkeypatch.setattr(cli, "_run_generator_geometry_audit", fake_generator_audit)
+
+    result = main(
+        [
+            "--repo",
+            str(tmp_path),
+            "--mode",
+            "generators",
+            "--generator-geometry-output",
+            "reports/generator.csv",
+            "--generator-geometry-markdown-output",
+            "reports/generator.md",
+        ]
+    )
+
+    assert result == 0
