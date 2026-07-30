@@ -108,6 +108,7 @@ reports/audits/generated/
 benchmarks/**/results/
 benchmarks/**/run_*/
 raw/assets/benchmark-results/**/selected_geometry_records.csv
+.asv/
 
 # Debug output
 debug_output/

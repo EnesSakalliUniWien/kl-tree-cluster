@@ -41,6 +41,11 @@ benchmark = [
     "python-louvain>=0.16",
     "hdbscan>=0.8.41",
 ]
+benchmark-infra = [
+    "asv>=0.6.6",
+    "clustering-benchmarks>=1.1.6",
+    "openml>=0.15.0",
+]
 diffusion = [
     "pygsp>=0.6.1",
 ]
@@ -82,6 +87,9 @@ all = [
     "scanpy>=1.10.0",
     "pygsp>=0.6.1",
     "deeptime>=0.4.5",
+    "asv>=0.6.6",
+    "clustering-benchmarks>=1.1.6",
+    "openml>=0.15.0",
 ]
 experimental-gpl = [
     "graphtools>=2.1.0",
@@ -128,7 +136,7 @@ ignore = ["E402", "E501"]
 [tool.deptry]
 ignore_notebooks = true
 known_first_party = ["applications", "benchmarks", "tree_break_selection", "brancharchitect"]
-pep621_dev_dependency_groups = ["dev", "benchmark", "diffusion", "trajectory", "viz", "all", "experimental-gpl", "brancharchitect"]
+pep621_dev_dependency_groups = ["dev", "benchmark", "benchmark-infra", "diffusion", "trajectory", "viz", "all", "experimental-gpl", "brancharchitect"]
 extend_exclude = ["^manuscript/", "^notebooks/", "^vendor/"]
 per_rule_ignores = { DEP002 = ["biopython", "orjson"], DEP003 = ["tensorflow"] }
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

@@ -63,6 +63,7 @@ Benchmark code is classified by role, not by age or filename:
 | `canonical` | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/`, `benchmarks/shared/` | Current benchmark contract, shared runners, default method set, and fast gates. |
 | `continuous` | `benchmarks/continuous/`, `benchmarks/shared/benchmark_runs/` | CI/local maintained benchmark entrypoints and reusable run orchestration seams. |
 | `experiment` | `benchmarks/experiments/` | Standalone scientific studies with explicit sweeps or real datasets. |
+| `external` | `benchmarks/external/` | Optional adapters for standardized external benchmark sources: clustbench/clustering-benchmarks and OpenML. |
 | `validation` | `benchmarks/validation/` | Focused calibration or method-constant checks with manifests. |
 | `diagnostic` | `benchmarks/diagnostics/` | Investigation-only panels, failure analysis, and post-run diagnosis. |
 | `cloud` | `benchmarks/cloud/` | AWS wrappers for large validation or diagnostic jobs. |
@@ -303,9 +304,24 @@ families.
 
 **Evaluation**: ARI, NMI, K-found vs. K-true. Per-dataset PDF and interactive HTML plots.
 
+### 8. External Benchmark Sources ([external/](external/))
+
+**Purpose**: Bring in scientifically maintained benchmark sources without
+making networked data downloads part of the default benchmark suite.
+
+- **clustbench / clustering-benchmarks**: preferred standardized clustering
+  benchmark batteries. The adapter preserves the multiple-reference-partition
+  contract and requires an explicit `label_index`.
+- **OpenML**: useful for reproducible dataset/task suites. The adapter treats
+  classification targets as clustering reference partitions for external
+  sanity checks; it is not clustering-specific in the same way clustbench is.
+- **ASV**: project-level performance regression suite for core tree
+  construction and divergence-population timings. See `asv.conf.json` and
+  `asv_benchmarks/`.
+
 ---
 
-### 8. Calibration ([calibration/](calibration/))
+### 9. Calibration ([calibration/](calibration/))
 
 **Purpose**: Empirical statistical calibration — verifies that the edge and sibling tests maintain correct Type I error rates under the null hypothesis, and that TreeBH FDR control is valid.
 

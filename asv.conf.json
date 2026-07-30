@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "project": "tree-break-selection",
+  "project_url": "https://github.com/berksakalli/kl-te-cluster",
+  "repo": ".",
+  "branches": ["dev"],
+  "environment_type": "virtualenv",
+  "pythons": ["3.11"],
+  "benchmark_dir": "asv_benchmarks",
+  "env_dir": ".asv/env",
+  "results_dir": ".asv/results",
+  "html_dir": ".asv/html",
+  "build_command": "python -m build --wheel --outdir {build_cache_dir} {build_dir}",
+  "default_benchmark_timeout": 120,
+  "matrix": {}
+}
