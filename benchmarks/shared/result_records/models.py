@@ -22,6 +22,11 @@ class BenchmarkResultRow:
     case_category: str
     source_family: str
     feature_representation: str
+    simulation_model: str
+    observation_model: str
+    benchmark_intent: str
+    scientific_caution: str
+    recommended_simulation_family: str
     method: str
     run_id: str
     benchmark_class: str

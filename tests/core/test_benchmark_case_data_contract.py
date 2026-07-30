@@ -22,6 +22,16 @@ def test_generated_case_metadata_names_source_family_and_representation() -> Non
         assert metadata["source_family"]
         assert isinstance(metadata["feature_representation"], str)
         assert metadata["feature_representation"]
+        assert isinstance(metadata["simulation_model"], str)
+        assert metadata["simulation_model"]
+        assert isinstance(metadata["observation_model"], str)
+        assert metadata["observation_model"]
+        assert isinstance(metadata["benchmark_intent"], str)
+        assert metadata["benchmark_intent"]
+        assert isinstance(metadata["scientific_caution"], str)
+        assert metadata["scientific_caution"]
+        assert isinstance(metadata["recommended_simulation_family"], str)
+        assert metadata["recommended_simulation_family"]
 
 
 def test_case_recipe_geometry_matches_generated_metadata() -> None:
@@ -189,12 +199,27 @@ def test_gaussian_source_cases_name_discretized_or_continuous_representation() -
     )
     assert binary_metadata["source_family"] == "gaussian_blobs"
     assert binary_metadata["feature_representation"] == "median_binary"
+    assert binary_metadata["simulation_model"] == "isotropic_gaussian_mixture"
+    assert (
+        binary_metadata["observation_model"]
+        == "per_feature_median_thresholded_continuous_matrix"
+    )
+    assert binary_metadata["benchmark_intent"] == "discretized_continuous_stress"
+    assert "not as raw Gaussian clustering" in binary_metadata["scientific_caution"]
+    assert (
+        binary_metadata["recommended_simulation_family"]
+        == "explicit_bernoulli_threshold_model_or_continuous_gaussian_variant"
+    )
 
     _data_df, _labels, _x_original, continuous_metadata = generate_case_data(
         cases_by_name["gauss_clear_medium_continuous"]
     )
     assert continuous_metadata["source_family"] == "gaussian_blobs"
     assert continuous_metadata["feature_representation"] == "continuous"
+    assert continuous_metadata["simulation_model"] == "isotropic_gaussian_mixture"
+    assert continuous_metadata["observation_model"] == "continuous_feature_matrix"
+    assert continuous_metadata["benchmark_intent"] == "continuous_reference_or_diagnostic"
+    assert continuous_metadata["scientific_caution"] == "none"
 
 
 @pytest.mark.parametrize(
@@ -264,6 +289,14 @@ def test_sbm_case_data_names_precomputed_tbs_distance_metric() -> None:
 
     assert metadata["requires_precomputed_tbs_distance"] is True
     assert metadata["distance_metric"] == "sbm_shifted_modularity"
+    assert metadata["simulation_model"] == "stochastic_block_model_graph"
+    assert metadata["observation_model"] == "node_by_node_graph_adjacency_matrix"
+    assert metadata["benchmark_intent"] == "graph_community_detection_stress"
+    assert "not independent feature measurements" in metadata["scientific_caution"]
+    assert (
+        metadata["recommended_simulation_family"]
+        == "graph_sbm_or_lfr_with_graph_native_distances"
+    )
     assert metadata["precomputed_distance_condensed"].shape[0] == (
         data_df.shape[0] * (data_df.shape[0] - 1) // 2
     )

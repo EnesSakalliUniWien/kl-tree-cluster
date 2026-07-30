@@ -20,6 +20,14 @@ import numpy as np
 import pandas as pd
 from sklearn.covariance import ledoit_wolf_shrinkage
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.tree.construction import (
+    DEFAULT_LINKAGE_TREE_ROOTING,
+    DEFAULT_PHYLOGENETIC_TREE_ROOTING,
+    DEFAULT_TREE_LINKAGE_METHOD,
+    LINKAGE_TREE_BUILDER,
+    NEIGHBOR_JOINING_TREE_BUILDER,
+    TREE_CONSENSUS_STRATEGIES,
+)
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.optimized_branch_lengths import (
     BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
@@ -51,16 +59,7 @@ DEFAULT_CASE_NAMES = (
     "sbm_moderate",
     "cat_clear_3cat_4c",
 )
-TOPOLOGIES = (
-    "average",
-    "complete",
-    "weighted",
-    "single",
-    "centroid",
-    "median",
-    "ward",
-    "neighbor_joining",
-)
+TOPOLOGIES = TREE_CONSENSUS_STRATEGIES
 BRANCH_MODES = ("none", "normalized_branch_length")
 
 
@@ -265,23 +264,23 @@ def build_family_geometry(
 
 
 def _topology_parameters(topology: str) -> dict[str, str]:
-    if topology == "neighbor_joining":
+    if topology == NEIGHBOR_JOINING_TREE_BUILDER:
         return {
-            "tree_builder": "neighbor_joining",
-            "tree_rooting": "mad",
-            "tree_linkage_method": "average",
+            "tree_builder": NEIGHBOR_JOINING_TREE_BUILDER,
+            "tree_rooting": DEFAULT_PHYLOGENETIC_TREE_ROOTING,
+            "tree_linkage_method": DEFAULT_TREE_LINKAGE_METHOD,
         }
     if topology not in TOPOLOGIES:
         raise ValueError(f"Unknown topology {topology!r}.")
     return {
-        "tree_builder": "linkage",
-        "tree_rooting": "linkage_root",
+        "tree_builder": LINKAGE_TREE_BUILDER,
+        "tree_rooting": DEFAULT_LINKAGE_TREE_ROOTING,
         "tree_linkage_method": topology,
     }
 
 
 def _run_id(topology: str) -> str:
-    if topology == "neighbor_joining":
+    if topology == NEIGHBOR_JOINING_TREE_BUILDER:
         return "family_metric_tree_builder_neighbor_joining"
     return f"family_metric_tree_linkage_method_{topology}"
 

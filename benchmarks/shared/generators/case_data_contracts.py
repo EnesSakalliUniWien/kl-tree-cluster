@@ -32,11 +32,54 @@ CORE_METADATA_KEYS = frozenset(
         "generator",
         "source_family",
         "feature_representation",
+        "simulation_model",
+        "observation_model",
+        "benchmark_intent",
+        "scientific_caution",
+        "recommended_simulation_family",
         "requires_precomputed_tbs_distance",
         "precomputed_distance_matrix",
         "precomputed_distance_condensed",
     }
 )
+
+_SIMULATION_MODELS = {
+    "binary_selected_nonnull_only": "selected_edge_bernoulli_stress",
+    "binary_template": "bernoulli_template_latent_class",
+    "categorical_dirichlet_multinomial": "dirichlet_multinomial_latent_class",
+    "categorical_multinomial": "categorical_multinomial_latent_class",
+    "continuous_low_rank_factor": "low_rank_gaussian_factor_model",
+    "continuous_spiked_covariance": "spiked_covariance_gaussian_model",
+    "dimensional_gaussian": "sparse_subspace_gaussian_mixture",
+    "gaussian_blobs": "isotropic_gaussian_mixture",
+    "gaussian_outliers": "gaussian_mixture_with_outlier_contamination",
+    "phylogenetic_brownian": "brownian_like_phylogenetic_continuous_model",
+    "phylogenetic_sequence": "branchwise_jukes_cantor_like_categorical_model",
+    "planted_hierarchy_binary": "hierarchical_bernoulli_latent_class",
+    "preloaded_matrix": "external_preloaded_matrix",
+    "stochastic_block_model": "stochastic_block_model_graph",
+    "temporal_sequence": "sequential_categorical_drift_model",
+}
+
+_OBSERVATION_MODELS = {
+    "binary": "native_binary_feature_matrix",
+    "categorical_one_hot": "one_hot_encoded_categorical_feature_blocks",
+    "continuous": "continuous_feature_matrix",
+    "graph_adjacency": "node_by_node_graph_adjacency_matrix",
+    "median_binary": "per_feature_median_thresholded_continuous_matrix",
+    "preloaded_matrix": "preloaded_matrix",
+    "quantile_one_hot": "quantile_discretized_continuous_one_hot_blocks",
+}
+
+_RECOMMENDED_SIMULATION_FAMILIES = {
+    "binary": "bernoulli_template_or_latent_class_binary_model",
+    "categorical_one_hot": "categorical_or_dirichlet_multinomial_blocks",
+    "continuous": "gaussian_mixture_or_sparse_subspace_gaussian",
+    "graph_adjacency": "graph_sbm_or_lfr_with_graph_native_distances",
+    "median_binary": "explicit_bernoulli_threshold_model_or_continuous_gaussian_variant",
+    "preloaded_matrix": "documented_external_data_contract",
+    "quantile_one_hot": "ordinal_or_categorical_discretization_model",
+}
 
 
 def require_case_value(test_case: dict, key: str, generator_name: str) -> Any:
@@ -48,6 +91,92 @@ def require_case_value(test_case: dict, key: str, generator_name: str) -> Any:
 def metadata_extras(metadata: dict[str, Any]) -> dict[str, Any]:
     """Return generator-specific metadata without duplicating core fields."""
     return {key: value for key, value in metadata.items() if key not in CORE_METADATA_KEYS}
+
+
+def _benchmark_intent(
+    *,
+    source_family: str,
+    feature_representation: str,
+    requires_precomputed_tbs_distance: bool,
+) -> str:
+    if feature_representation == "median_binary":
+        return "discretized_continuous_stress"
+    if feature_representation == "graph_adjacency":
+        return "graph_community_detection_stress"
+    if feature_representation == "quantile_one_hot":
+        return "discretized_continuous_categorical_stress"
+    if feature_representation == "continuous" and requires_precomputed_tbs_distance:
+        return "continuous_reference_or_diagnostic"
+    if source_family.startswith("phylogenetic"):
+        return "phylogenetic_sequence_or_trait_diagnostic"
+    if source_family.startswith("categorical"):
+        return "categorical_distributional_recovery"
+    if "binary" in source_family:
+        return "binary_distributional_recovery"
+    return "benchmark_case"
+
+
+def _scientific_caution(
+    *,
+    source_family: str,
+    feature_representation: str,
+    distance_metric: str | None,
+) -> str:
+    if feature_representation == "median_binary":
+        return (
+            "The simulated source is continuous but the observed benchmark matrix is "
+            "median-thresholded binary; interpret it as a discretized stress case, not "
+            "as raw Gaussian clustering."
+        )
+    if feature_representation == "graph_adjacency":
+        return (
+            "Adjacency rows are not independent feature measurements; distributional "
+            "tests over rows and graph-native topology distances are different "
+            "methodological contracts."
+        )
+    if feature_representation == "quantile_one_hot":
+        return (
+            "The simulated source is continuous but the observed benchmark matrix is "
+            "quantile-discretized and one-hot encoded."
+        )
+    if source_family == "stochastic_block_model" and distance_metric is None:
+        return "Graph benchmarks require an explicit graph-derived topology distance."
+    return "none"
+
+
+def methodological_contract_metadata(
+    *,
+    generator: str,
+    source_family: str,
+    feature_representation: str,
+    requires_precomputed_tbs_distance: bool,
+    distance_metric: str | None,
+) -> dict[str, str]:
+    """Return explicit scientific/methodological metadata for a generated case."""
+    recommended = _RECOMMENDED_SIMULATION_FAMILIES.get(
+        feature_representation,
+        "case_specific_model_required",
+    )
+    if source_family.startswith("phylogenetic") and feature_representation == "categorical_one_hot":
+        recommended = "phylogenetic_substitution_indel_sequence_simulator"
+    return {
+        "simulation_model": _SIMULATION_MODELS.get(source_family, generator),
+        "observation_model": _OBSERVATION_MODELS.get(
+            feature_representation,
+            feature_representation,
+        ),
+        "benchmark_intent": _benchmark_intent(
+            source_family=source_family,
+            feature_representation=feature_representation,
+            requires_precomputed_tbs_distance=requires_precomputed_tbs_distance,
+        ),
+        "scientific_caution": _scientific_caution(
+            source_family=source_family,
+            feature_representation=feature_representation,
+            distance_metric=distance_metric,
+        ),
+        "recommended_simulation_family": recommended,
+    }
 
 
 def case_metadata(
@@ -88,6 +217,13 @@ def case_metadata(
         "generator": generator,
         "source_family": source_family,
         "feature_representation": feature_representation,
+        **methodological_contract_metadata(
+            generator=generator,
+            source_family=source_family,
+            feature_representation=feature_representation,
+            requires_precomputed_tbs_distance=requires_precomputed_tbs_distance,
+            distance_metric=distance_metric,
+        ),
         "requires_precomputed_tbs_distance": bool(requires_precomputed_tbs_distance),
         "precomputed_distance_matrix": precomputed_distance_matrix,
         "precomputed_distance_condensed": precomputed_distance_condensed,

@@ -10,31 +10,16 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.tree.construction import (
+    NEIGHBOR_JOINING_TREE_BUILDER,
+    TREE_CONSENSUS_STRATEGIES,
+    TREE_CONSENSUS_STRATEGY_PRIORITY,
+)
 
 TARGET_TREE_CONSENSUS_METHOD = "tbs_diffusion_graphtools_adaptive_nnls"
 TARGET_TREE_CONSENSUS_GRID = "graphtools_adaptive_k_tree_strategy"
 
-EXPECTED_TREE_INFERENCES: tuple[str, ...] = (
-    "average",
-    "complete",
-    "weighted",
-    "single",
-    "centroid",
-    "median",
-    "ward",
-    "neighbor_joining",
-)
-
-TREE_PRIORITY: dict[str, int] = {
-    "weighted": 0,
-    "ward": 1,
-    "complete": 2,
-    "average": 3,
-    "centroid": 4,
-    "median": 5,
-    "neighbor_joining": 6,
-    "single": 7,
-}
+TREE_PRIORITY: dict[str, int] = TREE_CONSENSUS_STRATEGY_PRIORITY
 
 LABEL_COLUMNS: list[str] = [
     "test_case",
@@ -83,8 +68,8 @@ def tree_inference_from_run_id(run_id: str) -> str:
     """Return the tree strategy encoded in a benchmark grid run id."""
     raw = str(run_id)
     if "tree_builder_neighbor_joining" in raw:
-        return "neighbor_joining"
-    for tree_inference in EXPECTED_TREE_INFERENCES:
+        return NEIGHBOR_JOINING_TREE_BUILDER
+    for tree_inference in TREE_CONSENSUS_STRATEGIES:
         if f"tree_linkage_method_{tree_inference}" in raw:
             return tree_inference
     raise ValueError(f"Cannot infer tree strategy from run_id={run_id!r}.")
@@ -527,14 +512,14 @@ def _summary(
     label_free_integrity_pass: bool,
 ) -> pd.DataFrame:
     case_count = int(target["case_id"].nunique())
-    expected_rows = case_count * len(EXPECTED_TREE_INFERENCES)
+    expected_rows = case_count * len(TREE_CONSENSUS_STRATEGIES)
     result_rows = int(len(target))
     per_case_complete = target.groupby("case_id")["tree_inference"].agg(
-        lambda values: set(values.astype(str)) == set(EXPECTED_TREE_INFERENCES)
+        lambda values: set(values.astype(str)) == set(TREE_CONSENSUS_STRATEGIES)
     )
     completeness_pass = (
         result_rows == expected_rows
-        and int(target["run_id"].nunique()) == len(EXPECTED_TREE_INFERENCES)
+        and int(target["run_id"].nunique()) == len(TREE_CONSENSUS_STRATEGIES)
         and bool(per_case_complete.all())
     )
 
@@ -577,7 +562,7 @@ def _summary(
         "result_rows": result_rows,
         "expected_result_rows": expected_rows,
         "run_cells": int(target["run_id"].nunique()),
-        "expected_run_cells": len(EXPECTED_TREE_INFERENCES),
+        "expected_run_cells": len(TREE_CONSENSUS_STRATEGIES),
         "selected_cases": int(len(selected_rows)),
         "skipped_cases": int(selection["selector_status"].ne("selected").sum()),
         "label_rows": int(len(labels)),
@@ -798,7 +783,7 @@ def export_tree_consensus_label_files(
 
 
 __all__ = [
-    "EXPECTED_TREE_INFERENCES",
+    "TREE_CONSENSUS_STRATEGIES",
     "TARGET_TREE_CONSENSUS_GRID",
     "TARGET_TREE_CONSENSUS_METHOD",
     "TreeConsensusArtifacts",

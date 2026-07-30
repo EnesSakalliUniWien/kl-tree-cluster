@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.tree_consensus import (
-    EXPECTED_TREE_INFERENCES,
+    TREE_CONSENSUS_STRATEGIES,
     build_tree_consensus_tables,
     tree_inference_from_run_id,
 )
@@ -88,7 +88,7 @@ def _baseline_rows(case_id: str) -> list[dict[str, object]]:
             largest=0.3,
             ari=0.5,
         )
-        for tree in EXPECTED_TREE_INFERENCES
+        for tree in TREE_CONSENSUS_STRATEGIES
     ]
 
 
@@ -121,7 +121,7 @@ def test_selector_penalizes_fragmentation_against_better_internal_fit() -> None:
             )
     labels = _labels(
         "fragmented",
-        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in EXPECTED_TREE_INFERENCES},
+        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in TREE_CONSENSUS_STRATEGIES},
     )
 
     tables = build_tree_consensus_tables(pd.DataFrame(rows), labels)
@@ -153,7 +153,7 @@ def test_selector_applies_dominant_cluster_guard() -> None:
             )
     labels = _labels(
         "dominant",
-        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in EXPECTED_TREE_INFERENCES},
+        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in TREE_CONSENSUS_STRATEGIES},
     )
 
     tables = build_tree_consensus_tables(pd.DataFrame(rows), labels)
@@ -166,7 +166,7 @@ def test_selector_prefers_weighted_for_equivalent_topology_ties() -> None:
     rows = _baseline_rows("tie")
     labels = _labels(
         "tie",
-        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in EXPECTED_TREE_INFERENCES},
+        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in TREE_CONSENSUS_STRATEGIES},
     )
 
     tables = build_tree_consensus_tables(pd.DataFrame(rows), labels)
@@ -179,7 +179,7 @@ def test_selector_is_invariant_to_external_metrics() -> None:
     rows = _baseline_rows("external")
     labels = _labels(
         "external",
-        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in EXPECTED_TREE_INFERENCES},
+        {tree: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] for tree in TREE_CONSENSUS_STRATEGIES},
     )
     baseline = build_tree_consensus_tables(pd.DataFrame(rows), labels).selection
     perturbed = pd.DataFrame(rows)

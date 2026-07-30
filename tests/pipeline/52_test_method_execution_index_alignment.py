@@ -6,6 +6,7 @@ import benchmarks.shared.util.method_execution as method_execution
 import numpy as np
 import pandas as pd
 import pytest
+from benchmarks.shared.generators.case_data_contracts import methodological_contract_metadata
 from benchmarks.shared.types import MethodRunResult, MethodSpec
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
@@ -37,6 +38,11 @@ def _stage_timings(**overrides):
 
 
 def _benchmark_meta(**overrides):
+    generator = str(overrides.get("generator", "binary"))
+    source_family = str(overrides.get("source_family", "binary_template"))
+    feature_representation = str(overrides.get("feature_representation", "binary"))
+    requires_precomputed = bool(overrides.get("requires_precomputed_tbs_distance", False))
+    distance_metric = overrides.get("distance_metric")
     metadata = {
         "name": "regression_case",
         "n_clusters": 2,
@@ -44,9 +50,17 @@ def _benchmark_meta(**overrides):
         "n_features": 2,
         "noise": 0.0,
         "category": "regression",
+        "generator": generator,
         "source_family": "binary_template",
         "feature_representation": "binary",
         "requires_precomputed_tbs_distance": False,
+        **methodological_contract_metadata(
+            generator=generator,
+            source_family=source_family,
+            feature_representation=feature_representation,
+            requires_precomputed_tbs_distance=requires_precomputed,
+            distance_metric=str(distance_metric) if distance_metric is not None else None,
+        ),
     }
     metadata.update(overrides)
     return metadata
@@ -151,6 +165,62 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert computed_result.params["edge_alpha"] == 0.007
     assert computed_result.params["sibling_alpha"] == 0.05
     assert computed_result.meta["stage_timings"]["edge_gate_sec"] == 0.03
+    assert method_audit is None
+
+
+def test_run_single_method_once_reuses_prepared_hamming_distance(monkeypatch):
+    data_t = pd.DataFrame(
+        [[0, 1], [1, 0], [0, 0], [1, 1]],
+        index=["S0", "S1", "S2", "S3"],
+        columns=["F0", "F1"],
+    )
+    y_t = np.array([0, 0, 1, 1], dtype=int)
+    prepared_distance = np.array([1.0, 0.5, 0.5, 0.5, 0.5, 1.0])
+    captured_kwargs = {}
+
+    def _forbidden_pdist(*_args, **_kwargs):
+        raise AssertionError("Prepared Hamming TBS distance should be reused.")
+
+    def _fake_run_clustering_result(**kwargs):
+        captured_kwargs.update(kwargs)
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={"stage_timings": _stage_timings()},
+        )
+
+    monkeypatch.setattr(method_execution, "pdist", _forbidden_pdist)
+    monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
+
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
+    result_row, computed_result, method_audit = method_execution.run_single_method_once(
+        method_id="tbs",
+        spec=spec,
+        params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
+        case_idx=1,
+        case_name="distance_reuse_case",
+        tc_seed=42,
+        significance_level=0.05,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        data_t=data_t,
+        y_t=y_t,
+        x_original=data_t.values.astype(float),
+        meta=_benchmark_meta(
+            name="distance_reuse_case",
+            n_clusters=2,
+            n_samples=4,
+        ),
+        distance_matrix=None,
+        distance_condensed=prepared_distance,
+        matrix_audit=False,
+    )
+
+    assert result_row.status == "ok"
+    assert captured_kwargs["distance_condensed"] is prepared_distance
+    assert computed_result is not None
     assert method_audit is None
 
 

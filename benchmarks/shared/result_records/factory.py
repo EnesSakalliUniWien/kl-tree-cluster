@@ -75,6 +75,11 @@ def build_benchmark_result_row(
     silhouette_score: float = math.nan,
     davies_bouldin_index: float = math.nan,
     calinski_harabasz_index: float = math.nan,
+    simulation_model: str = "unspecified",
+    observation_model: str = "unspecified",
+    benchmark_intent: str = "unspecified",
+    scientific_caution: str = "unspecified",
+    recommended_simulation_family: str = "unspecified",
 ) -> BenchmarkResultRow:
     """Build a typed benchmark row with normalized output fields."""
     if true_clusters is None:
@@ -88,6 +93,11 @@ def build_benchmark_result_row(
         case_category=str(case_category),
         source_family=str(source_family),
         feature_representation=str(feature_representation),
+        simulation_model=str(simulation_model),
+        observation_model=str(observation_model),
+        benchmark_intent=str(benchmark_intent),
+        scientific_caution=str(scientific_caution),
+        recommended_simulation_family=str(recommended_simulation_family),
         method=str(method),
         run_id=str(run_id or method),
         benchmark_class=str(benchmark_class),

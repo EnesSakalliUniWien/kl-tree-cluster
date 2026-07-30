@@ -10,7 +10,7 @@ import pytest
 from benchmarks.shared.result_records import ComputedResultRecord
 from benchmarks.shared.result_records.factory import build_benchmark_result_row
 from benchmarks.shared.tree_consensus import (
-    EXPECTED_TREE_INFERENCES,
+    TREE_CONSENSUS_STRATEGIES,
     export_tree_consensus_label_files,
     write_tree_consensus_artifacts,
 )
@@ -56,7 +56,7 @@ def _result_rows(case_id: str, *, test_case: int) -> pd.DataFrame:
                 "davies_bouldin_index": 2.0 + index * 0.01,
                 "largest_cluster_fraction": 0.5 if tree == "single" else 0.25,
             }
-            for index, tree in enumerate(EXPECTED_TREE_INFERENCES)
+            for index, tree in enumerate(TREE_CONSENSUS_STRATEGIES)
         ]
     )
 

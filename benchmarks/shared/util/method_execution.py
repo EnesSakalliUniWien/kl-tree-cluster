@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
+from tree_break_selection.tree.construction import DEFAULT_BINARY_TREE_DISTANCE_METRIC
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     CONTINUOUS_TREE_DISTANCE_METRIC,
@@ -249,6 +250,8 @@ def run_single_method_once(
                     data_t.values,
                     feature_space,
                 )
+            elif metric == DEFAULT_BINARY_TREE_DISTANCE_METRIC and distance_condensed is not None:
+                distance_condensed_for_run = distance_condensed
             else:
                 distance_condensed_for_run = pdist(data_t.values, metric=metric)
             recorded_run_params["tree_distance_metric"] = metric
@@ -369,6 +372,11 @@ def run_single_method_once(
         case_category=meta["category"],
         source_family=meta["source_family"],
         feature_representation=meta["feature_representation"],
+        simulation_model=meta["simulation_model"],
+        observation_model=meta["observation_model"],
+        benchmark_intent=meta["benchmark_intent"],
+        scientific_caution=meta["scientific_caution"],
+        recommended_simulation_family=meta["recommended_simulation_family"],
         method=method_id,
         run_params=recorded_run_params,
         run_id=str(benchmark_metadata["run_id"]),
