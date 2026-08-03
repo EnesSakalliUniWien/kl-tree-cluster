@@ -25,6 +25,7 @@ from benchmarks.diagnostics.calibration.overlap.overlap_structural_sibling_panel
     pairwise_binary_jaccard_similarity,
     top_coordinate_set,
 )
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
@@ -1659,7 +1660,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             max_pairwise_samples=int(args.max_pairwise_samples),
         )
     )
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

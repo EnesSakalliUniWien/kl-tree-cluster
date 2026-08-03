@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.selected.tail.selected_tail_admissibility_domain import (
     SelectedTailRun,
     parse_run_specs,
@@ -458,7 +459,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         require_c_hat_precision=not bool(args.allow_missing_c_hat_precision),
         max_relative_c_simulation_se=float(args.max_relative_c_simulation_se),
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

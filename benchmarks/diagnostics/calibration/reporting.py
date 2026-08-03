@@ -12,6 +12,11 @@ import numpy as np
 import pandas as pd
 
 
+def print_diagnostic_output_paths(outputs: Mapping[str, Path]) -> None:
+    """Print diagnostic output paths as a JSON object for CLI callers."""
+    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+
+
 def diagnostic_json_default(value: object) -> object:
     """Serialize the value types admitted by diagnostic manifests."""
     if is_dataclass(value) and not isinstance(value, type):
@@ -62,4 +67,8 @@ def write_diagnostic_bundle(
     return paths
 
 
-__all__ = ["diagnostic_json_default", "write_diagnostic_bundle"]
+__all__ = [
+    "diagnostic_json_default",
+    "print_diagnostic_output_paths",
+    "write_diagnostic_bundle",
+]

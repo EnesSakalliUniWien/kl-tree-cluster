@@ -31,6 +31,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.selected.family.selected_family_traversal_panel import (
     NULL_OUTPUT_ROLE,
     _generate_data_with_truth,
@@ -700,7 +701,7 @@ def main(argv: list[str] | None = None) -> None:
         replicates=int(args.replicates),
         base_seed=int(args.base_seed),
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

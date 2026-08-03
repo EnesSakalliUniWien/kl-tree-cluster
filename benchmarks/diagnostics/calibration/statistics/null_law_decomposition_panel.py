@@ -29,6 +29,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_
     identify_binary_sibling_children,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.statistics.statistic_distribution_shape_panel import (
     infer_satterthwaite_reference_from_eigenvalues,
 )
@@ -520,7 +521,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             base_seed=int(args.base_seed),
         )
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
@@ -482,7 +483,7 @@ def main() -> None:
         minimum_bulk_eigenvalue_count=args.minimum_bulk_eigenvalue_count,
     )
     outputs = run_root_selected_h_u_observability_panel(config)
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

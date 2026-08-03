@@ -51,6 +51,7 @@ from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.statistics.spectral_summary import (
     effective_rank,
 )
@@ -1633,7 +1634,7 @@ def main() -> None:
         output_dir=args.output_dir,
         near_active_absolute_tolerance=args.near_active_absolute_tolerance,
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

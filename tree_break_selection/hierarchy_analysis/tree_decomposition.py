@@ -293,6 +293,29 @@ class TreeDecomposition:
             return None
         return value.item() if hasattr(value, "item") else value
 
+    def _node_edge_context(
+        self,
+        node: object,
+    ) -> tuple[
+        object | None,
+        object | None,
+        tuple[object, object] | None,
+        tuple[object, object] | None,
+        tuple[object, object, object] | None,
+    ]:
+        """Return the binary child and gate-test identities for one node."""
+        children = self._children[node]
+        if len(children) != 2:
+            return None, None, None, None, None
+        left_child, right_child = children
+        return (
+            left_child,
+            right_child,
+            (node, left_child),
+            (node, right_child),
+            (node, left_child, right_child),
+        )
+
     def _gate_p_value_debug_fields(
         self,
         *,
@@ -379,15 +402,13 @@ class TreeDecomposition:
     ) -> dict[str, object]:
         """Return one audit row for edge-reachable traversal."""
         children = self._children[node]
-        left_child = children[0] if len(children) == 2 else None
-        right_child = children[1] if len(children) == 2 else None
-        left_edge_test_tuple = (node, left_child) if left_child is not None else None
-        right_edge_test_tuple = (node, right_child) if right_child is not None else None
-        sibling_test_tuple = (
-            (node, left_child, right_child)
-            if left_child is not None and right_child is not None
-            else None
-        )
+        (
+            left_child,
+            right_child,
+            left_edge_test_tuple,
+            right_edge_test_tuple,
+            sibling_test_tuple,
+        ) = self._node_edge_context(node)
 
         left_edge_open = bool(self._edge_divergent[left_child]) if left_child is not None else False
         right_edge_open = (
@@ -610,15 +631,13 @@ class TreeDecomposition:
             decision = self._gate.decision(node)
             actual_decision_by_node[node] = decision
             children = self._children[node]
-            left_child = children[0] if len(children) == 2 else None
-            right_child = children[1] if len(children) == 2 else None
-            left_edge_test_tuple = (node, left_child) if left_child is not None else None
-            right_edge_test_tuple = (node, right_child) if right_child is not None else None
-            sibling_test_tuple = (
-                (node, left_child, right_child)
-                if left_child is not None and right_child is not None
-                else None
-            )
+            (
+                left_child,
+                right_child,
+                left_edge_test_tuple,
+                right_edge_test_tuple,
+                sibling_test_tuple,
+            ) = self._node_edge_context(node)
             passthrough_audit = self._gate.passthrough_audit_status(node)
             if collect_full_trace:
                 traversal_trace.append(

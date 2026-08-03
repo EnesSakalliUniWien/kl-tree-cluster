@@ -8,7 +8,6 @@ install the selected-hierarchy estimate as a production calibration fallback.
 
 from __future__ import annotations
 
-import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,6 +42,9 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
+from benchmarks.diagnostics.calibration.selected.hierarchy.cli import (
+    parse_selected_hierarchy_args,
+)
 from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_null_audit import (
     SelectedSiblingContext,
     SelectedSiblingRecord,
@@ -474,43 +476,15 @@ def run_internal_vs_selected_hierarchy_inflation_study(
     return summary
 
 
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+def main() -> None:
+    args = parse_selected_hierarchy_args(
         description=(
             "Compare internal empirical sibling inflation against regenerated "
             "selected-hierarchy selected-ratio behavior for the same observed target."
-        )
-    )
-    parser.add_argument("--case-names", default=",".join(DEFAULT_CASE_NAMES))
-    parser.add_argument("--n-replicates", type=int, default=25)
-    parser.add_argument("--seed", type=int, default=20260603)
-    parser.add_argument(
-        "--target-mode",
-        choices=(
-            "root",
-            "strongest",
-            "median_parent_size",
-            "non_root_strongest",
-            "non_root_median_parent_size",
         ),
-        default="root",
+        default_case_names=DEFAULT_CASE_NAMES,
+        default_seed=20260603,
     )
-    parser.add_argument(
-        "--context-match",
-        choices=(
-            "any",
-            "projection",
-            "projection_and_parent_size",
-            "projection_parent_size_depth",
-        ),
-        default="projection",
-    )
-    parser.add_argument("--output-dir", type=Path, default=None)
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = _parse_args()
     output_dir = args.output_dir
     if output_dir is None:
         output_dir = (

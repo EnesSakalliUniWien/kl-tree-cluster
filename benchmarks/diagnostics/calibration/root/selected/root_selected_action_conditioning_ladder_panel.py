@@ -13,18 +13,22 @@ Relaxed rows are diagnostic only and never produce production p-values.
 
 from __future__ import annotations
 
-import argparse
-import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     is_observed_target,
+)
+from benchmarks.diagnostics.calibration.root.selected.cli import (
+    parse_action_support_panel_args,
 )
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
@@ -102,21 +106,6 @@ class RootSelectedActionConditioningLadderConfig:
     output_dir: Path
     joined_feasibility_rows_path: Path = DEFAULT_JOINED_FEASIBILITY_ROWS
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument(
-        "--joined-feasibility-rows-path",
-        type=Path,
-        default=DEFAULT_JOINED_FEASIBILITY_ROWS,
-    )
-    parser.add_argument(
-        "--h-u-population-law-status",
-        default="identity_mp_assumed_deformed_mp_unestimated",
-    )
-    return parser.parse_args()
 
 
 def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
@@ -359,7 +348,11 @@ def run_root_selected_action_conditioning_ladder_panel(
 
 
 def main() -> None:
-    args = parse_args()
+    args = parse_action_support_panel_args(
+        description=__doc__,
+        default_rows_path=DEFAULT_JOINED_FEASIBILITY_ROWS,
+        default_population_law_status="identity_mp_assumed_deformed_mp_unestimated",
+    )
     outputs = run_root_selected_action_conditioning_ladder_panel(
         RootSelectedActionConditioningLadderConfig(
             output_dir=args.output_dir,
@@ -367,7 +360,7 @@ def main() -> None:
             h_u_population_law_status=str(args.h_u_population_law_status),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

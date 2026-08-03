@@ -18,6 +18,7 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_retained_pass_through_topology_likelihood_not_calibration"
@@ -971,7 +972,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             min_matched_signal_count=int(args.min_matched_signal_count),
         )
     )
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

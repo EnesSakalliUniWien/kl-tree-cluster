@@ -26,6 +26,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
     resolve_sibling_gate_profile,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_panel import (
     DEFAULT_DATA_ROLES,
     validate_data_roles,
@@ -1609,7 +1610,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             per_row_timeout_seconds=args.per_row_timeout_seconds,
         )
     )
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

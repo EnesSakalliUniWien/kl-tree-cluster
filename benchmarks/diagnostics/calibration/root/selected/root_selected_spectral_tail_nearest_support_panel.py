@@ -27,6 +27,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     action_band,
     finite_float,
@@ -492,7 +493,7 @@ def main() -> None:
             h_u_population_law_status=str(args.h_u_population_law_status),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ from benchmarks.diagnostics.calibration.edge.selected_edge_sibling_null_equation
     evaluate_selected_edge_sibling_null_equation,
     summarize_selected_edge_sibling_null_equation,
 )
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.statistics.statistic_distribution_shape_panel import (
     normalize_statistic_distribution_records,
     summarize_statistic_distribution_shape,
@@ -325,7 +326,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         output_dir=args.output_dir,
         min_null_records=args.min_null_records,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

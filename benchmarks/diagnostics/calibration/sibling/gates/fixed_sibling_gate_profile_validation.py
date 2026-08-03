@@ -24,6 +24,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
     resolve_sibling_gate_profile_config,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_panel import (
     DEFAULT_DATA_ROLES,
     validate_data_roles,
@@ -1309,7 +1310,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         resume_from_checkpoints=bool(args.resume_from_checkpoints),
     )
     outputs = run_fixed_sibling_gate_profile_validation(config)
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

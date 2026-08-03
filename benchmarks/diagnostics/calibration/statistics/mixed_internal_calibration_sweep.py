@@ -43,6 +43,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.nulls.sibling_null_weight_rule_validation import (
     evaluate_sibling_null_weight_rules,
 )
@@ -435,7 +436,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         sibling_alpha=float(args.sibling_alpha),
         resume=bool(args.resume),
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
     print(f"elapsed_sec={perf_counter() - started:.3f}")
 
 

@@ -747,7 +747,6 @@ def prepare_model_table(panel: pd.DataFrame) -> pd.DataFrame:
     if table.empty:
         return table
     table["signal_label"] = table["is_signal_context"].astype(bool).astype(float)
-    table["null_label"] = table["is_null_context"].astype(bool).astype(float)
     for column in (
         "feature_family",
         "depth_bin",

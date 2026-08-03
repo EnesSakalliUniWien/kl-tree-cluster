@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.selected.hierarchy.selected_hierarchy_geometry_covariates import (
     EDGE_ACTION_BIN_LABELS,
     EDGE_ACTION_BINS,
@@ -555,7 +556,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         max_exceedance_standard_error=float(args.max_exceedance_standard_error),
         max_parent_size_abs_error=float(args.max_parent_size_abs_error),
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

@@ -10,10 +10,8 @@ not null support, unless their calibration role says so.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
 from typing import Sequence
@@ -21,6 +19,10 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_mixed_region_law import (
     build_root_selected_mixed_region_law_rows,
 )
@@ -270,18 +272,6 @@ def parse_args() -> argparse.Namespace:
         help="Probability tilt on active features for sparse_block_spike_proposal.",
     )
     return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootTieRankNullProposalFrontierConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def _parse_csv_list(raw: str | None) -> tuple[str, ...] | None:
@@ -1053,41 +1043,32 @@ def run_root_tie_rank_null_proposal_frontier(
 ) -> dict[str, Path]:
     """Run the proposal frontier and write outputs."""
     start = perf_counter()
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_tie_rank_null_proposal_frontier(config)
-    paths = {
-        "root_rows": output_dir / ROOT_ROWS_OUTPUT,
-        "merge_margins": output_dir / MERGE_MARGINS_OUTPUT,
-        "tie_rows": output_dir / TIE_ROWS_OUTPUT,
-        "mixed_rows": output_dir / MIXED_ROWS_OUTPUT,
-        "combined_feasibility_rows": output_dir / COMBINED_FEASIBILITY_ROWS_OUTPUT,
-        "combined_feasibility_strata": output_dir / COMBINED_FEASIBILITY_STRATA_OUTPUT,
-        "combined_feasibility_summary": output_dir / COMBINED_FEASIBILITY_SUMMARY_OUTPUT,
-        "target_support": output_dir / TARGET_SUPPORT_OUTPUT,
-        "target_frontier": output_dir / TARGET_FRONTIER_OUTPUT,
-        "proposal_summary": output_dir / PROPOSAL_SUMMARY_OUTPUT,
-        "failures": output_dir / FAILURES_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "elapsed_seconds": float(perf_counter() - start),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "root_rows": ROOT_ROWS_OUTPUT,
+            "merge_margins": MERGE_MARGINS_OUTPUT,
+            "tie_rows": TIE_ROWS_OUTPUT,
+            "mixed_rows": MIXED_ROWS_OUTPUT,
+            "combined_feasibility_rows": COMBINED_FEASIBILITY_ROWS_OUTPUT,
+            "combined_feasibility_strata": COMBINED_FEASIBILITY_STRATA_OUTPUT,
+            "combined_feasibility_summary": COMBINED_FEASIBILITY_SUMMARY_OUTPUT,
+            "target_support": TARGET_SUPPORT_OUTPUT,
+            "target_frontier": TARGET_FRONTIER_OUTPUT,
+            "proposal_summary": PROPOSAL_SUMMARY_OUTPUT,
+            "failures": FAILURES_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "elapsed_seconds": float(perf_counter() - start),
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:
@@ -1110,7 +1091,7 @@ def main() -> None:
             spike_delta=float(args.spike_delta),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

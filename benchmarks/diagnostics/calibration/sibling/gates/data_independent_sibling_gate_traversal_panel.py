@@ -51,6 +51,7 @@ from tree_break_selection.tree.feature_space import (
 )
 from tree_break_selection.tree.poset_tree import PosetTree
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_panel import (
     DEFAULT_CANDIDATE_METHODS,
     DEFAULT_DATA_ROLES,
@@ -1666,7 +1667,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             min_signal_mean_ari=float(args.min_signal_mean_ari),
         )
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

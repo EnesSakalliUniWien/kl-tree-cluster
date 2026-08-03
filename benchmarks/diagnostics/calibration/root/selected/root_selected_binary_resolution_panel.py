@@ -19,15 +19,16 @@ method can fail closed when the binary root is uncalibrated.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, string_value
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
@@ -112,18 +113,6 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_EXTERNAL_LAW_EQUATION_ROWS,
     )
     return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedBinaryResolutionConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
@@ -325,30 +314,22 @@ def evaluate_root_selected_binary_resolution_panel(
 def run_root_selected_binary_resolution_panel(
     config: RootSelectedBinaryResolutionConfig,
 ) -> dict[str, Path]:
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_selected_binary_resolution_panel(config)
-    paths = {
-        "rows": config.output_dir / ROWS_OUTPUT,
-        "summary": config.output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:
@@ -360,7 +341,7 @@ def main() -> None:
             external_law_equation_rows_path=args.external_law_equation_rows_path,
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

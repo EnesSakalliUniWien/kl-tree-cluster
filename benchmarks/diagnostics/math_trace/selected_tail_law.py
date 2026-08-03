@@ -14,16 +14,6 @@ def compute_selected_tail_variables(table: pd.DataFrame) -> pd.DataFrame:
         scale = pd.to_numeric(result.get("reference_scale"), errors="coerce")
         df = pd.to_numeric(result.get("degrees_of_freedom"), errors="coerce")
         result["selected_ratio"] = stat / (scale * df)
-    min_edge_p = pd.concat(
-        [
-            pd.to_numeric(result.get("edge_left_raw_p"), errors="coerce"),
-            pd.to_numeric(result.get("edge_right_raw_p"), errors="coerce"),
-        ],
-        axis=1,
-    ).min(axis=1)
-    result["edge_action_from_p"] = -np.log(np.clip(min_edge_p, 1e-300, 1.0))
-    cos2 = pd.to_numeric(result.get("selected_subspace_cos2"), errors="coerce")
-    result["selected_subspace_tan2_from_cos2"] = (1.0 - cos2) / cos2.clip(lower=1e-12)
     return result
 
 

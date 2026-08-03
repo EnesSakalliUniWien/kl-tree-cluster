@@ -7,7 +7,6 @@ does not change traversal decisions or route between methods.
 
 from __future__ import annotations
 
-import argparse
 import json
 import math
 import os
@@ -34,12 +33,12 @@ from benchmarks.diagnostics.calibration.traversal.branch_length_traversal_audit 
     _tuple_rows_from_computed,
     _validate_methods,
 )
+from benchmarks.diagnostics.calibration.traversal.cli import parse_traversal_audit_args
 from benchmarks.shared.result_records import benchmark_rows_to_dataframe
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once
 from benchmarks.shared.util.time import format_timestamp_utc
-from benchmarks.validation.statistics.selected_edge_type1_geometry import parse_names
 
 SCHEMA_VERSION = "path_conditioned_traversal_audit/v1"
 STUDY_ROLE = "diagnostic_path_conditioned_traversal_audit_not_policy"
@@ -70,17 +69,6 @@ class PathConditionedTraversalAuditConfig:
     methods: tuple[str, ...] = DEFAULT_METHODS
     significance_level: float = DEFAULT_SIBLING_ALPHA
     edge_alpha: float = DEFAULT_EDGE_ALPHA
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--suite", default="full")
-    parser.add_argument("--case-names", type=parse_names, default=DEFAULT_CASE_NAMES)
-    parser.add_argument("--methods", type=parse_names, default=DEFAULT_METHODS)
-    parser.add_argument("--significance-level", type=float, default=DEFAULT_SIBLING_ALPHA)
-    parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
-    return parser.parse_args()
 
 
 def _path_nodes(path: object) -> tuple[str, ...]:
@@ -723,7 +711,13 @@ def run_path_conditioned_traversal_audit(
 
 
 def main() -> None:
-    args = parse_args()
+    args = parse_traversal_audit_args(
+        description=__doc__,
+        default_case_names=DEFAULT_CASE_NAMES,
+        default_methods=DEFAULT_METHODS,
+        default_significance_level=DEFAULT_SIBLING_ALPHA,
+        default_edge_alpha=DEFAULT_EDGE_ALPHA,
+    )
     config = PathConditionedTraversalAuditConfig(
         output_dir=args.output_dir,
         suite=str(args.suite),

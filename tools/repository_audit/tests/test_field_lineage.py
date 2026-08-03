@@ -29,9 +29,7 @@ def test_field_lineage_classifies_schema_dead_and_reused_fields(
     assert fields["reused_field"]["cleanup_classification"] == "used_field"
     assert fields["kept_schema"]["reuse"] == "schema_only_export_candidate"
     assert fields["kept_schema"]["cleanup_classification"] == "output_schema_column"
-    assert fields["dead_field"]["writer_scopes"] == [
-        "tree_break_selection/result.py::build"
-    ]
+    assert fields["dead_field"]["writer_scopes"] == ["tree_break_selection/result.py::build"]
 
 
 def test_field_lineage_traces_pandas_loc_columns_and_field_helper_reads(
@@ -64,8 +62,7 @@ def test_field_lineage_traces_benchmark_annotation_helper_reads(
     production = tmp_path / "tree_break_selection/result.py"
     production.parent.mkdir(parents=True)
     production.write_text(
-        "def build(df, node):\n"
-        "    df.loc[node, 'exported_field'] = 1.0\n",
+        "def build(df, node):\n    df.loc[node, 'exported_field'] = 1.0\n",
         encoding="utf-8",
     )
     benchmark = tmp_path / "benchmarks/diagnostics/panel.py"
@@ -154,3 +151,140 @@ def test_field_lineage_marks_returned_dict_keys_as_output_schema(
     fields = {field["key"]: field for field in lineage["fields"]}
 
     assert fields["live_split_count"]["cleanup_classification"] == "output_schema_column"
+
+
+def test_field_lineage_marks_pandas_exported_columns_as_output_schema(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/panel.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def write_panel(table, output_path):\n"
+        "    table['reported_metric'] = 1.0\n"
+        "    table.to_csv(output_path, index=False)\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["reported_metric"]["cleanup_classification"] == "output_schema_column"
+
+
+def test_field_lineage_traces_dictionary_iteration_as_field_reads(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/panel.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def signature():\n"
+        "    parts = {}\n"
+        "    parts['tie_cell_presence'] = 'present'\n"
+        "    return '|'.join(f'{key}={value}' for key, value in parts.items())\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["tie_cell_presence"]["reuse"] == "same_function_reader"
+    assert fields["tie_cell_presence"]["cleanup_classification"] == "used_field"
+
+
+def test_field_lineage_traces_direct_container_iteration_as_field_reads(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/panel.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def keys():\n"
+        "    parts = {}\n"
+        "    parts['section_order'] = 1\n"
+        "    return [key for key in parts]\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["section_order"]["reuse"] == "same_function_reader"
+    assert fields["section_order"]["cleanup_classification"] == "used_field"
+
+
+def test_field_lineage_classifies_dataframe_attrs_as_output_metadata(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/pipeline.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def finish(results):\n"
+        "    results.attrs['plot_generation_status'] = 'not_requested'\n"
+        "    return results\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["plot_generation_status"]["cleanup_classification"] == ("output_schema_column")
+
+
+def test_field_lineage_classifies_anndata_uns_as_output_metadata(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "applications/scrna/pipeline.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def prepare(adata):\n"
+        "    adata.uns['input_expression_min'] = 0.0\n"
+        "    adata.write_h5ad('prepared.h5ad')\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["input_expression_min"]["cleanup_classification"] == ("output_schema_column")
+
+
+def test_field_lineage_classifies_matplotlib_rcparams_as_configuration(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/plots.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def configure(mpl):\n    mpl.rcParams['pdf.fonttype'] = 42\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["pdf.fonttype"]["cleanup_classification"] == "configuration_key"
+
+
+def test_field_lineage_traces_expanded_keyword_arguments_as_reads(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    source = tmp_path / "benchmarks/adapter.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def load(client, url):\n"
+        "    kwargs = {}\n"
+        "    kwargs['url'] = url\n"
+        "    return client.load_dataset(**kwargs)\n",
+        encoding="utf-8",
+    )
+
+    lineage = build_field_lineage(tmp_path)
+    fields = {field["key"]: field for field in lineage["fields"]}
+
+    assert fields["url"]["reuse"] == "same_function_reader"
+    assert fields["url"]["cleanup_classification"] == "used_field"

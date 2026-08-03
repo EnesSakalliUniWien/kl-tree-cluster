@@ -18,16 +18,18 @@ Rows remain diagnostic. This module does not create a production rescue rule.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
 
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     is_calibration_support,
     is_observed_target,
@@ -290,18 +292,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed-offset", type=int, default=DEFAULT_SEED_OFFSET)
     return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedSameGeometryExternalSupportAttemptConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def _parse_csv_list(raw: str | None) -> tuple[str, ...]:
@@ -854,52 +844,44 @@ def run_same_geometry_external_support_attempt(
 ) -> dict[str, Path]:
     """Run the same-geometry external support attempt and write artifacts."""
     start = perf_counter()
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_same_geometry_external_support_attempt(config)
-    outputs = {
-        "frontier_generated_rows": config.output_dir / FRONTIER_GENERATED_ROWS_OUTPUT,
-        "frontier_target_rows": config.output_dir / FRONTIER_TARGET_ROWS_OUTPUT,
-        "frontier_summary": config.output_dir / FRONTIER_SUMMARY_OUTPUT,
-        "frontier_failures": config.output_dir / FRONTIER_FAILURES_OUTPUT,
-        "replay_run_rows": config.output_dir / RUN_ROWS_OUTPUT,
-        "replay_node_decisions": config.output_dir / NODE_DECISIONS_OUTPUT,
-        "replay_distribution_rows": config.output_dir / DISTRIBUTION_ROWS_OUTPUT,
-        "replay_pvalue_rows": config.output_dir / PVALUE_ROWS_OUTPUT,
-        "replay_pvalue_summary": config.output_dir / PVALUE_SUMMARY_OUTPUT,
-        "replay_pvalue_case_summary": config.output_dir / PVALUE_CASE_SUMMARY_OUTPUT,
-        "replay_pvalue_tau_s_sensitivity": config.output_dir / PVALUE_TAU_S_OUTPUT,
-        "replay_measurability_rows": config.output_dir / MEASURABILITY_ROWS_OUTPUT,
-        "replay_measurability_summary": config.output_dir / MEASURABILITY_SUMMARY_OUTPUT,
-        "replay_topology_rows": config.output_dir / TOPOLOGY_ROWS_OUTPUT,
-        "replay_topology_summary": config.output_dir / TOPOLOGY_SUMMARY_OUTPUT,
-        "joined_rows": config.output_dir / JOINED_ROWS_OUTPUT,
-        "deformed_rows": config.output_dir / DEFORMED_ROWS_OUTPUT,
-        "deformed_support_rows": config.output_dir / DEFORMED_SUPPORT_ROWS_OUTPUT,
-        "deformed_summary": config.output_dir / DEFORMED_SUMMARY_OUTPUT,
-        "tail_rows": config.output_dir / TAIL_ROWS_OUTPUT,
-        "tail_summary": config.output_dir / TAIL_SUMMARY_OUTPUT,
-        "attempt_rows": config.output_dir / ATTEMPT_ROWS_OUTPUT,
-        "attempt_summary": config.output_dir / ATTEMPT_SUMMARY_OUTPUT,
-    }
-    for key, path in outputs.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "elapsed_seconds": float(perf_counter() - start),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": {key: str(path) for key, path in outputs.items()},
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "frontier_generated_rows": FRONTIER_GENERATED_ROWS_OUTPUT,
+            "frontier_target_rows": FRONTIER_TARGET_ROWS_OUTPUT,
+            "frontier_summary": FRONTIER_SUMMARY_OUTPUT,
+            "frontier_failures": FRONTIER_FAILURES_OUTPUT,
+            "replay_run_rows": RUN_ROWS_OUTPUT,
+            "replay_node_decisions": NODE_DECISIONS_OUTPUT,
+            "replay_distribution_rows": DISTRIBUTION_ROWS_OUTPUT,
+            "replay_pvalue_rows": PVALUE_ROWS_OUTPUT,
+            "replay_pvalue_summary": PVALUE_SUMMARY_OUTPUT,
+            "replay_pvalue_case_summary": PVALUE_CASE_SUMMARY_OUTPUT,
+            "replay_pvalue_tau_s_sensitivity": PVALUE_TAU_S_OUTPUT,
+            "replay_measurability_rows": MEASURABILITY_ROWS_OUTPUT,
+            "replay_measurability_summary": MEASURABILITY_SUMMARY_OUTPUT,
+            "replay_topology_rows": TOPOLOGY_ROWS_OUTPUT,
+            "replay_topology_summary": TOPOLOGY_SUMMARY_OUTPUT,
+            "joined_rows": JOINED_ROWS_OUTPUT,
+            "deformed_rows": DEFORMED_ROWS_OUTPUT,
+            "deformed_support_rows": DEFORMED_SUPPORT_ROWS_OUTPUT,
+            "deformed_summary": DEFORMED_SUMMARY_OUTPUT,
+            "tail_rows": TAIL_ROWS_OUTPUT,
+            "tail_summary": TAIL_SUMMARY_OUTPUT,
+            "attempt_rows": ATTEMPT_ROWS_OUTPUT,
+            "attempt_summary": ATTEMPT_SUMMARY_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "elapsed_seconds": float(perf_counter() - start),
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    outputs["manifest"] = manifest_path
-    return outputs
 
 
 def main() -> None:
@@ -934,7 +916,7 @@ def main() -> None:
             seed_offset=int(args.seed_offset),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

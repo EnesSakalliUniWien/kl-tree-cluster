@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_q5_selected_tail_law_not_calibration"
@@ -711,7 +712,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         min_train_rows_per_predictor=args.min_train_rows_per_predictor,
         min_test_rows=args.min_test_rows,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,10 @@ The modes deliberately escalate in cost:
   NetworkX GraphML graph for pandas/dictionary field cleanup review. It keeps
   raw read/write reuse evidence separate from cleanup classification, excluding
   graph, environment, configuration, and known output-schema keys from true
-  dead-write candidates.
+  dead-write candidates. Whole-container evidence includes pandas export
+  methods, dictionary `.items()`/`.keys()`/`.values()` and direct iteration,
+  and expanded `**kwargs`. `DataFrame.attrs` and AnnData `.uns` are output
+  metadata, while Matplotlib `rcParams` are configuration.
 - `tbs-audit --mode duplicates --scope applications` runs jscpd for a focused
   path and writes a classified duplicate-cleanup report. Scopes are repeatable,
   default to `applications`, and can be used from another worktree with

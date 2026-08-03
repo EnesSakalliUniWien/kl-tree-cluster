@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
+
 STUDY_ROLE = "diagnostic_edge_sibling_pvalue_relationship_not_calibration"
 SCHEMA_VERSION = "edge_sibling_pvalue_relationship/v1"
 
@@ -602,7 +604,7 @@ def main(argv: list[str] | None = None) -> None:
         output_dir=args.output_dir,
         title=args.title,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

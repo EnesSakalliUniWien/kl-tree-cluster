@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_production_admissibility_contract_not_calibration"
@@ -270,7 +271,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         components_path=args.components,
         output_dir=args.output_dir,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

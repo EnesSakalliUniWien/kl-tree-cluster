@@ -10,6 +10,7 @@ from benchmarks.diagnostics.path_b.mixed_null_signal_geometry_validation import 
     build_row_aligned_kak_geometry_panel,
     classify_sibling_truth_context,
     evaluate_geometry_models,
+    prepare_model_table,
     summarize_geometry_models,
     summarize_labeled_calibration,
 )
@@ -33,6 +34,21 @@ def test_classify_sibling_truth_context_marks_null_signal_and_mixed() -> None:
     assert signal_context["truth_context_label"] == "signal_context"
     assert signal_context["truth_sibling_separation_score"] == 1.0
     assert mixed_context["truth_context_label"] == "mixed_context"
+
+
+def test_prepare_model_table_uses_one_binary_target_column() -> None:
+    panel = pd.DataFrame(
+        {
+            "truth_context_label": ["null_context", "signal_context"],
+            "is_null_context": [True, False],
+            "is_signal_context": [False, True],
+        }
+    )
+
+    table = prepare_model_table(panel)
+
+    assert table["signal_label"].tolist() == [0.0, 1.0]
+    assert "null_label" not in table.columns
 
 
 def test_build_mixed_null_signal_geometry_panel_joins_truth_and_edge_geometry() -> None:

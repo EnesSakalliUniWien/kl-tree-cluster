@@ -3,6 +3,9 @@ from pathlib import Path
 
 import pandas as pd
 from benchmarks.diagnostics.math_trace.infer_benchmark_math import infer_math
+from benchmarks.diagnostics.math_trace.selected_tail_law import (
+    compute_selected_tail_variables,
+)
 from benchmarks.diagnostics.math_trace.trace_schema import REQUIRED_NODE_TRACE_COLUMNS
 
 
@@ -78,3 +81,20 @@ def test_infer_math_writes_trace_outputs(tmp_path: Path):
     assert (output_dir / "math_inference_report.md").exists()
     assert (output_dir / "failure_attribution.csv").exists()
     assert (output_dir / "support_threshold_audit.csv").exists()
+
+
+def test_selected_tail_variables_omit_unused_derived_columns() -> None:
+    table = pd.DataFrame(
+        {
+            "selected_ratio": [3.0],
+            "edge_left_raw_p": [0.01],
+            "edge_right_raw_p": [0.02],
+            "selected_subspace_cos2": [0.75],
+        }
+    )
+
+    variables = compute_selected_tail_variables(table)
+
+    assert variables["selected_ratio"].tolist() == [3.0]
+    assert "edge_action_from_p" not in variables.columns
+    assert "selected_subspace_tan2_from_cos2" not in variables.columns

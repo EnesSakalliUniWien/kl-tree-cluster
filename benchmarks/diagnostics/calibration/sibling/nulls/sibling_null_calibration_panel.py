@@ -8,7 +8,6 @@ calibration rule.
 
 from __future__ import annotations
 
-import argparse
 import json
 import math
 from collections.abc import Sequence
@@ -17,6 +16,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.cli import parse_null_calibration_panel_args
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_sibling_null_calibration_panel_not_calibration"
@@ -296,18 +297,8 @@ def run_sibling_null_calibration_panel(
     }
 
 
-def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--panel", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--alpha", type=float, default=0.05)
-    parser.add_argument("--tolerance", type=float, default=0.02)
-    parser.add_argument("--min-rows", type=int, default=30)
-    return parser.parse_args(argv)
-
-
 def main(argv: Sequence[str] | None = None) -> None:
-    args = _parse_args(argv)
+    args = parse_null_calibration_panel_args(argv, description=__doc__)
     outputs = run_sibling_null_calibration_panel(
         panel_path=args.panel,
         output_dir=args.output_dir,
@@ -315,7 +306,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         tolerance=args.tolerance,
         min_rows=args.min_rows,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

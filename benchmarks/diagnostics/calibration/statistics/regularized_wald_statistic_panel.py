@@ -23,6 +23,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.traversal.production_admissibility_contract import (
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
@@ -551,7 +552,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             base_seed=int(args.base_seed),
         )
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

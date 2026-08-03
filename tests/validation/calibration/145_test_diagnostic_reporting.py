@@ -5,7 +5,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 
 
 @dataclass(frozen=True)
@@ -42,3 +45,20 @@ def test_write_diagnostic_bundle_rejects_mismatched_table_keys(tmp_path: Path) -
             filenames={"summary": "summary.csv"},
             manifest={},
         )
+
+
+def test_print_diagnostic_output_paths_emits_json(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    print_diagnostic_output_paths(
+        {
+            "rows": tmp_path / "rows.csv",
+            "manifest": tmp_path / "manifest.json",
+        }
+    )
+
+    assert json.loads(capsys.readouterr().out) == {
+        "rows": str(tmp_path / "rows.csv"),
+        "manifest": str(tmp_path / "manifest.json"),
+    }

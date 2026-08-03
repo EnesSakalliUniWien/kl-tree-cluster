@@ -11,7 +11,6 @@ fallback in production code.
 
 from __future__ import annotations
 
-import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,6 +45,9 @@ from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
 
+from benchmarks.diagnostics.calibration.selected.hierarchy.cli import (
+    parse_selected_hierarchy_args,
+)
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
@@ -635,44 +637,16 @@ def run_selected_hierarchy_null_audit(
     return summary
 
 
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+def main() -> None:
+    args = parse_selected_hierarchy_args(
         description=(
             "Estimate selected-hierarchy sibling-null behavior by regenerating "
             "null data, rebuilding the hierarchy, and collecting selected focal "
             "sibling statistics."
-        )
-    )
-    parser.add_argument("--case-names", default=",".join(DEFAULT_CASE_NAMES))
-    parser.add_argument("--n-replicates", type=int, default=25)
-    parser.add_argument("--seed", type=int, default=20260601)
-    parser.add_argument(
-        "--target-mode",
-        choices=(
-            "root",
-            "strongest",
-            "median_parent_size",
-            "non_root_strongest",
-            "non_root_median_parent_size",
         ),
-        default="root",
+        default_case_names=DEFAULT_CASE_NAMES,
+        default_seed=20260601,
     )
-    parser.add_argument(
-        "--context-match",
-        choices=(
-            "any",
-            "projection",
-            "projection_and_parent_size",
-            "projection_parent_size_depth",
-        ),
-        default="projection",
-    )
-    parser.add_argument("--output-dir", type=Path, default=None)
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = _parse_args()
     output_dir = args.output_dir
     if output_dir is None:
         output_dir = (

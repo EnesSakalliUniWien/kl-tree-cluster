@@ -8,15 +8,17 @@ ratio, edge margin, and spectral ratio.
 
 from __future__ import annotations
 
-import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
+
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
+from benchmarks.diagnostics.calibration.root.tie_rank.cli import parse_proposal_panel_args
 
 SCHEMA_VERSION = "root_tie_rank_spectral_action_dominance_panel/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_spectral_action_dominance_panel_not_calibration"
@@ -93,29 +95,6 @@ class RootTieRankSpectralActionDominanceConfig:
 
     output_dir: Path
     proposal_feasibility_rows_path: Path = DEFAULT_PROPOSAL_FEASIBILITY_ROWS
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument(
-        "--proposal-feasibility-rows-path",
-        type=Path,
-        default=DEFAULT_PROPOSAL_FEASIBILITY_ROWS,
-    )
-    return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootTieRankSpectralActionDominanceConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
@@ -395,42 +374,36 @@ def run_root_tie_rank_spectral_action_dominance_panel(
     config: RootTieRankSpectralActionDominanceConfig,
 ) -> dict[str, Path]:
     """Run the continuous dominance panel and write outputs."""
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_tie_rank_spectral_action_dominance_panel(config)
-    paths = {
-        "rows": output_dir / ROWS_OUTPUT,
-        "summary": output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:
-    args = parse_args()
+    args = parse_proposal_panel_args(
+        description=__doc__,
+        default_rows_path=DEFAULT_PROPOSAL_FEASIBILITY_ROWS,
+    )
     outputs = run_root_tie_rank_spectral_action_dominance_panel(
         RootTieRankSpectralActionDominanceConfig(
             output_dir=args.output_dir,
             proposal_feasibility_rows_path=args.proposal_feasibility_rows_path,
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

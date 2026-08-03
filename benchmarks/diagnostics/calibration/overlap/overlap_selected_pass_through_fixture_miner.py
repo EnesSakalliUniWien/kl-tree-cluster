@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
@@ -1750,7 +1751,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             min_finite_topology_per_side=int(args.min_finite_topology_per_side),
         )
     )
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

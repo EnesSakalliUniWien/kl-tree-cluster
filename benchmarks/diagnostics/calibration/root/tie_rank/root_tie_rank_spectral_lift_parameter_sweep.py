@@ -14,10 +14,8 @@ replay before they can be used in measured-bandwidth calibration.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
 from typing import Sequence
@@ -25,6 +23,10 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     require_columns,
@@ -191,18 +193,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-action-edge-fraction", type=float, default=0.95)
     parser.add_argument("--min-tie-fraction-floor", type=float, default=0.70)
     return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootTieRankSpectralLiftParameterSweepConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def _parse_csv_list(raw: str | None) -> tuple[str, ...] | None:
@@ -913,34 +903,25 @@ def run_spectral_lift_parameter_sweep(
 ) -> dict[str, Path]:
     """Run the spectral-lift parameter sweep and write outputs."""
     start = perf_counter()
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_spectral_lift_parameter_sweep(config)
-    paths = {
-        "generated_rows": output_dir / GENERATED_ROWS_OUTPUT,
-        "target_rows": output_dir / TARGET_ROWS_OUTPUT,
-        "summary": output_dir / SUMMARY_OUTPUT,
-        "failures": output_dir / FAILURES_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "elapsed_seconds": float(perf_counter() - start),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={
+            "generated_rows": GENERATED_ROWS_OUTPUT,
+            "target_rows": TARGET_ROWS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
+            "failures": FAILURES_OUTPUT,
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "elapsed_seconds": float(perf_counter() - start),
+        },
+        manifest_filename=MANIFEST_OUTPUT,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:
@@ -961,7 +942,7 @@ def main() -> None:
             min_tie_fraction_floor=float(args.min_tie_fraction_floor),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

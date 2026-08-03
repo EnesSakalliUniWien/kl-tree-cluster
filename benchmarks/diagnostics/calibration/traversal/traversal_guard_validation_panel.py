@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_traversal_guard_validation_panel_not_calibration"
@@ -303,7 +304,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         min_pure_precision=args.min_pure_precision,
         max_signal_flag_rate=args.max_signal_flag_rate,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     CalibrationSupportThresholds,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_internal_support_threshold_validation_not_calibration"
@@ -279,7 +280,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         panel_path=args.panel,
         output_dir=args.output_dir,
     )
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

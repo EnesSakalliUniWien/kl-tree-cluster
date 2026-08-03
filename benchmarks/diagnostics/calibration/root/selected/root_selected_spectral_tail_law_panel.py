@@ -17,7 +17,6 @@ stratum. Otherwise they fail closed.
 from __future__ import annotations
 
 import argparse
-import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,7 +24,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     is_calibration_support,
@@ -440,7 +442,7 @@ def main() -> None:
             h_u_population_law_status=str(args.h_u_population_law_status),
         )
     )
-    print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

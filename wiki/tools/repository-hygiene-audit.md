@@ -2,8 +2,15 @@
 title: Repository Hygiene Audit
 type: tool
 status: reviewed
-updated: 2026-07-29
+updated: 2026-08-03
 sources:
+  - benchmarks/diagnostics/calibration/cli.py
+  - benchmarks/diagnostics/calibration/reporting.py
+  - benchmarks/diagnostics/calibration/root/selected/cli.py
+  - benchmarks/diagnostics/calibration/root/tie_rank/cli.py
+  - benchmarks/diagnostics/calibration/selected/hierarchy/cli.py
+  - benchmarks/diagnostics/calibration/traversal/cli.py
+  - tests/validation/calibration/193_test_cli_contracts.py
   - tools/repository_audit/README.md
   - tools/repository_audit/pyproject.toml
   - tools/repository_audit/src/tbs_repo_audit/cli.py
@@ -71,9 +78,14 @@ Markdown, and NetworkX GraphML. This mode is the static source cleanup path for
 pandas and dictionary result fields. It reports raw read/write reuse separately
 from cleanup classification so graph attributes, environment keys,
 configuration keys, and known output-schema columns are not treated as true
-dead writes. OpenLineage is intentionally not part of this mode because its
-standard role is runtime job, dataset, and run lineage metadata for executed
-pipelines.
+dead writes. Whole-container evidence covers pandas exports, dictionary
+`.items()`/`.keys()`/`.values()` and direct iteration, and expanded `**kwargs`.
+`DataFrame.attrs` and AnnData `.uns` are classified as output metadata;
+Matplotlib `rcParams` are configuration. The analysis is deliberately
+conservative and scope-local: container rebinding or interprocedural aliases
+still require manual review. OpenLineage is intentionally not part of this mode
+because its standard role is runtime job, dataset, and run lineage metadata for
+executed pipelines.
 
 `calibration-contract` reads an explicit sibling-record CSV and distinguishes
 tested non-significant records from stopped-subtree frontiers and their nested
@@ -135,9 +147,10 @@ The repository also exposes `make audit`, `make audit-quick`, and
   that count to 2. The two retained lines choose sequential or all-core
   execution in the production spectral worker resolver. The remaining 21,936
   calibration-only lines are confined to benchmark and diagnostic modules.
-- The tool package has 36 focused tests, including compact coverage-set
+- The tool package has 53 focused tests, including compact coverage-set
   comparison, punctuation-insensitive documentation matching, and LibCST
-  field-lineage read/write and cleanup-bucket classification.
+  field-lineage read/write, container-sink, output-metadata, and cleanup-bucket
+  classification.
 - The first responsibility-aware clone tranche split application/production
   and benchmark scans before editing. The combined scan fell from 492 groups
   and 8,753 duplicated lines (3.71%) to 473 groups and 8,178 lines (3.47%).
@@ -149,6 +162,18 @@ The repository also exposes `make audit`, `make audit-quick`, and
   owners; the benchmark slice then fell to 345 groups and 5,808 lines (4.03%).
   These counts remain evidence for subsequent tranches, not a mandate to merge
   domain-distinct code with coincidentally similar syntax.
+- The 2026-08-03 CLI/entrypoint tranche first separated parser definitions from
+  adjacent output persistence. Nineteen manual selected-root and root tie-rank
+  bundle writers now use `write_diagnostic_bundle`, and 55 calibration
+  entrypoints use one JSON output-path renderer. Exact parser contracts moved
+  to their owning calibration, selected-root, root tie-rank,
+  selected-hierarchy, and traversal `cli.py` modules; forwarding aliases were
+  removed. The parser-containing duplicate slice fell from 62 groups and 1,197
+  lines to 52 groups and 903 lines, while the same global scan fell from 437
+  groups and 7,394 lines to 409 groups and 6,797 lines. Of the remaining 52
+  parser-containing groups, 24 still contain actual parser definitions and 11
+  are explicit shared bundle call sites, so those categories require separate
+  review rather than one broad extraction.
 
 ## Links
 

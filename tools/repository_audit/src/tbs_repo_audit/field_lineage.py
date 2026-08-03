@@ -49,6 +49,19 @@ GRAPH_ROOT_NAMES = {
     "weighted",
 }
 GRAPH_KEYS = {"weight", "length", "branch_length", "linkage_branch_length"}
+CONTAINER_ITERATION_METHODS = {"items", "keys", "values"}
+PANDAS_EXPORT_METHODS = {
+    "to_csv",
+    "to_excel",
+    "to_feather",
+    "to_hdf",
+    "to_html",
+    "to_json",
+    "to_markdown",
+    "to_parquet",
+    "to_pickle",
+    "to_sql",
+}
 
 
 @dataclass(frozen=True)
@@ -140,6 +153,16 @@ def _root_name(expression_name: str | None) -> str:
     return "" if not expression_name else expression_name.split(".", 1)[0]
 
 
+def _container_name(expression_name: str | None) -> str | None:
+    """Return the owning container for common pandas indexer expressions."""
+    if expression_name is None:
+        return None
+    for suffix in (".at", ".iat", ".iloc", ".loc"):
+        if expression_name.endswith(suffix):
+            return expression_name[: -len(suffix)]
+    return expression_name
+
+
 def _is_schema_assignment_name(name: str) -> bool:
     lowered = name.lower()
     return (
@@ -162,6 +185,10 @@ def _is_schema_assignment_name(name: str) -> bool:
 
 def _access_kind_for_expression(expression_name: str | None) -> str:
     root = _root_name(expression_name)
+    if expression_name and (expression_name == "rcParams" or expression_name.endswith(".rcParams")):
+        return "configuration"
+    if expression_name and expression_name.endswith((".attrs", ".uns")):
+        return "output_metadata"
     if expression_name in {"os.environ"} or expression_name == "os.environ":
         return "environment"
     if expression_name and expression_name.endswith(".environ"):
@@ -183,6 +210,8 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         self.surface = _surface(relative)
         self.scope_stack: list[str] = []
         self.uses: list[FieldFunctionUse] = []
+        self._container_write_keys: dict[tuple[str, str], set[str]] = defaultdict(set)
+        self._container_sinks: list[tuple[str, str, str, str, int]] = []
 
     def _scope(self) -> str:
         return ".".join(self.scope_stack) if self.scope_stack else "<module>"
@@ -197,18 +226,60 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         operation: str,
         node: cst.CSTNode,
         access_kind: str = "field",
+        container: str | None = None,
     ) -> None:
-        self.uses.append(
-            FieldFunctionUse(
-                key=key,
-                operation=operation,
-                access_kind=access_kind,
-                path=str(self.relative),
-                line=self._line(node),
-                scope=self._scope(),
-                surface=self.surface,
-            )
+        scope = self._scope()
+        use = FieldFunctionUse(
+            key=key,
+            operation=operation,
+            access_kind=access_kind,
+            path=str(self.relative),
+            line=self._line(node),
+            scope=scope,
+            surface=self.surface,
         )
+        self.uses.append(use)
+        if operation == "write" and container is not None:
+            self._container_write_keys[(scope, container)].add(key)
+
+    def _record_container_sink(
+        self,
+        *,
+        container: str | None,
+        operation: str,
+        access_kind: str,
+        node: cst.CSTNode,
+    ) -> None:
+        if container is None:
+            return
+        self._container_sinks.append(
+            (self._scope(), container, operation, access_kind, self._line(node))
+        )
+
+    def resolved_uses(self) -> list[FieldFunctionUse]:
+        """Add field-level evidence implied by whole-container sinks."""
+        uses = list(self.uses)
+        seen = {
+            (use.key, use.operation, use.path, use.line, use.scope, use.access_kind) for use in uses
+        }
+        for scope, container, operation, access_kind, line in self._container_sinks:
+            for key in sorted(self._container_write_keys.get((scope, container), ())):
+                identity = (key, operation, str(self.relative), line, scope, access_kind)
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                uses.append(
+                    FieldFunctionUse(
+                        key=key,
+                        operation=operation,
+                        access_kind=access_kind,
+                        path=str(self.relative),
+                        line=line,
+                        scope=scope,
+                        surface=self.surface,
+                    )
+                )
+        return uses
 
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
         self.scope_stack.append(node.name.value)
@@ -224,11 +295,27 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
     def leave_FunctionDef(self, original_node: cst.FunctionDef) -> None:
         self.scope_stack.pop()
 
+    def visit_For(self, node: cst.For) -> bool | None:
+        self._record_container_sink(
+            container=_container_name(_expression_name(node.iter)),
+            operation="read",
+            access_kind="field",
+            node=node,
+        )
+        return True
+
+    def visit_CompFor(self, node: cst.CompFor) -> bool | None:
+        self._record_container_sink(
+            container=_container_name(_expression_name(node.iter)),
+            operation="read",
+            access_kind="field",
+            node=node,
+        )
+        return True
+
     def visit_Assign(self, node: cst.Assign) -> bool | None:
         target_names = [
-            target.target.value
-            for target in node.targets
-            if isinstance(target.target, cst.Name)
+            target.target.value for target in node.targets if isinstance(target.target, cst.Name)
         ]
         if any(_is_schema_assignment_name(name) for name in target_names):
             for key in _schema_literal_strings(node.value):
@@ -249,7 +336,9 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         if not keys:
             return True
         operation = "read"
-        access_kind = _access_kind_for_expression(_expression_name(node.value))
+        expression_name = _expression_name(node.value)
+        access_kind = _access_kind_for_expression(expression_name)
+        container = _container_name(expression_name)
         parent = self.get_metadata(ParentNodeProvider, node, None)
         if isinstance(parent, cst.AssignTarget) and parent.target is node:
             operation = "write"
@@ -260,11 +349,39 @@ class _FieldFunctionVisitor(cst.CSTVisitor):
         elif isinstance(parent, cst.Del):
             operation = "delete"
         for key in keys:
-            self._record(key=key, operation=operation, node=node, access_kind=access_kind)
+            self._record(
+                key=key,
+                operation=operation,
+                node=node,
+                access_kind=access_kind,
+                container=container,
+            )
         return True
 
     def visit_Call(self, node: cst.Call) -> bool | None:
         method = _call_name(node.func)
+        for argument in node.args:
+            if argument.star == "**":
+                self._record_container_sink(
+                    container=_container_name(_expression_name(argument.value)),
+                    operation="read",
+                    access_kind="field",
+                    node=node,
+                )
+        if isinstance(node.func, cst.Attribute) and method in CONTAINER_ITERATION_METHODS:
+            self._record_container_sink(
+                container=_container_name(_expression_name(node.func.value)),
+                operation="read",
+                access_kind="field",
+                node=node,
+            )
+        if isinstance(node.func, cst.Attribute) and method in PANDAS_EXPORT_METHODS:
+            self._record_container_sink(
+                container=_container_name(_expression_name(node.func.value)),
+                operation="schema",
+                access_kind="schema",
+                node=node,
+            )
         if method in ENV_READ_FUNCTIONS and node.args:
             key = _literal_string(node.args[0].value)
             if key is not None:
@@ -308,7 +425,7 @@ def _parse_field_uses(repo: Path) -> tuple[list[FieldFunctionUse], list[dict[str
         except Exception as exc:
             parse_errors.append({"path": str(relative), "error": str(exc)})
             continue
-        uses.extend(visitor.uses)
+        uses.extend(visitor.resolved_uses())
     return uses, parse_errors
 
 
@@ -337,6 +454,8 @@ def _cleanup_classification(uses: list[FieldFunctionUse]) -> str:
     key = uses[0].key if uses else ""
 
     if schemas:
+        return "output_schema_column"
+    if access_kinds and access_kinds <= {"output_metadata"}:
         return "output_schema_column"
     if access_kinds and access_kinds <= {"environment"}:
         return "environment_key"
@@ -372,19 +491,11 @@ def build_field_lineage(repo: Path) -> dict[str, object]:
                 "reuse": _field_reuse(key_uses),
                 "cleanup_classification": _cleanup_classification(key_uses),
                 "operations": dict(sorted(Counter(use.operation for use in key_uses).items())),
-                "access_kinds": dict(
-                    sorted(Counter(use.access_kind for use in key_uses).items())
-                ),
+                "access_kinds": dict(sorted(Counter(use.access_kind for use in key_uses).items())),
                 "surfaces": dict(sorted(Counter(use.surface for use in key_uses).items())),
-                "writer_scopes": sorted(
-                    {f"{use.path}::{use.scope}" for use in writers}
-                ),
-                "reader_scopes": sorted(
-                    {f"{use.path}::{use.scope}" for use in readers}
-                ),
-                "schema_scopes": sorted(
-                    {f"{use.path}::{use.scope}" for use in schemas}
-                ),
+                "writer_scopes": sorted({f"{use.path}::{use.scope}" for use in writers}),
+                "reader_scopes": sorted({f"{use.path}::{use.scope}" for use in readers}),
+                "schema_scopes": sorted({f"{use.path}::{use.scope}" for use in schemas}),
                 "uses": [asdict(use) for use in key_uses],
             }
         )
@@ -452,8 +563,7 @@ def write_field_lineage_outputs(
     production_dead = [
         field
         for field in fields
-        if field["reuse"] == "no_reader_dead_candidate"
-        and "production" in field["surfaces"]
+        if field["reuse"] == "no_reader_dead_candidate" and "production" in field["surfaces"]
     ]
     production_cleanup_candidates = [
         field

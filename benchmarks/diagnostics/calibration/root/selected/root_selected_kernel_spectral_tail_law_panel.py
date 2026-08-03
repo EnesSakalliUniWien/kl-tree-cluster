@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     finite_int,
@@ -1203,7 +1204,7 @@ def run_kernel_spectral_tail_law_panel(
 
 def main() -> None:
     outputs = run_kernel_spectral_tail_law_panel(config_from_args(parse_args()))
-    print(json.dumps({key: str(value) for key, value in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":

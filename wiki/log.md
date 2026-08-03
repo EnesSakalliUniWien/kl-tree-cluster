@@ -5855,6 +5855,23 @@ verification, and maintenance events here in chronological order.
   review rather than treating them as automatic deletions. The generator mode
   completed across all 122 active cases and retained the sparse high-dimensional
   case as an explicit low-geometry-signal stress.
+- Removed three proven benchmark-only dead fields: two unused selected-tail
+  transforms and the unused complement of the model table's `signal_label`.
+  Centralized the duplicated binary child/edge/sibling test identities in
+  `TreeDecomposition`. Extended and versioned `tbs-audit` field lineage to
+  recognize pandas exports, dictionary iteration, expanded `**kwargs`,
+  `DataFrame.attrs`, AnnData `.uns`, and Matplotlib `rcParams`. The fresh scan
+  reduced duplicate evidence from 438 to 437 groups and filtered field-cleanup
+  candidates from 147 to 130, with zero production cleanup candidates.
+- Split the CLI/entrypoint clone inventory into parser, persistence, and
+  terminal-rendering responsibilities. Centralized 19 root diagnostic bundle
+  writers and 55 calibration output-path printers, then moved identical
+  calibration, selected-root, root tie-rank, selected-hierarchy, and traversal
+  argument contracts into family-owned `cli.py` modules without forwarding
+  aliases. Characterization tests preserve option names, types, defaults, and
+  explicit overrides. The global clone scan moved from 437 groups and 7,394
+  lines to 409 groups and 6,797 lines; parser-containing groups moved from 62
+  and 1,197 lines to 52 and 903 lines.
 
 ## Evidence
 

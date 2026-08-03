@@ -22,6 +22,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
     SIBLING_GATE_PROFILES,
 )
 
+from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_selected_neighborhood_distribution_not_calibration"
@@ -2838,7 +2839,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             conditional_law_rows_path=args.conditional_law_rows_path,
         )
     )
-    print(json.dumps({key: str(path) for key, path in outputs.items()}, indent=2))
+    print_diagnostic_output_paths(outputs)
 
 
 if __name__ == "__main__":
