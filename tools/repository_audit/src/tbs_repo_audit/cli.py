@@ -12,6 +12,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Sequence
 
+from .calibration_contract import (
+    build_calibration_contract_report,
+    write_calibration_contract_report,
+)
 from .coverage_evidence import compare_coverage
 from .duplicates import (
     DEFAULT_DUPLICATE_SCOPES,
@@ -36,6 +40,12 @@ DEFAULT_GENERATOR_GEOMETRY_OUTPUT = Path(
 )
 DEFAULT_GENERATOR_GEOMETRY_MARKDOWN_OUTPUT = Path(
     "reports/audits/generated/generator-geometry.md"
+)
+DEFAULT_CALIBRATION_CONTRACT_OUTPUT = Path(
+    "reports/audits/generated/calibration-contract.json"
+)
+DEFAULT_CALIBRATION_CONTRACT_MARKDOWN_OUTPUT = Path(
+    "reports/audits/generated/calibration-contract.md"
 )
 CHECK_COMMANDS = {
     "ruff": ["ruff", "check", "."],
@@ -348,6 +358,7 @@ def _parser() -> argparse.ArgumentParser:
             "fields",
             "duplicates",
             "generators",
+            "calibration-contract",
             "quick",
             "evidence",
             "mutation",
@@ -357,6 +368,7 @@ def _parser() -> argparse.ArgumentParser:
             "map: static evidence; fields: LibCST field/function lineage; "
             "duplicates: classified jscpd cleanup report; "
             "generators: generated-data geometry and scientific-assumption audit; "
+            "calibration-contract: stopped-frontier support multiplicity; "
             "quick: add linters/clones/fixtures; evidence: add calibration coverage contexts; "
             "mutation: add mutmut"
         ),
@@ -416,6 +428,17 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_GENERATOR_GEOMETRY_MARKDOWN_OUTPUT,
         help="Markdown generator-geometry audit path, relative to the repository",
+    )
+    parser.add_argument(
+        "--calibration-records",
+        type=Path,
+        help="exported sibling-record CSV; required in calibration-contract mode",
+    )
+    parser.add_argument(
+        "--calibration-markdown-output",
+        type=Path,
+        default=DEFAULT_CALIBRATION_CONTRACT_MARKDOWN_OUTPUT,
+        help="Markdown calibration-contract report path, relative to the repository",
     )
     parser.add_argument(
         "--mutation-target",
@@ -512,6 +535,48 @@ def main(argv: Sequence[str] | None = None) -> int:
         if result.stderr:
             print(result.stderr, file=sys.stderr, end="")
         return result.returncode
+    if args.mode == "calibration-contract":
+        if args.calibration_records is None:
+            raise SystemExit(
+                "Calibration-contract mode requires --calibration-records."
+            )
+        records_path = (
+            args.calibration_records
+            if args.calibration_records.is_absolute()
+            else repo / args.calibration_records
+        )
+        calibration_output = (
+            DEFAULT_CALIBRATION_CONTRACT_OUTPUT
+            if args.output == DEFAULT_OUTPUT
+            else args.output
+        )
+        output = (
+            calibration_output
+            if calibration_output.is_absolute()
+            else repo / calibration_output
+        )
+        markdown_output = (
+            args.calibration_markdown_output
+            if args.calibration_markdown_output.is_absolute()
+            else repo / args.calibration_markdown_output
+        )
+        report = build_calibration_contract_report(records_path)
+        write_calibration_contract_report(
+            report,
+            output=output,
+            markdown_output=markdown_output,
+        )
+        summary = report["summary"]
+        assert isinstance(summary, dict)
+        print(f"Calibration contract report: {output}")
+        print(f"Calibration contract markdown: {markdown_output}")
+        print(
+            "Calibration support: "
+            f"{summary['role_supported_record_count']} role-supported records; "
+            f"{summary['structural_calibration_record_count']} structural records; "
+            f"{summary['nested_blocked_record_count']} nested blocked descendants"
+        )
+        return 0
 
     mutation_target = (
         _mutation_target(repo, args.mutation_target)

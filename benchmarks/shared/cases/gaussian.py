@@ -22,13 +22,15 @@ GAUSSIAN_CASES = {
             "seed": 42,
         },
         {
-            "name": "gauss_extreme_noise_highd",
+            "name": "gauss_dense_signal_highd",
             "generator": "blobs",
             "n_samples": 40,
             "n_features": 20000,
             "n_clusters": 4,
             "cluster_std": 7.5,
             "seed": 43,
+            "benchmark_intent": "dense_high_dimensional_signal_and_calibration_saturation",
+            "scientific_caution": "all_coordinates_are_cluster_dependent_not_irrelevant_noise",
         },
         {
             "name": "gauss_extreme_noise_many",
@@ -149,7 +151,7 @@ GAUSSIAN_CASES["continuous_gaussian_examples"] = [
     ),
     *representation_variants_by_name(
         GAUSSIAN_CASES["gaussian_extreme_noise"],
-        selected_names=("gauss_extreme_noise_highd",),
+        selected_names=("gauss_dense_signal_highd",),
         generator="blobs_continuous",
         name_suffix="_continuous",
         representation_role="continuous_stress_example",

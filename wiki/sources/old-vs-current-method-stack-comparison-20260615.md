@@ -63,7 +63,7 @@ gate.
   component is active but non-separating: the single truth row has component
   `-0.606531`, the null-like median is `-0.471195`, and `13` negatives exceed
   the truth on this component alone.
-- The current fixed-coordinate diagnostic profiles add non-cross-fit sibling
+- The current fixed-coordinate diagnostic profiles add same-data sibling
   gates, selected-topology alpha penalties, root-stability guards, and optional
   selected-family/permutation guards.
 - The base traversal law is not the main difference. Old and current both split

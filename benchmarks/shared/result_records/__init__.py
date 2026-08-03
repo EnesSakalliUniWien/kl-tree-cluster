@@ -10,10 +10,9 @@ from .dataframe import (
     benchmark_rows_to_dataframe,
 )
 from .factory import build_benchmark_result_row
-from .models import BenchmarkResultRow, BenchmarkRunStatus
+from .models import BenchmarkResultRow
 
 __all__ = [
-    "BenchmarkRunStatus",
     "BenchmarkResultRow",
     "ComputedResultRecord",
     "NUMERIC_RESULT_COLUMNS",

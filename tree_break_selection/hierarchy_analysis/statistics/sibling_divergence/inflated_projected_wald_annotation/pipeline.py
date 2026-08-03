@@ -34,6 +34,7 @@ from .fdr_annotation import (
     mark_non_binary_as_skipped,
 )
 from .projection_dimension_annotation import (
+    write_record_calibration_evidence,
     write_record_projection_dimensions,
 )
 
@@ -146,6 +147,7 @@ def annotate_sibling_divergence(
         return annotations_df
 
     write_record_projection_dimensions(annotations_df, records)
+    write_record_calibration_evidence(annotations_df, records)
     _validate_focal_sibling_records(records)
     n_focal = sum(not record.is_null_like for record in records)
 

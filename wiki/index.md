@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-07-28
+updated: 2026-08-03
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -73,12 +73,8 @@ renamed, or promoted.
 - [[selected-edge-binary-categorical-pilot-20260604]] - AWS pilot extending
   selected-edge diagnostics to direct categorical multinomial nulls and
   exposing high-cardinality categorical fixed-tree frontier inflation.
-- [[feature-split-selection-audit-20260601]] - cross-fit audit showing that
-  feature-split hierarchy selection/testing restores null support in the null
-  case and keeps signal examples interpretable.
 - [[selected-hierarchy-null-audit-20260601]] - same-data selected-hierarchy
-  null audit showing large selected-hierarchy correction factors without using
-  cross-fitting as the method.
+  null audit showing large selected-hierarchy correction factors.
 - [[selected-hierarchy-stratification-diagnostic-20260602]] - selected-null
   scale stratification by parent depth and parent-size bins, recorded as
   descriptive heterogeneity rather than calibration borrowing.
@@ -738,7 +734,7 @@ renamed, or promoted.
   inference, simulation-based inference, conformal risk control, and
   calibration/observability tooling as the most relevant framework stack.
 - [[data-independent-sibling-gate-panel-20260613]] - diagnostic same-data,
-  non-cross-fit sibling-gate candidate using fixed coordinate-wise Wald
+  same-data sibling-gate candidate using fixed coordinate-wise Wald
   p-values plus a selected-topology penalty; the `binary_2clusters` smoke
   controls the selected null near `0.01` while remaining diagnostic-only.
 - [[data-independent-sibling-gate-traversal-panel-20260613]] - traversal-level
@@ -1258,8 +1254,8 @@ renamed, or promoted.
   time opt-in, and records that fixed-coordinate sibling evidence must not force
   the edge projection floor.
 - [[benchmark-pipeline-contract]] - active benchmark execution order and the
-  strict case-generation, distance, method-dispatch, and report-orchestration
-  contracts.
+  strict case-generation, distance, method-dispatch, typed unsupported-outcome,
+  scientific-support coverage, and report-orchestration contracts.
 - [[spectral-backend-runtime-diagnostic]] - runtime evidence showing that
   null-whitened tangent matrix materialization, not SciPy eigendecomposition,
   dominates the current slow spectral workloads.

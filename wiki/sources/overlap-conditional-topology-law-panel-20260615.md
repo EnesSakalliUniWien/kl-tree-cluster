@@ -43,7 +43,7 @@ tags:
 `overlap_conditional_topology_law_panel.py` makes the selected-neighborhood
 topology object directed and incidence-aware. It scores root, internal,
 pass-through, and leaf rows using local income/outcome topology features only:
-no cross-fit split, no selected-family permutation replay, and no learned
+no data partition, no selected-family permutation replay, and no learned
 threshold.
 
 ## Key Points

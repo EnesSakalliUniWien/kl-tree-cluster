@@ -33,8 +33,8 @@ only one flat clustering.
   `fixed_coordinate_guarded_v1`, `fixed_coordinate_selective_root_v1`,
   `fixed_coordinate_selective_passthrough_v1`, and
   `fixed_coordinate_global_passthrough_refined_v1`.
-- Fixed-profile rows surface the existing non-cross-fit fixed coordinate BH
-  path; the panel does not add cross-fitting or reintroduce adaptive parent
+- Fixed-profile rows surface the existing same-data fixed coordinate BH
+  path; the panel does not reintroduce adaptive parent
   PCA into the sibling statistic.
 - The runner writes `selected_family_traversal_rows.csv`,
   `selected_family_guard_rows.csv`, `multiscale_node_decisions.csv`,

@@ -18,6 +18,9 @@ class NodeSpectralResult:
     mp_threshold_rows: int
     projection_matrix: np.ndarray | None
     eigenvalues: np.ndarray | None
+    descendant_leaf_row_count: int = 0
+    internal_distribution_row_count: int = 0
+    spectral_matrix_row_count: int = 0
     full_eigenvalues: np.ndarray | None = None
     active_feature_count: int = 0
     stage_timings: dict[str, float] = field(default_factory=dict)

@@ -1078,3 +1078,49 @@ def test_run_clustering_result_uses_provided_graph_distance_matrix():
         assert result.labels is None
         assert isinstance(result.skip_reason, str)
         assert result.skip_reason.strip()
+
+
+def test_run_clustering_result_gives_distance_tree_nnls_methods_their_own_geometry(
+    monkeypatch,
+):
+    """Distance-tree NNLS methods must get their own constructor that supplies
+    branch_length_data_df explicitly, mirroring tbs_diffusion_graphtools_nnls,
+    rather than falling through the generic TBS_RUNNER_METHODS dispatch branch
+    that never wires branch_length_data_df through."""
+    captured = {}
+
+    def _capture_runner(*args, **kwargs):
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs_nnls",
+        MethodSpec(
+            name="TBS Divergence (NNLS branch lengths)",
+            runner=_capture_runner,
+            param_grid=[{}],
+        ),
+    )
+
+    df = _toy_dataframe()
+    result = run_clustering_result(
+        data_df=df,
+        method_id="tbs_nnls",
+        params={
+            "tree_distance_metric": "hamming",
+            "tree_linkage_method": "average",
+            "branch_length_optimization_method": "fixed_topology_nnls",
+        },
+        seed=42,
+    )
+
+    assert result.status in {"ok", "skip"}
+    assert captured["kwargs"]["branch_length_data_df"] is df

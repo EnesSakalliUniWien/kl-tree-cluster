@@ -31,8 +31,7 @@ tags:
 This audit estimates the same-data selected-hierarchy sibling null by
 regenerating null feature matrices, rebuilding the hierarchy inside every
 replicate, rerunning the edge gate, and collecting selected focal sibling
-statistics. It keeps cross-fitting out of the candidate method and directly
-targets the selected-hierarchy inference problem.
+statistics. It directly targets the selected-hierarchy inference problem.
 
 ## Key Points
 
@@ -117,6 +116,5 @@ targets the selected-hierarchy inference problem.
 ## Links
 
 - [[edge-selection-null-audit-20260601]]
-- [[feature-split-selection-audit-20260601]]
 - [[oracle-gate-path-diagnostic]]
 - [[open-mathematical-questions]]

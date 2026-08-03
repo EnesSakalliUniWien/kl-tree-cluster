@@ -152,7 +152,7 @@ calibration rule.
   to ARI `0.0`. Increasing local selected-subtree permutation resolution also
   does not solve it: with `999` draws, the false descendant remains selected at
   p-value `0.002`, while the strong signal roots are at p-value `0.001`.
-- The next viable non-cross-fit fix is a global selected-family null for
+- The next viable same-data fix is a global selected-family null for
   pass-through descendants. On the observed false row, a full-tree
   pass-through replay gives global p-value about `0.06` with `49` draws, and a
   conservative global-min sibling-family replay gives p-value about `0.05`

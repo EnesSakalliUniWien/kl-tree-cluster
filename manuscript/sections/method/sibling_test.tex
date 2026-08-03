@@ -309,10 +309,11 @@ accepting or rejecting calibration support.
 \paragraph{Calibration-support contract.}
 For a focal sibling pair $u$, the empirical-null interpretation of
 \(\hat c_{f_u}(x_u)\) requires positive calibration mass from records that are
-strict-null-like or stopped by the edge path.
+tested null-like or lie below a stopped edge path.
 Let $f_q$ denote the feature family of sibling record $q$, let
-$S_{l(q)}^{\mathrm{edge}}$ and $S_{r(q)}^{\mathrm{edge}}$ be the two
-child-parent edge rejection indicators, and let
+$E_{l(q)}^{\mathrm{edge}}$ and $E_{r(q)}^{\mathrm{edge}}$ indicate whether the
+two child-parent edges were tested, let $S_{l(q)}^{\mathrm{edge}}$ and
+$S_{r(q)}^{\mathrm{edge}}$ be their rejection indicators, and let
 $B_q^{\mathrm{edge}}$ indicate that the sibling record is edge-blocked by the
 ancestor testing path. Define the local support set
 \[
@@ -329,23 +330,29 @@ The strict empirical-null support set is
 =
 \left\{
 q\in\mathcal C_u:
+E_{l(q)}^{\mathrm{edge}}=1,\
+E_{r(q)}^{\mathrm{edge}}=1,\
 S_{l(q)}^{\mathrm{edge}}=0,\
 S_{r(q)}^{\mathrm{edge}}=0
 \right\},
 \]
-and the weak stopped-or-null support set is
+so untested descendants are not called strict-null observations. The stopped
+support set is
 \[
 \mathcal C_{\mathrm{stop},u}
 =
 \left\{
 q\in\mathcal C_u:
-q\in\mathcal C_{0,u}\ \text{or}\ B_q^{\mathrm{edge}}=1
+B_q^{\mathrm{edge}}=1
 \right\}.
 \]
 If $\mathcal C_{0,u}$ has positive calibration mass, the local estimate has
 strict internal empirical-null support. If $\mathcal C_{0,u}$ is empty but
-$\mathcal C_{\mathrm{stop},u}$ has positive mass, the estimate has only weak
-stopped-or-null support. If both are empty but $\mathcal C_u$ has positive
+$\mathcal C_{\mathrm{stop},u}$ has positive mass, the estimate has only
+stopped-path support. The current estimator includes nested blocked descendants
+as node records; therefore its reported record count and weight-only effective
+sample size are not counts of independent stopping events. If both support sets
+are empty but $\mathcal C_u$ has positive
 mass, the data provide selected non-null context but not empirical-null
 calibration. If $\mathcal C_u$ has no positive mass, the local empirical-null
 calibration contract is unsatisfied. A leave-one-context version of this
@@ -363,9 +370,9 @@ The present evidence establishes this as a necessary support contract, not as a
 sufficient finite-sample guarantee. Minimum effective sample size thresholds
 remain a validation gap.
 The denominator is required to have positive effective calibration mass from
-strict-null or stopped-edge records. If no such positive-degree sibling records
-carry positive null weight, the calibration contract is not satisfied and the
-implementation raises an error.
+tested-null or stopped-path records. If no such positive-degree sibling
+records carry positive null weight, the calibration contract is not satisfied
+and the implementation raises an error.
 
 \paragraph{Runtime inflation adjustment and sibling false-discovery-rate correction.}
 For each focal pair $u$, the inflation-adjusted runtime test is

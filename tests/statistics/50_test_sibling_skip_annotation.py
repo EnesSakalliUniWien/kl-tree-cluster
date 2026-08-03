@@ -68,3 +68,59 @@ def test_inflated_projected_wald_marks_leaves_as_skipped() -> None:
 
     for leaf in ["L0", "L1", "L2", "L3"]:
         assert bool(result.loc[leaf, "Sibling_Divergence_Skipped"])
+
+
+def _annotate(tree: nx.DiGraph, annotations: pd.DataFrame) -> pd.DataFrame:
+    sibling_parent_ids = ["N4", "N2", "N3"]
+    return annotate_sibling_divergence(
+        tree,
+        annotations,
+        sibling_projection_dimensions_from_edge_comparisons={
+            parent: 1 for parent in sibling_parent_ids
+        },
+        parent_principal_component_projections={
+            parent: np.eye(20, dtype=float)[:1] for parent in sibling_parent_ids
+        },
+        parent_principal_component_eigenvalues={
+            parent: np.ones(1, dtype=float) for parent in sibling_parent_ids
+        },
+    )
+
+
+def test_skipped_null_like_parent_retains_calibration_degrees_of_freedom() -> None:
+    tree = _binary_tree()
+    result = _annotate(tree, _edge_annotations(tree))
+
+    assert bool(result.loc["N3", "Sibling_Divergence_Skipped"])
+    assert float(result.loc["N3", "Sibling_Degrees_of_Freedom"]) == 1.0
+
+
+def test_annotations_expose_role_support_for_every_sibling_record() -> None:
+    tree = _binary_tree()
+    result = _annotate(tree, _edge_annotations(tree))
+
+    # N3's children L2/L3 are both non-significant, so N3 is null-like and is
+    # admissible empirical-null calibration support. N2's children are both
+    # significant, tested and unblocked, so it is focal and not support.
+    assert bool(result.loc["N3", "Sibling_Role_Supported"])
+    assert not bool(result.loc["N2", "Sibling_Role_Supported"])
+
+
+def test_annotations_expose_sibling_null_weight_for_every_record() -> None:
+    tree = _binary_tree()
+    result = _annotate(tree, _edge_annotations(tree))
+
+    # Calibration support needs all three of dof > 0, weight > 0 and role
+    # support, so the weight must survive for skipped parents too.
+    weight = float(result.loc["N3", "Sibling_Null_Weight"])
+    assert 0.0 <= weight <= 1.0
+
+
+def test_annotations_expose_parent_positive_eigenvalue_count() -> None:
+    tree = _binary_tree()
+    result = _annotate(tree, _edge_annotations(tree))
+
+    # dof == 0 is reachable only when the parent spectrum has no positive
+    # eigenvalues, so the available rank must be auditable next to the dof.
+    # The fixture supplies a single unit eigenvalue per parent.
+    assert float(result.loc["N3", "Sibling_Parent_Positive_Eigenvalue_Count"]) == 1.0

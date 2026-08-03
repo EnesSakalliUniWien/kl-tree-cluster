@@ -120,6 +120,34 @@ def test_fit_empirical_null_inflation_model_excludes_selected_nonnull_records() 
     )
 
 
+def test_fit_empirical_null_inflation_model_reports_exclusive_support_roles() -> None:
+    records = [
+        _make_record(
+            "tested_null",
+            stat=2.0,
+            degrees_of_freedom=1.0,
+            is_null_like=True,
+            is_edge_blocked=False,
+        ),
+        _make_record(
+            "stopped",
+            stat=8.0,
+            degrees_of_freedom=2.0,
+            is_null_like=True,
+            is_edge_blocked=True,
+        ),
+    ]
+
+    model = fit_empirical_null_inflation_model(records)
+
+    assert model.n_calibration == 2
+    assert model.n_strict_null_calibration == 1
+    assert model.n_edge_blocked_calibration == 1
+    assert model.n_stopped_or_null_calibration == 2
+    assert model.sample_is_strict_null.tolist() == [True, False]
+    assert model.sample_is_edge_blocked.tolist() == [False, True]
+
+
 def test_fit_empirical_null_inflation_model_rejects_selected_nonnull_only_support() -> None:
     records = [
         _make_record(
@@ -468,3 +496,28 @@ def test_fit_empirical_null_inflation_model_reports_underflow_stable_effective_s
     model = fit_empirical_null_inflation_model(records)
 
     assert math.isclose(model.effective_sample_size, 1.8)
+
+
+@pytest.mark.parametrize(
+    ("is_null_like", "is_edge_blocked", "expected"),
+    [
+        (True, False, True),
+        (False, True, True),
+        (True, True, True),
+        (False, False, False),
+    ],
+)
+def test_sibling_pair_record_owns_empirical_null_support_rule(
+    is_null_like: bool,
+    is_edge_blocked: bool,
+    expected: bool,
+) -> None:
+    record = _make_record(
+        "p",
+        stat=1.0,
+        degrees_of_freedom=1.0,
+        is_null_like=is_null_like,
+        is_edge_blocked=is_edge_blocked,
+    )
+
+    assert record.has_empirical_null_support is expected

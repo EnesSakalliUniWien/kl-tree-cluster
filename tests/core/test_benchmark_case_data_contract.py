@@ -72,13 +72,79 @@ def test_benchmark_case_suites_separate_input_contracts() -> None:
         "gauss_clear_medium_continuous",
         "gauss_moderate_3c_continuous",
         "gauss_null_large_continuous",
-        "gauss_extreme_noise_highd_continuous",
+        "gauss_dense_signal_highd_continuous",
         "dim_consolidated_4c_24f_continuous",
         "dim_consolidated_4c_72f_continuous",
         "dim_diffuse_6c_136f_continuous",
         "gauss_single_outlier_4c_continuous",
         "gauss_outlier_cluster_4c_continuous",
     }
+
+
+def test_high_dimensional_gaussian_cases_have_explicit_signal_semantics() -> None:
+    cases_by_name = {case["name"]: case for case in get_default_test_cases()}
+
+    assert "gauss_extreme_noise_highd" not in cases_by_name
+    assert "gauss_extreme_noise_highd_continuous" not in cases_by_name
+
+    dense = cases_by_name["gauss_dense_signal_highd"]
+    assert {
+        "generator": dense["generator"],
+        "n_samples": dense["n_samples"],
+        "n_features": dense["n_features"],
+        "n_clusters": dense["n_clusters"],
+        "cluster_std": dense["cluster_std"],
+        "seed": dense["seed"],
+    } == {
+        "generator": "blobs",
+        "n_samples": 40,
+        "n_features": 20_000,
+        "n_clusters": 4,
+        "cluster_std": 7.5,
+        "seed": 43,
+    }
+
+    sparse = cases_by_name["gauss_sparse_signal_highd_noise"]
+    assert {
+        "generator": sparse["generator"],
+        "n_samples": sparse["n_samples"],
+        "n_clusters": sparse["n_clusters"],
+        "informative_dims": sparse["informative_dims"],
+        "n_features": sparse["n_features"],
+        "separation": sparse["separation"],
+        "informative_std": sparse["informative_std"],
+        "noise_std": sparse["noise_std"],
+        "informative_corr": sparse["informative_corr"],
+        "noise_corr": sparse["noise_corr"],
+        "signal_mode": sparse["signal_mode"],
+        "balanced_clusters": sparse["balanced_clusters"],
+        "seed": sparse["seed"],
+    } == {
+        "generator": "dimensional_gaussian",
+        "n_samples": 40,
+        "n_clusters": 4,
+        "informative_dims": 12,
+        "n_features": 20_000,
+        "separation": 2.8,
+        "informative_std": 1.0,
+        "noise_std": 1.0,
+        "informative_corr": 0.0,
+        "noise_corr": 0.0,
+        "signal_mode": "consolidated",
+        "balanced_clusters": True,
+        "seed": 43,
+    }
+
+    for name in ("gauss_dense_signal_highd", "gauss_dense_signal_highd_continuous"):
+        _data, _labels, _original, metadata = generate_case_data(cases_by_name[name])
+        assert (
+            metadata["benchmark_intent"]
+            == "dense_high_dimensional_signal_and_calibration_saturation"
+        )
+        assert (
+            metadata["scientific_caution"]
+            == "all_coordinates_are_cluster_dependent_not_irrelevant_noise"
+        )
 
 
 def test_case_data_requires_explicit_generator() -> None:

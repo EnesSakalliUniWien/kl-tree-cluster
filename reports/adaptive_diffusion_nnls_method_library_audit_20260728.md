@@ -334,7 +334,7 @@ The current `ok` therefore means "SciPy accepted a termination condition," not
 All pairs are used when \(n(n-1)/2 \le 50,000\); otherwise the implementation
 draws exactly 50,000 unique pairs using a Python set and a fixed random seed.
 The fit error is measured on those same fitting pairs. There is no held-out
-pair error, topology resampling, feature split, or edge-length uncertainty.
+pair error, topology resampling, or edge-length uncertainty.
 
 Changing only the pair-sampling seed produced:
 
@@ -683,9 +683,8 @@ explicit hypothesis, not an implicit fallback.
    sampling is active.
 3. Record edge-length stability, fraction at the lower bound, matrix rank or
    conditioning diagnostics, and gate-label stability.
-4. Separate topology-selection features, branch-fit features, and gate-test
-   features in at least one cross-fit validation route to quantify same-data
-   optimism.
+4. Quantify same-data optimism through full-pipeline selected-hierarchy null
+   reconstruction that repeats topology selection, branch fitting, and gate testing.
 
 ### Priority 2 — performance and observability
 

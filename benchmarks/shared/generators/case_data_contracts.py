@@ -228,6 +228,12 @@ def case_metadata(
         "precomputed_distance_matrix": precomputed_distance_matrix,
         "precomputed_distance_condensed": precomputed_distance_condensed,
     }
+    for field_name in ("benchmark_intent", "scientific_caution"):
+        if field_name in test_case:
+            field_value = str(test_case[field_name]).strip()
+            if not field_value:
+                raise ValueError(f"{field_name} must be non-empty when provided.")
+            metadata[field_name] = field_value
     if distance_metric is not None:
         if not distance_metric:
             raise ValueError("distance_metric must be non-empty when provided.")

@@ -54,6 +54,14 @@ _DETAILED_LOG_EXCLUSIONS = frozenset(
         "sibling_gate_fdr_sec",
         "traversal_sec",
         "skip_reason",
+        "unsupported_reason_code",
+        "unsupported_stage",
+        "unsupported_reason",
+        "unsupported_focal_record_count",
+        "unsupported_admissible_support_count",
+        "unsupported_invalid_record_count",
+        "unsupported_upstream_tested_count",
+        "unsupported_upstream_rejected_count",
         "labels_length",
     }
 )

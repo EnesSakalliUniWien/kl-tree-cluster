@@ -288,7 +288,7 @@ verification, and maintenance events here in chronological order.
   and compare against in-sample and fixed-tree feature-permutation regimes.
   The first run is stored under
   `raw/assets/benchmark-results/sample_split_selection_audit_20260601/` and
-  summarized in [[feature-split-selection-audit-20260601]].
+  summarized in an audit page that has since been removed.
 - Added `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
   to estimate the same-data selected-hierarchy sibling null directly. The
   first Bernoulli/categorical run used 20 null replicates on four
@@ -5801,6 +5801,60 @@ verification, and maintenance events here in chronological order.
   exponential, or gamma families rather than plain fixed-subspace chi-square,
   and recorded the selected-quadratic-form interpretation in
   [[topology-diffusion-pdf-cdf-spectral-relationship-audit-20260730]].
+- Traced `n_calibration` through Tree-BH, sibling-record construction, and the
+  empirical-null fit. Blocked descendants had been reported simultaneously as
+  strict-null and stopped-edge records because untested edges retain
+  `rejected=False`. Production reporting now makes these roles exclusive while
+  preserving the validated all-descendant inflation estimate. On
+  `binary_moderate_4c`, the unchanged 75-record fit is now reported as 4 tested
+  null records plus 71 blocked records; it retains four clusters, ARI `1.0`,
+  and `c_hat=15.0933`.
+- Added `tbs-audit --mode calibration-contract --calibration-records PATH`.
+  Across the 48,114 exported all-method sibling rows it found 25,960
+  role-supported node records but only 4,862 tested-null plus stopped-frontier
+  structural records, including 21,098 nested blocked descendants. The report
+  exposes this dependence diagnostic without silently changing production
+  weighting; a frontier-only trial was rejected after it changed the binary
+  low/moderate/hard results from 7/4/4 clusters to 10/5/32 clusters.
+
+### 2026-08-01
+
+- Removed the feature-partition calibration direction from the maintained
+  repository. Deleted its diagnostic runner, dedicated benchmark artifacts,
+  and wiki source page; removed its active code, method-description, report,
+  wiki-index, analysis, question, and source references. Same-data
+  selection-conditioned calibration remains the sole maintained direction.
+
+### 2026-08-03
+
+- Implemented the typed benchmark outcome contract for scientifically
+  unsupported empirical-null TBS runs. Zero-support sibling-calibration
+  boundaries now return no labels, zero clusters, a stable structured reason,
+  and `NaN` quality metrics; dispatch, result rows, performance grids, coverage
+  summaries, and validation plots preserve the distinction from operational
+  skips. Mixed calibration states with other role-supported records remain
+  executable.
+- Replaced the active misleading `gauss_extreme_noise_highd` identifier with
+  `gauss_dense_signal_highd` without an alias, and added the distinct
+  `gauss_sparse_signal_highd_noise` case with 12 informative plus 19,988
+  independent nuisance dimensions. Zero-correlated nuisance sampling now uses
+  a linear-memory direct-normal path. Historical raw result identifiers were
+  not rewritten.
+- Verified 1,363 repository tests with zero failures and 15 numerical warnings,
+  broad Ruff checks, 272-page wiki lint, and diff whitespace checks. The fresh
+  geometry audit measured nearest-neighbor label agreement of `1.000` for the
+  dense case and `0.175` for the sparse case, correctly marking the latter as
+  low-signal. A four-row continuation smoke produced one unsupported TBS row,
+  three later successful rows, and TBS unsupported coverage `1/2` while
+  K-means remained `0/2` unsupported.
+- Ran the globally installed repository analysis before commit. `tbs-audit
+  --mode quick` scanned 833 Python files with zero parse errors and zero
+  unresolved calibration imports; Ruff, Vulture, jscpd execution, and
+  dead-fixture checks all completed successfully. The evidence inventory records
+  438 exact clone groups and 147 filtered field-cleanup candidates for later
+  review rather than treating them as automatic deletions. The generator mode
+  completed across all 122 active cases and retained the sparse high-dimensional
+  case as an explicit low-geometry-signal stress.
 
 ## Evidence
 

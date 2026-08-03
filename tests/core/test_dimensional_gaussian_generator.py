@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import importlib
+
 import numpy as np
+import pytest
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.generators.generate_dimensional_gaussian import (
@@ -79,8 +82,56 @@ def test_default_cases_include_dimensional_gaussian_family() -> None:
     all_cases = get_default_test_cases()
     family = [case for case in all_cases if case.get("generator") == "dimensional_gaussian"]
 
-    assert len(family) == 6
+    assert len(family) == 7
     assert {case["category"] for case in family} == {
         "gaussian_dimensionality_consolidated",
         "gaussian_dimensionality_diffuse",
+        "gaussian_sparse_signal_highd_noise",
     }
+
+
+def test_zero_correlated_high_dimensional_noise_uses_independent_fast_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dimensional_generator = importlib.import_module(
+        "benchmarks.shared.generators.generate_dimensional_gaussian"
+    )
+    real_covariance = dimensional_generator._make_exchangeable_covariance
+
+    def reject_dense_noise_covariance(n_dims: int, std: float, corr: float) -> np.ndarray:
+        if n_dims == 19_988:
+            raise AssertionError("independent nuisance dimensions must not allocate dense covariance")
+        return real_covariance(n_dims, std, corr)
+
+    monkeypatch.setattr(
+        dimensional_generator,
+        "_make_exchangeable_covariance",
+        reject_dense_noise_covariance,
+    )
+    config = DimensionalGaussianConfig(
+        n_samples=40,
+        n_clusters=4,
+        informative_dims=12,
+        noise_dims=19_988,
+        separation=2.8,
+        informative_std=1.0,
+        noise_std=1.0,
+        informative_corr=0.0,
+        noise_corr=0.0,
+        signal_mode="consolidated",
+        balanced_clusters=True,
+        random_seed=43,
+    )
+
+    data, labels, metadata = generate_dimensional_gaussian(config)
+    repeated_data, repeated_labels, _repeated_metadata = generate_dimensional_gaussian(config)
+
+    assert data.shape == (40, 20_000)
+    assert metadata["noise_dims"] == 19_988
+    np.testing.assert_array_equal(labels, repeated_labels)
+    np.testing.assert_array_equal(data, repeated_data)
+    nuisance = data[:, config.informative_dims :]
+    cluster_noise_means = np.asarray(
+        [nuisance[labels == cluster_id].mean() for cluster_id in range(config.n_clusters)]
+    )
+    assert np.max(np.abs(cluster_noise_means)) < 0.01

@@ -163,6 +163,9 @@ def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         "benchmark_grid",
         "params",
         "skip_reason",
+        "unsupported_reason_code",
+        "unsupported_stage",
+        "unsupported_reason",
     ):
         normalized[col] = normalized[col].fillna("").astype(str)
 

@@ -11,7 +11,8 @@ from . import get_default_test_cases
 
 REGRESSION_GATE_CASE_NAMES: tuple[str, ...] = (
     "gauss_extreme_noise_3c",
-    "gauss_extreme_noise_highd",
+    "gauss_dense_signal_highd",
+    "gauss_sparse_signal_highd_noise",
     "dim_consolidated_4c_24f",
     "dim_consolidated_4c_272f",
     "dim_diffuse_6c_36f",

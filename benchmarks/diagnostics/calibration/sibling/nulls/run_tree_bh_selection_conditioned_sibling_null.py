@@ -46,8 +46,8 @@ from benchmarks.diagnostics.runner_support import (
 from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _DEFAULT_GAUSSIAN_BLOCKERS = (
-    "gauss_extreme_noise_highd",
-    "gauss_extreme_noise_highd_continuous",
+    "gauss_dense_signal_highd",
+    "gauss_dense_signal_highd_continuous",
 )
 
 

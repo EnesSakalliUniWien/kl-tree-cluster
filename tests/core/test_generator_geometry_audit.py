@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from benchmarks.diagnostics.generators.case_geometry_audit import (
     audit_case,
@@ -25,6 +26,19 @@ def test_generator_geometry_audit_records_low_signal_dimensional_case() -> None:
     )
     assert row.observation_model == "per_feature_median_thresholded_continuous_matrix"
     assert row.benchmark_intent == "discretized_continuous_stress"
+
+
+def test_generator_geometry_audit_records_sparse_high_dimensional_case_without_promising_recovery() -> None:
+    row = audit_case(_case("gauss_sparse_signal_highd_noise"))
+
+    assert row.n_samples == 40
+    assert row.n_features == 20_000
+    assert row.true_clusters == 4
+    assert row.benchmark_intent == "irrelevant_feature_robustness_stress"
+    assert row.metadata_scientific_caution == (
+        "known_labels_do_not_imply_tree_recoverability_geometry_audit_is_authoritative"
+    )
+    assert np.isfinite(row.nearest_neighbor_same_label_fraction)
 
 
 def test_generator_geometry_audit_records_duplicate_heavy_binary_case() -> None:

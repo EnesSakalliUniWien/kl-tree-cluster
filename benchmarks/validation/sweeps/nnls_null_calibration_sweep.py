@@ -56,7 +56,7 @@ from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.time import format_timestamp_utc
 
-SCHEMA_VERSION = "nnls_null_calibration_sweep/v1"
+SCHEMA_VERSION = "nnls_null_calibration_sweep/v3"
 GENERATED_BY = "benchmarks.validation.sweeps.nnls_null_calibration_sweep"
 DEFAULT_OUTPUT_DIR = Path("reports/nnls_null_calibration_sweep")
 DEFAULT_CASE_NAMES = (
@@ -103,6 +103,7 @@ def _record_row(
         "n_parent": int(record.n_parent),
         "is_null_like": bool(record.is_null_like),
         "is_edge_blocked": bool(record.is_edge_blocked),
+        "is_role_supported": bool(record.has_empirical_null_support),
         "sibling_null_weight": float(record.sibling_null_weight),
         "sibling_projection_dimension": float(record.sibling_projection_dimension),
         "parent_spectral_eigenvalue_count": float(record.parent_spectral_eigenvalue_count),
@@ -169,6 +170,77 @@ def hamming_squared_euclidean_embedding(data: pd.DataFrame) -> pd.DataFrame:
 def _finite_min(values: pd.Series | np.ndarray | list[object]) -> float:
     series = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
     return float(series.min()) if not series.empty else math.nan
+
+
+def _tree_root(tree: object) -> object | None:
+    if hasattr(tree, "root"):
+        return tree.root()
+    roots = [node for node, degree in tree.in_degree() if int(degree) == 0]
+    if len(roots) == 1:
+        return roots[0]
+    return None
+
+
+def _tree_shape_summary(tree: object) -> dict[str, object]:
+    if tree is None or not hasattr(tree, "nodes") or not hasattr(tree, "out_degree"):
+        return {}
+    nodes = list(tree.nodes)
+    leaf_nodes = [node for node in nodes if int(tree.out_degree(node)) == 0]
+    internal_nodes = [node for node in nodes if int(tree.out_degree(node)) > 0]
+    root = _tree_root(tree)
+    return {
+        "tree_n_leaves": int(len(leaf_nodes)),
+        "tree_n_internal_nodes": int(len(internal_nodes)),
+        "tree_n_nodes": int(len(nodes)),
+        "tree_root": "" if root is None else str(root),
+    }
+
+
+def _spectral_frame_summary_from_result(result_extra: dict[str, object]) -> dict[str, object]:
+    tree = result_extra.get("tree")
+    gate_bundle = result_extra.get("gate_bundle")
+    if gate_bundle is None:
+        return _tree_shape_summary(tree)
+    spectral_context = gate_bundle.edge_gate_result.spectral_context
+    descendant_leaf_rows = getattr(spectral_context, "descendant_leaf_row_counts_by_node", {})
+    internal_rows = getattr(spectral_context, "internal_distribution_row_counts_by_node", {})
+    matrix_rows = getattr(spectral_context, "spectral_matrix_row_counts_by_node", {})
+    internal_node_ids: list[object] = []
+    if tree is not None and hasattr(tree, "nodes") and hasattr(tree, "out_degree"):
+        internal_node_ids = [node for node in tree.nodes if int(tree.out_degree(node)) > 0]
+    else:
+        internal_node_ids = list(matrix_rows)
+
+    def _sum_for_nodes(values_by_node: dict[object, object]) -> int:
+        total = 0
+        for node in internal_node_ids:
+            total += int(values_by_node.get(str(node), values_by_node.get(node, 0)))
+        return total
+
+    def _max_for_nodes(values_by_node: dict[object, object]) -> int:
+        values = [
+            int(values_by_node.get(str(node), values_by_node.get(node, 0)))
+            for node in internal_node_ids
+        ]
+        return max(values) if values else 0
+
+    root = _tree_root(tree) if tree is not None else None
+
+    def _root_value(values_by_node: dict[object, object]) -> int:
+        if root is None:
+            return 0
+        return int(values_by_node.get(str(root), values_by_node.get(root, 0)))
+
+    return {
+        **_tree_shape_summary(tree),
+        "spectral_total_descendant_leaf_rows": _sum_for_nodes(descendant_leaf_rows),
+        "spectral_total_internal_distribution_rows": _sum_for_nodes(internal_rows),
+        "spectral_total_matrix_rows": _sum_for_nodes(matrix_rows),
+        "spectral_max_internal_distribution_rows": _max_for_nodes(internal_rows),
+        "root_descendant_leaf_rows": _root_value(descendant_leaf_rows),
+        "root_internal_distribution_rows": _root_value(internal_rows),
+        "root_spectral_matrix_rows": _root_value(matrix_rows),
+    }
 
 
 def _bool_sum(frame: pd.DataFrame, column: str) -> int:
@@ -293,6 +365,11 @@ def _parent_eigenvalue_rows_from_result(
         "principal_component_eigenvalues_by_node",
         {},
     )
+    descendant_leaf_rows = getattr(spectral_context, "descendant_leaf_row_counts_by_node", {})
+    internal_rows = getattr(spectral_context, "internal_distribution_row_counts_by_node", {})
+    matrix_rows = getattr(spectral_context, "spectral_matrix_row_counts_by_node", {})
+    active_features = getattr(spectral_context, "active_feature_counts_by_node", {})
+    mp_threshold_rows = getattr(spectral_context, "mp_threshold_rows_by_node", {})
     rows: list[dict[str, object]] = []
     for parent, eigenvalues in eigenvalues_by_node.items():
         values = np.asarray(eigenvalues, dtype=float).reshape(-1)
@@ -316,6 +393,21 @@ def _parent_eigenvalue_rows_from_result(
                     "positive_eigenvalue_sum": positive_sum,
                     "positive_eigenvalue_share": (
                         float(value / positive_sum) if positive and positive_sum > 0.0 else 0.0
+                    ),
+                    "parent_descendant_leaf_rows": int(
+                        descendant_leaf_rows.get(str(parent), descendant_leaf_rows.get(parent, 0))
+                    ),
+                    "parent_internal_distribution_rows": int(
+                        internal_rows.get(str(parent), internal_rows.get(parent, 0))
+                    ),
+                    "parent_spectral_matrix_rows": int(
+                        matrix_rows.get(str(parent), matrix_rows.get(parent, 0))
+                    ),
+                    "parent_active_feature_count": int(
+                        active_features.get(str(parent), active_features.get(parent, 0))
+                    ),
+                    "parent_mp_threshold_rows": int(
+                        mp_threshold_rows.get(str(parent), mp_threshold_rows.get(parent, 0))
                     ),
                 }
             )
@@ -468,6 +560,7 @@ def _run_branch_source(
             "branch_length_optimization_n_zero_design_columns",
             math.nan,
         ),
+        **_spectral_frame_summary_from_result(extra),
         **model_summary,
     }
     return row, record_rows, eigenvalue_rows

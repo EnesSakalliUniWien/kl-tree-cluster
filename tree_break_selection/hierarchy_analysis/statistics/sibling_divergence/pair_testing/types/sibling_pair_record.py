@@ -60,5 +60,10 @@ class SiblingPairRecord:
     feature_family: str = "bernoulli"
     """Feature-space family label for the sibling contrast covariance model."""
 
+    @property
+    def has_empirical_null_support(self) -> bool:
+        """Return whether this record is admissible empirical-null calibration."""
+        return bool(self.is_null_like or self.is_edge_blocked)
+
 
 __all__ = ["SiblingPairRecord"]

@@ -1,6 +1,6 @@
 [project]
 name = "tbs-repository-audit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-based repository hygiene audits for Tree-Break Selection"
 requires-python = ">=3.11,<3.14"
 dependencies = [

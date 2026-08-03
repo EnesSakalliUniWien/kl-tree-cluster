@@ -146,6 +146,7 @@ benchmarks/results/run_YYYYMMDD_HHMMSSZ_<case_suite>/
 ├── benchmark_performance_grid.md            # Ranked grid-cell report
 ├── benchmark_performance_grid_summary.csv   # One row per run_id/grid cell
 ├── benchmark_performance_grid_*.csv         # Case-by-run ARI/NMI/Purity/status grids
+├── benchmark_support_coverage_by_method_case_family.csv # Unsupported coverage
 ├── failure_report.md              # Failed cases analysis
 ├── benchmark_relationship_report.md   # Factor/method relationship summary
 ├── benchmark_relationship_*.csv       # Method/section summaries + modeled effects
@@ -164,7 +165,7 @@ case suite and compares the default benchmark methods.
 
 **Data generation**: By default the runner uses the `full` suite from
 `benchmarks.shared.cases.get_test_cases_by_suite()`, which currently resolves to
-121 cases. Each case specifies a generator, sample count, feature count,
+122 cases. Each case specifies a generator, sample count, feature count,
 cluster count, and noise level. The dispatcher (`generate_case_data`) routes to
 the appropriate generator, binarizes, one-hot-encodes, or keeps continuous
 coordinates under an explicit `FeatureSpace`, and feeds the resulting matrix to
@@ -334,7 +335,6 @@ making networked data downloads part of the default benchmark suite.
 
 - Null calibration: 30 replicates per scenario (configurable via `TBS_CAL_NULL_REPS`). Full pipeline runs (linkage → tree → decompose) on each replicate.
 - TreeBH calibration: 200 replicates per scenario (configurable via `TBS_CAL_TREEBH_REPS`).
-- Also includes crossfit permutation diagnostics.
 
 **Evaluation**: Per-scenario Type I error rates with 95% binomial CIs. Edge and sibling rejection rates compared to nominal α = 0.05. TreeBH FDR and power summaries. Results written to CSV + `calibration_plots.pdf` + `calibration_report.md`.
 
@@ -342,7 +342,7 @@ making networked data downloads part of the default benchmark suite.
 
 ## Test Case Categories
 
-The full suite currently resolves to 121 cases from the shared case registry.
+The full suite currently resolves to 122 cases from the shared case registry.
 The major families represented in that registry are summarized below.
 
 ### Contract Suites
@@ -353,11 +353,11 @@ contracts instead of mixing every historical stress case into one score.
 | Suite | Cases | Contract | Main interpretation |
 | ----- | ----- | -------- | ------------------- |
 | `binary` | 42 | Native Bernoulli `{0,1}` matrices from the binary generator. | Primary benchmark for the mature Bernoulli Tree-Break Selection path. |
-| `categorical` | 27 | Multinomial/categorical blocks represented by explicit one-hot `FeatureSpace` metadata. | Tests block-covariance categorical support, not independent Bernoulli columns. |
+| `categorical` | 29 | Multinomial/categorical blocks represented by explicit one-hot `FeatureSpace` metadata. | Tests block-covariance categorical support, not independent Bernoulli columns. |
 | `continuous` | 9 | Selected raw Gaussian-coordinate examples with explicit continuous `FeatureSpace` and Euclidean tree distances. | Experimental empirical-Gaussian path; report separately from binary and discretized Gaussian results. |
-| `discretized_gaussian` | 32 | Gaussian sources transformed to binary or quantile one-hot features. | Discretization stress tests, not evidence for native continuous performance. |
+| `discretized_gaussian` | 33 | Gaussian sources transformed to binary or quantile one-hot features. | Discretization stress tests, not evidence for native continuous performance. |
 | `graph` | 3 | SBM adjacency features with precomputed modularity distance. | Graph-distance/recoverability stress tests. |
-| `full` | 121 | Union of the registry. | Broad smoke/reporting suite; avoid using its aggregate as a single method claim. |
+| `full` | 122 | Union of the registry. | Broad smoke/reporting suite; avoid using its aggregate as a single method claim. |
 
 ### Gaussian
 
@@ -371,8 +371,17 @@ Gaussian stress case; they are a focused check of the empirical-Gaussian path.
 | Family | Discretized cases | Selected continuous examples |
 | ------ | ----------------- | ---------------------------- |
 | Gaussian blobs (`blobs`) | `gaussian_extreme_noise`, `improved_gaussian`, `gaussian_null`, `overlapping_gaussian`, `overlapping_gaussian_quantile` | `continuous_gaussian_examples` |
-| Dimensional Gaussian | `gaussian_dimensionality_consolidated`, `gaussian_dimensionality_diffuse` | `continuous_dimensional_gaussian_examples` |
+| Dimensional Gaussian | `gaussian_dimensionality_consolidated`, `gaussian_dimensionality_diffuse`, `gaussian_sparse_signal_highd_noise` | `continuous_dimensional_gaussian_examples` |
 | Gaussian outliers | `gaussian_outlier_singleton`, `gaussian_outlier_contamination` | `continuous_gaussian_outlier_examples` |
+
+The 40-by-20,000 all-informative blob recipe is named
+`gauss_dense_signal_highd`: every coordinate is cluster-dependent, so it is a
+dense-signal calibration-saturation stress rather than an irrelevant-noise
+case. `gauss_sparse_signal_highd_noise` is the separate irrelevant-feature
+stress with 12 informative and 19,988 independent nuisance coordinates. Its
+known labels do not promise tree recoverability; the generator-geometry audit
+determines whether its observed median-binary Hamming geometry preserves the
+target partition.
 
 ### Core Binary (28 cases)
 
@@ -494,10 +503,23 @@ diagnostic run. NNLS benchmark output should retain the solver status,
 normalized residual columns so quality comparisons can distinguish topology
 effects from failed branch-time fitting.
 
-Benchmark dispatch is fail-fast for method exceptions. A runner may still return
-an explicit `status=skip` result for a known unsupported method/case contract,
-but unexpected exceptions are not converted into benchmark rows. Regression and
-maintained validation/NNLS grids therefore stop at the first execution error.
+Benchmark dispatch is fail-fast for method exceptions and uses three typed
+non-error outcomes. `status=ok` requires labels and contributes quality scores.
+`status=skip` is an operational non-attempt with a `skip_reason`.
+`status=unsupported` is a scientifically attempted run for which the method's
+assumptions cannot be satisfied; it has no labels, zero found clusters, `NaN`
+quality metrics, and a structured reason. The flattened result fields are
+`unsupported_reason_code`, `unsupported_stage`, `unsupported_reason`, and the
+five `unsupported_*_count` evidence columns. The initial registered reason is
+`empirical_null_no_internal_support` at `sibling_calibration`.
+
+Unexpected exceptions are never converted into result rows. Unsupported runs
+are excluded from quality-score denominators but remain in the scientific
+coverage denominator. Reports expose `unsupported_count` and
+`unsupported_rate = unsupported / (ok + unsupported)` by method and case
+family; operational skips are reported separately and do not change that
+denominator. Regression and maintained validation/NNLS grids therefore stop at
+the first execution error while continuing past typed unsupported outcomes.
 
 ## Adding New Benchmark Suites
 

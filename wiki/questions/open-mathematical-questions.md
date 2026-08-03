@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-07-28
+updated: 2026-08-03
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -13,12 +13,13 @@ sources:
   - tree_break_selection/tree/feature_space.py
   - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
   - benchmarks/shared/generators/case_data_contracts.py
+  - benchmarks/shared/cases/gaussian.py
+  - benchmarks/shared/cases/dimensionality.py
   - tree_break_selection/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/selected-edge-type1-geometry-pilot-20260604.md
   - wiki/sources/selected-edge-binary-categorical-pilot-20260604.md
-  - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
@@ -187,15 +188,14 @@ an independent random orthonormal projection, tail rates are near nominal. The
 remaining mathematical problem is therefore selective/adaptive projection and
 hierarchy conditioning, not a wrong fixed-subspace chi-square formula.
 
-The project direction explicitly excludes cross-fit/sample-split methods as the
-next production path. The immediate Tree-Break Selection work is therefore selective/adaptive
-projection null theory for the current same-data gate, plus careful study of
-same-data topology objectives. The TooManyCells note is relational only: it
+The immediate Tree-Break Selection work is selective/adaptive projection null
+theory for the current same-data gate, plus careful study of same-data topology
+objectives. The TooManyCells note is relational only: it
 positions Tree-Break Selection against a tree-first divisive spectral method with
 Newman-Girvan modularity stopping. It is not a direct comparator or a proposed
 replacement for the Tree-Break Selection gate.
 
-The same-date data-independent sibling-gate panel gives the first non-cross-fit
+The same-date data-independent sibling-gate panel gives the first same-data
 candidate direction that directly removes the broken adaptive projection layer.
 It replaces parent-learned PCA/dimension selection with fixed coordinate-wise
 Wald p-value aggregation and a predeclared selected-topology penalty. In the
@@ -262,7 +262,7 @@ targeted binary cases retained signal with zero observed null false splits,
 while direct categorical high-cardinality and overlap cases lost power
 (`cat_highcard_20cat_4c` mean ARI `0.080649`, `cat_overlap_3cat_4c` mean ARI
 `0.703263`). The open method problem is therefore no longer the fixed-subspace
-chi-square law; it is how to design a non-cross-fit categorical gate or
+chi-square law; it is how to design a same-data categorical gate or
 stopping objective that preserves power while keeping the selected-root null
 closed.
 
@@ -353,7 +353,7 @@ fixed-gate repair. Traversal transfer rows now feed the shared conservative
 contract: binary fixed-coordinate transfer can be carried forward only as
 `diagnostic_only`, while high-cardinality categorical transfer remains
 `fail_closed_undefined`. This means the original adaptive projection failure has
-a concrete non-cross-fit repair candidate for binary contexts, but no broad
+a concrete same-data repair candidate for binary contexts, but no broad
 production method is proved until the selected traversal law is solved for
 categorical and other feature families.
 
@@ -365,9 +365,8 @@ false root and blocked no signal roots. In mixed binary/categorical smoke, the
 guard controlled all tested nulls. However, categorical transfer remains just
 short of the current signal criterion: the best tested minimum categorical
 signal mean ARI was `0.747419` against the `0.75` threshold, driven by
-`cat_mod_3cat_4c`. The open question has therefore shifted from "can selected
-categorical roots be guarded without cross-fitting?" to "how should
-root-stability thresholds and categorical signal criteria be calibrated so that
+`cat_mod_3cat_4c`. The open question is how root-stability thresholds and
+categorical signal criteria should be calibrated so that
 moderate but real categorical structure is not rejected as too weak?"
 
 A follow-up threshold sweep gives a concrete diagnostic method candidate. With
@@ -432,7 +431,7 @@ binary signal. It does not block the `cat_clear_3cat_4c` null root
 (`mean root-stability ARI = 0.283508 > 0.24`). A 99-draw selected-root
 permutation diagnostic then gives selected-root p-value `0.17` for that
 categorical null root and `0.01` for the matched categorical signal root,
-suggesting a non-cross-fit selective-root guard rather than a larger global
+suggesting a same-data selective-root guard rather than a larger global
 topology penalty. This is still not production evidence because it is targeted
 to one observed false-root seed and because broad confidence evidence remains
 fail-closed.
@@ -444,8 +443,7 @@ known `cat_clear_3cat_4c` null root is closed and the method returns one
 cluster; the matched categorical signal is retained with ARI `0.881909`. The
 known `binary_2clusters` null remains closed by root stability, while
 selected-root permutation would also block it. The open mathematical problem is
-therefore no longer "can the specific categorical false root be closed without
-cross-fitting?" It is whether the selected-root permutation conditioning,
+therefore whether the selected-root permutation conditioning,
 replicate count, guard alpha, and feature-family/tree-construction domain can
 be validated broadly enough to satisfy the production-admissibility contract.
 The packaged `fixed_coordinate_selective_root_v1` profile reproduces that
@@ -517,7 +515,7 @@ closes two of the three observed false rows and keeps the row with p-value
 minimum signal mean ARI lower confidence `0.832434`, so the binary production
 summary moves from fail-closed to diagnostic-only.
 
-What remains open is no longer the existence of an executable non-cross-fit
+What remains open is no longer the existence of an executable same-data
 pass-through correction, or a categorical fixed-coordinate whitening path. It
 is direct-categorical support-target validation of the refined profile, the
 cost of repeated selected-family permutations, and proof or prospective
@@ -637,19 +635,8 @@ Wald has mean FDP `0.95`; and the active inflated selected-tree layer has
 FDR question, but it shows that we must validate algorithmic FDR, fixed-tree
 Wald calibration, selected-tree effects, and inflation support separately.
 
-The first cross-fit diagnostic supports this interpretation. Because the TBS
-tree is a sample-leaf hierarchy, literal sample splitting is undefined without
-a held-out-sample assignment model. The implemented feature-split audit builds
-the tree from one feature block and tests node distributions on a held-out
-feature block over the same leaves. In `gauss_null_large`, this changes the
-edge rejection rate from `1.0` in-sample to `0.0`, restores 199 supported
-calibration records, and returns one cluster. Signal examples retain high or
-perfect ARI while recovering many supported records. This points toward
-cross-fit or selected-tree conditional inference as the next mathematical
-development.
-
-The selected-hierarchy null audit then removes cross-fitting from the candidate
-method and simulates the same-data selected hierarchy directly. It regenerates
+The selected-hierarchy null audit simulates the same-data selected hierarchy
+directly. It regenerates
 Bernoulli or categorical null data, rebuilds the tree in every replicate,
 reruns edge tests, and collects selected focal sibling statistics. In the first
 four representative cases, selected-hierarchy correction factors are large
@@ -819,6 +806,11 @@ avoid hard support failure, but it also identifies the mathematical problem:
 those records are selected non-null evidence and are not admissible
 empirical-null calibration support. The diagnostic is therefore useful for
 describing the phenomenon, not for changing production calibration.
+
+That identifier is retained here because it names the historical audit row.
+The unchanged active all-informative recipe is now
+`gauss_dense_signal_highd`; the new `gauss_sparse_signal_highd_noise` recipe is
+the distinct question of robustness to 19,988 truly irrelevant coordinates.
 
 The 2026-06-04 calibration-contract implementation makes this separation
 explicit in code. Focal sibling calibration now returns a `CalibrationDecision`

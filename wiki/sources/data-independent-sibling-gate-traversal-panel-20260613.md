@@ -221,7 +221,7 @@ and reports cluster-level outcomes.
   admissibility stayed fail-closed because the confidence component was still
   null-uncertain with only two null replicates.
 - Named profiles `fixed_coordinate_guarded_v1` and `fixed_global_guarded_v1`
-  now package the non-cross-fit method knobs as auditable diagnostic
+  now package the same-data method knobs as auditable diagnostic
   candidates. They set the fixed sibling method, selected-topology penalty
   `50`, root-stability threshold `0.24`, `12` stability subsamples, feature
   fraction `0.8`, and deterministic seed `0`; the profile id is stored in

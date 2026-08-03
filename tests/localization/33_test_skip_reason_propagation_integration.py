@@ -1,7 +1,8 @@
-"""Integration test for runner failure rows across benchmark surfaces."""
+"""Integration test for runner failure propagation across benchmark surfaces."""
 
 from __future__ import annotations
 
+import pytest
 from benchmarks.experiments.branch_length.logic import run_branch_length_benchmark
 from benchmarks.experiments.multi_split.run import run_multi_split_benchmark
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
@@ -9,8 +10,8 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodSpec
 
 
-def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
-    original_kl = METHOD_SPECS["tbs"]
+def test_forced_runner_failure_raises_everywhere(monkeypatch):
+    original_tbs = METHOD_SPECS["tbs"]
 
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("forced integration failure")
@@ -19,9 +20,9 @@ def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
         METHOD_SPECS,
         "tbs",
         MethodSpec(
-            name=original_kl.name,
+            name=original_tbs.name,
             runner=_raise_runner,
-            param_grid=original_kl.param_grid,
+            param_grid=original_tbs.param_grid,
         ),
     )
 
@@ -36,34 +37,31 @@ def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
         "category": "forced_failure_contract",
     }
 
-    pipeline_df, _ = benchmark_cluster_algorithm(
-        test_cases=[pipeline_case],
-        verbose=False,
-        methods=["tbs"],
-        plot_umap=False,
-        plot_manifold=False,
-    )
-    assert pipeline_df.loc[0, "status"] == "skip"
-    assert pipeline_df.loc[0, "skip_reason"] == "forced integration failure"
+    with pytest.raises(RuntimeError, match="forced integration failure"):
+        benchmark_cluster_algorithm(
+            test_cases=[pipeline_case],
+            verbose=False,
+            methods=["tbs"],
+            plot_umap=False,
+            plot_manifold=False,
+        )
 
-    branch_df = run_branch_length_benchmark(
-        n_leaves=20,
-        n_features=20,
-        branch_lengths=[0.2],
-        random_seed=7,
-        method="tbs",
-        verbose=False,
-    )
-    assert branch_df.loc[0, "status"] == "skip"
-    assert branch_df.loc[0, "skip_reason"] == "forced integration failure"
+    with pytest.raises(RuntimeError, match="forced integration failure"):
+        run_branch_length_benchmark(
+            n_leaves=20,
+            n_features=20,
+            branch_lengths=[0.2],
+            random_seed=7,
+            method="tbs",
+            verbose=False,
+        )
 
-    multi_df = run_multi_split_benchmark(
-        n_total_samples=24,
-        n_groups_list=[2],
-        n_features=20,
-        n_replicates=1,
-        base_seed=13,
-        verbose=False,
-    )
-    assert multi_df.loc[0, "status"] == "skip"
-    assert multi_df.loc[0, "skip_reason"] == "forced integration failure"
+    with pytest.raises(RuntimeError, match="forced integration failure"):
+        run_multi_split_benchmark(
+            n_total_samples=24,
+            n_groups_list=[2],
+            n_features=20,
+            n_replicates=1,
+            base_seed=13,
+            verbose=False,
+        )

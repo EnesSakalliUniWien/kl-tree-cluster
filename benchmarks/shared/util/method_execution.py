@@ -420,6 +420,7 @@ def run_single_method_once(
         under_split=under_split,
         status=result.status,
         skip_reason=result.skip_reason,
+        unsupported_reason=result.unsupported_reason,
         labels_length=labels_len,
         stage_timings=stage_timings,
     )

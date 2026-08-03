@@ -38,7 +38,7 @@
 ## Assumptions And Non-Assumptions
 
 - We stay on branch `dev`.
-- We do not introduce cross-fitting as a production method.
+- The study targets the same-data selected-hierarchy method.
 - We do not change `DEFAULT_EDGE_ALPHA` or `DEFAULT_SIBLING_ALPHA` from this plan.
 - We do not add a fallback calibration path.
 - We treat current alpha-grid evidence as benchmark-performance evidence, not Type-I control evidence.
@@ -946,7 +946,7 @@ Expected: `fixed_tree` unsupported.
 
 - [ ] **Step 3: Implement fixed-tree mode**
 
-Build tree on `tree_seed` null data and test on independent `data_seed` null data using the same leaf labels. Keep this as a diagnostic baseline, not production cross-fitting.
+Build the tree on `tree_seed` null data and test on independent `data_seed` null data using the same leaf labels. Keep this only as a data-independent diagnostic baseline.
 
 - [ ] **Step 4: Run tests**
 

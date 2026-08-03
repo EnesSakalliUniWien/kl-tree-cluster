@@ -34,13 +34,31 @@ TBS_DISTANCE_TREE_METHODS = {
     "tbs_internal_filter_branch_length_v1",
     "tbs_bandwidth_context_v1",
     "tbs_neighbor_joining",
+    "tbs_nnls",
+    "tbs_fixed_coordinate_bh_nnls",
+    "tbs_fixed_coordinate_by_nnls",
+    "tbs_fixed_coordinate_holm_nnls",
+    "tbs_fixed_coordinate_bonferroni_nnls",
+    "tbs_fixed_block_bh_nnls",
+    "tbs_fixed_block_simes_bh_nnls",
 }
 
 TBS_RUNNER_METHODS = TBS_DISTANCE_TREE_METHODS | {"tbs_iqtree3"}
+
+TBS_DISTANCE_TREE_NNLS_METHODS = {
+    "tbs_nnls",
+    "tbs_fixed_coordinate_bh_nnls",
+    "tbs_fixed_coordinate_by_nnls",
+    "tbs_fixed_coordinate_holm_nnls",
+    "tbs_fixed_coordinate_bonferroni_nnls",
+    "tbs_fixed_block_bh_nnls",
+    "tbs_fixed_block_simes_bh_nnls",
+}
 
 __all__ = [
     "DEFAULT_METHODS",
     "DISTANCE_MATRIX_METHODS",
     "TBS_DISTANCE_TREE_METHODS",
+    "TBS_DISTANCE_TREE_NNLS_METHODS",
     "TBS_RUNNER_METHODS",
 ]

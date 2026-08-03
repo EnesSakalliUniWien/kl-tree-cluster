@@ -208,7 +208,7 @@ in the selected tree before asking whether pass-through should be promoted.
   zero-negative threshold and still requires a selected-family law over the
   frontier surface.
 - The selected-family frontier-law extension makes that law explicit without
-  permutations or sample splitting. For a clean family vector \(x\), with all
+  permutation replay. For a clean family vector \(x\), with all
   frontier coordinates oriented so larger is better, it computes
   \(m(x)=\min_{y\in\mathcal N}\max_j(x_j-y_j)\) against fragment controls
   \(\mathcal N\). The indicator \(1\{m(x)>0\}\) feeds a

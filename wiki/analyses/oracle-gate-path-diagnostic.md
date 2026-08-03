@@ -2,12 +2,16 @@
 title: Oracle Gate-Path Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-07-28
+updated: 2026-08-03
 sources:
   - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/gate_path_trace.py
   - benchmarks/diagnostics/calibration/sibling/nulls/sibling_inflation_diagnostic.py
   - benchmarks/shared/tbs_tree_context.py
+  - benchmarks/shared/runners/tbs_support.py
+  - benchmarks/shared/types/unsupported_reason.py
+  - benchmarks/shared/cases/gaussian.py
+  - benchmarks/shared/cases/dimensionality.py
   - benchmarks/diagnostics/oracle/run_oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/run_gate_path_trace.py
   - benchmarks/diagnostics/calibration/sibling/nulls/run_sibling_inflation_diagnostic.py
@@ -20,7 +24,6 @@ sources:
   - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_summary.csv
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
-  - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
   - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
@@ -336,22 +339,23 @@ The strict empirical-null support set is
 \[
 \mathcal C_{0,u}
 =
-\{q\in\mathcal C_u:\ S_{l(q)}^{\mathrm{edge}}=0
-\ \text{and}\ S_{r(q)}^{\mathrm{edge}}=0\},
+\{q\in\mathcal C_u:\ E_{l(q)}^{\mathrm{edge}}=E_{r(q)}^{\mathrm{edge}}=1,\
+S_{l(q)}^{\mathrm{edge}}=S_{r(q)}^{\mathrm{edge}}=0\},
 \]
 
-where \(S_{l(q)}^{\mathrm{edge}}\) and \(S_{r(q)}^{\mathrm{edge}}\) are the two
-child-parent edge rejection indicators. The weak stopped-or-null support set is
+where \(E^{\mathrm{edge}}\) records whether an edge was tested and
+\(S^{\mathrm{edge}}\) records rejection. Untested descendants are therefore not
+strict-null observations. The stopped-path support set is
 
 \[
 \mathcal C_{\mathrm{stop},u}
 =
-\{q\in\mathcal C_u:\ q\in\mathcal C_{0,u}
-\ \text{or}\ B_q^{\mathrm{edge}}=1\},
+\{q\in\mathcal C_u:\ B_q^{\mathrm{edge}}=1\}.
 \]
 
-where \(B_q^{\mathrm{edge}}\) indicates that the sibling record is edge-blocked
-by the ancestor testing path.
+The active estimator includes nested blocked descendants as node records.
+Consequently, its record count and weight-only effective sample size do not
+represent independent stopping events.
 
 The support-status contract is:
 
@@ -359,18 +363,19 @@ The support-status contract is:
 strict_empirical_null_supported
   iff C_{0,u} has positive local calibration mass.
 
-stopped_or_strict_empirical_null_supported
+stopped_path_empirical_null_supported
   iff C_{0,u} has no positive mass but C_{stop,u} does.
 
 unsupported_without_empirical_null_support
-  iff C_{stop,u} has no positive local calibration mass.
+  iff both C_{0,u} and C_{stop,u} have no positive local calibration mass.
 ```
 
 Only the first two statuses support an internal empirical-null interpretation.
 If \(\mathcal C_u\) contains only selected non-null context, that context
 can be reported descriptively but is not a calibration state. The local
-empirical-null calibration contract is unsatisfied whenever
-\(\mathcal C_{\mathrm{stop},u}\) has no positive mass. A production method
+empirical-null calibration contract is unsatisfied whenever both
+\(\mathcal C_{0,u}\) and \(\mathcal C_{\mathrm{stop},u}\) have no positive
+mass. A production method
 must raise a calibration-data error; it must not silently use \(\hat c=1\),
 recycle the target record, or call an external calibration model that has not
 been validated under the full selection event.
@@ -396,6 +401,26 @@ described as internally empirical-null supported. In the current strict
 production path, selected non-null records are not admitted into the fitted
 model, so both situations are production calibration failures rather than
 runtime calibration states.
+
+The names in the table above are historical evidence identifiers and remain
+unchanged in raw assets. The active all-informative recipe is now
+`gauss_dense_signal_highd` (and
+`gauss_dense_signal_highd_continuous`) because all 20,000 coordinates are
+cluster-dependent. The separate active `gauss_sparse_signal_highd_noise` case
+has 12 informative coordinates and 19,988 independent nuisance coordinates;
+its geometry audit, rather than its known labels, determines whether it is a
+tree-recoverable quality case.
+
+### Typed Unsupported Benchmark Outcome
+
+The benchmark runner now converts this one proven calibration boundary into a
+typed `unsupported` outcome before traversal. The stable reason code is
+`empirical_null_no_internal_support`, the stage is `sibling_calibration`, and
+the evidence records focal, admissible-support, invalid, upstream-tested, and
+upstream-rejected counts. Unsupported is neither a successful one-cluster
+partition nor an operational skip: it returns no labels, reports zero found
+clusters, keeps quality metrics undefined, and remains visible in the
+scientific-support denominator. Other exceptions still propagate.
 
 The production contract now follows this interpretation. The fitted inflation
 model admits only positive-weight records that are strict null-like or
@@ -436,18 +461,6 @@ child-parent edges, the internal empirical-null support set
 positive-weight records left. The honest method response is therefore a
 calibration-data error until a selected-tree conditional calibration law is
 defined and validated.
-
-The feature-split selection audit tests the cleanest cross-fit analogue that
-is currently well-defined for a sample-leaf hierarchy. One feature block builds
-the tree, and the held-out feature block supplies node distributions and gate
-tests on the same sample leaves. Literal sample splitting remains undefined
-without an explicit assignment model for held-out samples. In the
-`gauss_null_large` case, feature-split cross-fit changes the edge rejection
-rate from `1.0` to `0.0`, restores 199 supported sibling calibration records,
-and returns one cluster. The binary, categorical, and Gaussian signal examples
-retain perfect or high ARI while recovering many supported records. This is
-evidence that cross-fitting the selection and testing features can restore the
-calibration-support object that the in-sample selected tree destroys.
 
 The selected-hierarchy null audit keeps the same-data method target and
 simulates the selected hierarchy itself. Each null replicate regenerates a

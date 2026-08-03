@@ -53,7 +53,7 @@ clustering pipeline.
   pass-through candidates against a whole selected-family minimum sibling
   p-value under feature-block permutations.
 - `sibling_gate_profile="fixed_coordinate_guarded_v1"` and
-  `sibling_gate_profile="fixed_global_guarded_v1"` package the non-cross-fit
+  `sibling_gate_profile="fixed_global_guarded_v1"` package the same-data
   fixed-gate repair as named diagnostic candidates. The profile id is recorded
   in gate annotation metadata and participates in cache reuse checks.
 - `sibling_gate_profile="fixed_coordinate_selective_root_v1"` packages a

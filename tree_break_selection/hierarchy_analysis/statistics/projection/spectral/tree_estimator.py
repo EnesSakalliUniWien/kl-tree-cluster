@@ -267,6 +267,9 @@ def _aggregate_spectral_results(
     raw_mp_signal_counts: dict[str, int],
     effective_independent_rows: dict[str, int],
     mp_threshold_rows: dict[str, int],
+    descendant_leaf_row_counts: dict[str, int],
+    internal_distribution_row_counts: dict[str, int],
+    spectral_matrix_row_counts: dict[str, int],
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
     full_eigenvalues: dict[str, np.ndarray],
@@ -278,6 +281,11 @@ def _aggregate_spectral_results(
         raw_mp_signal_counts[node_result.node_id] = node_result.raw_mp_signal_count
         effective_independent_rows[node_result.node_id] = node_result.effective_independent_rows
         mp_threshold_rows[node_result.node_id] = node_result.mp_threshold_rows
+        descendant_leaf_row_counts[node_result.node_id] = node_result.descendant_leaf_row_count
+        internal_distribution_row_counts[node_result.node_id] = (
+            node_result.internal_distribution_row_count
+        )
+        spectral_matrix_row_counts[node_result.node_id] = node_result.spectral_matrix_row_count
         if node_result.projection_matrix is None or node_result.eigenvalues is None:
             raise ValueError(
                 "Spectral decomposition must return PCA projection and eigenvalues for "
@@ -358,6 +366,9 @@ def compute_spectral_decomposition(
     raw_mp_signal_counts: Dict[str, int] = {}
     effective_independent_rows: Dict[str, int] = {}
     mp_threshold_rows: Dict[str, int] = {}
+    descendant_leaf_row_counts: Dict[str, int] = {}
+    internal_distribution_row_counts: Dict[str, int] = {}
+    spectral_matrix_row_counts: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
     pca_eigenvalues: Dict[str, np.ndarray] = {}
     full_eigenvalues: Dict[str, np.ndarray] = {}
@@ -371,6 +382,9 @@ def compute_spectral_decomposition(
             raw_mp_signal_counts[node_id] = 0
             effective_independent_rows[node_id] = 1
             mp_threshold_rows[node_id] = 1
+            descendant_leaf_row_counts[node_id] = 1
+            internal_distribution_row_counts[node_id] = 0
+            spectral_matrix_row_counts[node_id] = 1
             full_eigenvalues[node_id] = np.zeros(0, dtype=np.float64)
             active_feature_counts[node_id] = 0
         else:
@@ -403,6 +417,9 @@ def compute_spectral_decomposition(
         raw_mp_signal_counts=raw_mp_signal_counts,
         effective_independent_rows=effective_independent_rows,
         mp_threshold_rows=mp_threshold_rows,
+        descendant_leaf_row_counts=descendant_leaf_row_counts,
+        internal_distribution_row_counts=internal_distribution_row_counts,
+        spectral_matrix_row_counts=spectral_matrix_row_counts,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
         full_eigenvalues=full_eigenvalues,
@@ -455,6 +472,9 @@ def compute_spectral_decomposition(
         raw_mp_signal_counts_by_node=raw_mp_signal_counts,
         effective_independent_rows_by_node=effective_independent_rows,
         mp_threshold_rows_by_node=mp_threshold_rows,
+        descendant_leaf_row_counts_by_node=descendant_leaf_row_counts,
+        internal_distribution_row_counts_by_node=internal_distribution_row_counts,
+        spectral_matrix_row_counts_by_node=spectral_matrix_row_counts,
         principal_component_projections_by_node=pca_projections,
         principal_component_eigenvalues_by_node=pca_eigenvalues,
         full_component_eigenvalues_by_node=full_eigenvalues,

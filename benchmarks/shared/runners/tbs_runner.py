@@ -48,6 +48,7 @@ from tree_break_selection.tree.optimized_branch_lengths import (
     validate_branch_length_optimization_method,
 )
 
+from benchmarks.shared.runners.tbs_support import unsupported_empirical_null_reason
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import labels_and_report_from_decomposition
 from benchmarks.shared.util.time import elapsed_since
@@ -266,6 +267,38 @@ def run_tbs_on_distance(
     )
     stage_timings.update(gate_annotation_bundle.stage_timings)
     resolved_gate_config = gate_annotation_bundle.metadata.config
+
+    unsupported_reason = unsupported_empirical_null_reason(
+        gate_annotation_bundle.annotated_df,
+        sibling_gate_method=str(resolved_gate_config.sibling_gate_method),
+    )
+    if unsupported_reason is not None:
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=None,
+            status="unsupported",
+            skip_reason=None,
+            extra={
+                "tree": tree,
+                "decomposition": None,
+                "traversal_trace": [],
+                "full_edge_traversal_trace": [],
+                "traversal_counters": {},
+                "annotations": gate_annotation_bundle.annotated_df,
+                "gate_bundle": gate_annotation_bundle,
+                "linkage_matrix": tree_build.linkage_matrix,
+                "tree_builder": str(tree_builder),
+                "tree_rooting": str(tree_rooting),
+                "tree_build_diagnostics": asdict(tree_build.diagnostics),
+                "phylogenetic_rooting": tree_build.phylogenetic_rooting,
+                "iqtree_metadata": tree_build.iqtree_metadata,
+                "stage_timings": stage_timings,
+                "sibling_gate_method": str(resolved_gate_config.sibling_gate_method),
+                **branch_length_optimization_metadata,
+            },
+            unsupported_reason=unsupported_reason,
+        )
 
     decomposer = TreeDecomposition(
         tree=tree,

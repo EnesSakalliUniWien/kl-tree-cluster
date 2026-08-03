@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import math
 
-from benchmarks.shared.result_records.models import BenchmarkResultRow, BenchmarkRunStatus
+from benchmarks.shared.result_records.models import BenchmarkResultRow
+from benchmarks.shared.types import BenchmarkRunStatus, UnsupportedReason
 from benchmarks.shared.util.params import format_params_for_display
 from benchmarks.shared.util.time import normalize_stage_timings
 
@@ -17,9 +18,13 @@ def _normalize_status(status: str | BenchmarkRunStatus) -> BenchmarkRunStatus:
         return BenchmarkRunStatus.OK
     if raw == BenchmarkRunStatus.SKIP.value:
         return BenchmarkRunStatus.SKIP
+    if raw == BenchmarkRunStatus.UNSUPPORTED.value:
+        return BenchmarkRunStatus.UNSUPPORTED
     raise ValueError(
         f"Invalid benchmark status: {status!r}. "
-        f"Expected one of: {BenchmarkRunStatus.OK.value!r}, {BenchmarkRunStatus.SKIP.value!r}."
+        "Expected one of: "
+        f"{BenchmarkRunStatus.OK.value!r}, {BenchmarkRunStatus.SKIP.value!r}, "
+        f"{BenchmarkRunStatus.UNSUPPORTED.value!r}."
     )
 
 
@@ -54,6 +59,7 @@ def build_benchmark_result_row(
     status: str | BenchmarkRunStatus,
     skip_reason: str | None,
     labels_length: int,
+    unsupported_reason: UnsupportedReason | None = None,
     run_id: str | None = None,
     benchmark_class: str = "unclassified",
     benchmark_grid: str = "default",
@@ -86,6 +92,33 @@ def build_benchmark_result_row(
         raise ValueError("true_clusters must be an integer; use 0 when cluster truth is unknown.")
     if noise is None:
         raise ValueError("noise must be a float; use NaN when noise metadata is unavailable.")
+    normalized_status = _normalize_status(status)
+    normalized_skip_reason = None
+    if skip_reason is not None and str(skip_reason).strip():
+        normalized_skip_reason = str(skip_reason).strip()
+    if normalized_status is BenchmarkRunStatus.OK:
+        if normalized_skip_reason is not None:
+            raise ValueError("status=ok must not include skip_reason.")
+        if unsupported_reason is not None:
+            raise ValueError("status=ok must not include unsupported_reason.")
+    elif normalized_status is BenchmarkRunStatus.SKIP:
+        if found_clusters != 0 or labels_length != 0:
+            raise ValueError("status=skip requires zero clusters and labels.")
+        if normalized_skip_reason is None:
+            raise ValueError("status=skip requires a non-empty skip_reason.")
+        if unsupported_reason is not None:
+            raise ValueError("status=skip must not include unsupported_reason.")
+    else:
+        if found_clusters != 0 or labels_length != 0:
+            raise ValueError("status=unsupported requires zero clusters and labels.")
+        if normalized_skip_reason is not None:
+            raise ValueError("status=unsupported must not include skip_reason.")
+        if unsupported_reason is None:
+            raise ValueError("status=unsupported requires unsupported_reason.")
+
+    unsupported_evidence = (
+        unsupported_reason.evidence if unsupported_reason is not None else None
+    )
     normalized_stage_timings = normalize_stage_timings(stage_timings)
     return BenchmarkResultRow(
         test_case=int(test_case),
@@ -161,8 +194,38 @@ def build_benchmark_result_row(
         sibling_gate_adjusted_tests_sec=normalized_stage_timings["sibling_gate_adjusted_tests_sec"],
         sibling_gate_fdr_sec=normalized_stage_timings["sibling_gate_fdr_sec"],
         traversal_sec=normalized_stage_timings["traversal_sec"],
-        status=_normalize_status(status),
-        skip_reason=(skip_reason or ""),
+        status=normalized_status,
+        skip_reason=(normalized_skip_reason or ""),
+        unsupported_reason_code=(
+            unsupported_reason.code.value if unsupported_reason is not None else ""
+        ),
+        unsupported_stage=(unsupported_reason.stage if unsupported_reason is not None else ""),
+        unsupported_reason=(unsupported_reason.message if unsupported_reason is not None else ""),
+        unsupported_focal_record_count=(
+            math.nan
+            if unsupported_evidence is None
+            else float(unsupported_evidence.focal_record_count)
+        ),
+        unsupported_admissible_support_count=(
+            math.nan
+            if unsupported_evidence is None
+            else float(unsupported_evidence.admissible_support_count)
+        ),
+        unsupported_invalid_record_count=(
+            math.nan
+            if unsupported_evidence is None
+            else float(unsupported_evidence.invalid_record_count)
+        ),
+        unsupported_upstream_tested_count=(
+            math.nan
+            if unsupported_evidence is None
+            else float(unsupported_evidence.upstream_tested_count)
+        ),
+        unsupported_upstream_rejected_count=(
+            math.nan
+            if unsupported_evidence is None
+            else float(unsupported_evidence.upstream_rejected_count)
+        ),
         labels_length=int(labels_length),
     )
 

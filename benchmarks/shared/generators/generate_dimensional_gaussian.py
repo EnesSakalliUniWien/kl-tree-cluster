@@ -141,7 +141,7 @@ def generate_dimensional_gaussian(
         config.informative_corr,
     )
     noise_cov = None
-    if config.noise_dims > 0:
+    if config.noise_dims > 0 and config.noise_corr != 0.0:
         noise_cov = _make_exchangeable_covariance(
             config.noise_dims,
             config.noise_std,
@@ -156,12 +156,19 @@ def generate_dimensional_gaussian(
             cov=informative_cov,
             size=cluster_size,
         )
-        if noise_cov is not None:
-            noise_block = rng.multivariate_normal(
-                mean=np.zeros(config.noise_dims, dtype=float),
-                cov=noise_cov,
-                size=cluster_size,
-            )
+        if config.noise_dims > 0:
+            if noise_cov is None:
+                noise_block = rng.normal(
+                    0.0,
+                    config.noise_std,
+                    size=(cluster_size, config.noise_dims),
+                )
+            else:
+                noise_block = rng.multivariate_normal(
+                    mean=np.zeros(config.noise_dims, dtype=float),
+                    cov=noise_cov,
+                    size=cluster_size,
+                )
             cluster_matrix = np.hstack([informative_block, noise_block])
         else:
             cluster_matrix = informative_block

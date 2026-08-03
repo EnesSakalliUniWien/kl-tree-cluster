@@ -8,7 +8,7 @@ def test_regression_gate_cases_resolve_in_stable_order():
     cases = get_regression_gate_test_cases()
 
     assert [case["name"] for case in cases] == list(REGRESSION_GATE_CASE_NAMES)
-    assert len(cases) == 17
+    assert len(cases) == 18
     assert len({case["name"] for case in cases}) == len(cases)
 
 

@@ -3,14 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
-
-class BenchmarkRunStatus(str, Enum):
-    """Canonical run statuses for benchmark rows."""
-
-    OK = "ok"
-    SKIP = "skip"
+from benchmarks.shared.types.run_status import BenchmarkRunStatus
 
 
 @dataclass(frozen=True)
@@ -88,10 +82,17 @@ class BenchmarkResultRow:
     traversal_sec: float
     status: BenchmarkRunStatus
     skip_reason: str
+    unsupported_reason_code: str
+    unsupported_stage: str
+    unsupported_reason: str
+    unsupported_focal_record_count: float
+    unsupported_admissible_support_count: float
+    unsupported_invalid_record_count: float
+    unsupported_upstream_tested_count: float
+    unsupported_upstream_rejected_count: float
     labels_length: int
 
 
 __all__ = [
-    "BenchmarkRunStatus",
     "BenchmarkResultRow",
 ]

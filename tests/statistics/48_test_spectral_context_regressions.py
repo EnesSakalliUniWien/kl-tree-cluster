@@ -216,6 +216,15 @@ class TestSpectralContextRegressions:
         assert branch_length.effective_independent_rows_by_node["root"] == 3
         assert empirical.mp_threshold_rows_by_node["root"] == 3
         assert branch_length.mp_threshold_rows_by_node["root"] == 3
+        assert empirical.descendant_leaf_row_counts_by_node["root"] == 3
+        assert empirical.internal_distribution_row_counts_by_node["root"] == 1
+        assert empirical.spectral_matrix_row_counts_by_node["root"] == 4
+        assert empirical.descendant_leaf_row_counts_by_node["I0"] == 2
+        assert empirical.internal_distribution_row_counts_by_node["I0"] == 0
+        assert empirical.spectral_matrix_row_counts_by_node["I0"] == 2
+        assert branch_length.descendant_leaf_row_counts_by_node["root"] == 3
+        assert branch_length.internal_distribution_row_counts_by_node["root"] == 1
+        assert branch_length.spectral_matrix_row_counts_by_node["root"] == 4
         assert not np.allclose(
             empirical.full_component_eigenvalues_by_node["root"],
             branch_length.full_component_eigenvalues_by_node["root"],
@@ -249,4 +258,3 @@ class TestSpectralContextRegressions:
 
         with pytest.raises(ValueError):
             _get_n_jobs(16)
-

@@ -192,7 +192,7 @@ current stack:
   neighborhood role:
     strict support over log(k) and log(parent size), plus diagnostic topology rows
   strength:
-    fail-closed support and fixed-coordinate non-cross-fit sibling gates
+    fail-closed support and fixed-coordinate same-data sibling gates
   weakness:
     insufficient explicit distribution law for internal selected neighborhoods
 ```

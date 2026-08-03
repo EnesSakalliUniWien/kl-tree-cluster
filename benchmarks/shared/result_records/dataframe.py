@@ -79,6 +79,14 @@ RESULT_COLUMNS = [
     "traversal_sec",
     "status",
     "skip_reason",
+    "unsupported_reason_code",
+    "unsupported_stage",
+    "unsupported_reason",
+    "unsupported_focal_record_count",
+    "unsupported_admissible_support_count",
+    "unsupported_invalid_record_count",
+    "unsupported_upstream_tested_count",
+    "unsupported_upstream_rejected_count",
     "labels_length",
 ]
 
@@ -100,6 +108,9 @@ _TEXT_RESULT_COLUMNS = frozenset(
         "params",
         "status",
         "skip_reason",
+        "unsupported_reason_code",
+        "unsupported_stage",
+        "unsupported_reason",
     }
 )
 NUMERIC_RESULT_COLUMNS = tuple(
@@ -181,6 +192,16 @@ def benchmark_rows_to_dataframe(rows: Iterable[BenchmarkResultRow]) -> pd.DataFr
             "traversal_sec": row.traversal_sec,
             "status": row.status.value,
             "skip_reason": row.skip_reason,
+            "unsupported_reason_code": row.unsupported_reason_code,
+            "unsupported_stage": row.unsupported_stage,
+            "unsupported_reason": row.unsupported_reason,
+            "unsupported_focal_record_count": row.unsupported_focal_record_count,
+            "unsupported_admissible_support_count": (
+                row.unsupported_admissible_support_count
+            ),
+            "unsupported_invalid_record_count": row.unsupported_invalid_record_count,
+            "unsupported_upstream_tested_count": row.unsupported_upstream_tested_count,
+            "unsupported_upstream_rejected_count": row.unsupported_upstream_rejected_count,
             "labels_length": row.labels_length,
         }
         for row in rows

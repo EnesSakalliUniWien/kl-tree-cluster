@@ -279,3 +279,49 @@ def test_generators_mode_forwards_audit_result(
     )
 
     assert result == 0
+
+
+def test_calibration_contract_mode_reports_stopped_frontier_multiplicity(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    records = tmp_path / "records.csv"
+    records.write_text(
+        "source_case_id,parent,left,right,degrees_of_freedom,"
+        "sibling_null_weight,is_edge_blocked,is_role_supported\n"
+        "toy,root,stopped_frontier,root_leaf,1,1,false,true\n"
+        "toy,stopped_frontier,nested_stopped,frontier_leaf,2,1,true,true\n"
+        "toy,nested_stopped,left_leaf,right_leaf,1,1,true,true\n",
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "--repo",
+            str(tmp_path),
+            "--mode",
+            "calibration-contract",
+            "--calibration-records",
+            str(records),
+            "--output",
+            "reports/calibration-contract.json",
+            "--calibration-markdown-output",
+            "reports/calibration-contract.md",
+        ]
+    )
+
+    assert result == 0
+    report = json.loads(
+        (tmp_path / "reports/calibration-contract.json").read_text(encoding="utf-8")
+    )
+    assert report["summary"] == {
+        "group_count": 1,
+        "raw_record_count": 3,
+        "nonfinite_record_count": 0,
+        "role_supported_record_count": 3,
+        "tested_null_record_count": 1,
+        "stopped_frontier_record_count": 1,
+        "nested_blocked_record_count": 1,
+        "structural_calibration_record_count": 2,
+    }
+    assert (tmp_path / "reports/calibration-contract.md").exists()

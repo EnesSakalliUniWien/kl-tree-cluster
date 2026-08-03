@@ -52,6 +52,17 @@ def test_selected_signal_like_rows_do_not_calibrate_empirical_null() -> None:
     assert role_allows_empirical_null_calibration(SupportRole.STOPPED_EDGE_NULL_ANCHOR)
 
 
+def test_stopped_edge_role_takes_precedence_over_null_like_flag() -> None:
+    role = classify_support_role(
+        {
+            "is_null_like": True,
+            "is_edge_blocked": True,
+        }
+    )
+
+    assert role == SupportRole.STOPPED_EDGE_NULL_ANCHOR
+
+
 def test_invalid_explicit_support_role_fails_closed() -> None:
     with pytest.raises(ValueError, match="Invalid explicit support role"):
         classify_support_role(

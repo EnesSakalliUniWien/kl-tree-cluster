@@ -103,6 +103,28 @@ DIMENSIONALITY_CASES = {
             "seed": 13102,
         },
     ],
+    "gaussian_sparse_signal_highd_noise": [
+        {
+            "name": "gauss_sparse_signal_highd_noise",
+            "generator": "dimensional_gaussian",
+            "n_samples": 40,
+            "n_clusters": 4,
+            "informative_dims": 12,
+            "n_features": 20_000,
+            "separation": 2.8,
+            "informative_std": 1.0,
+            "noise_std": 1.0,
+            "informative_corr": 0.0,
+            "noise_corr": 0.0,
+            "signal_mode": "consolidated",
+            "balanced_clusters": True,
+            "seed": 43,
+            "benchmark_intent": "irrelevant_feature_robustness_stress",
+            "scientific_caution": (
+                "known_labels_do_not_imply_tree_recoverability_geometry_audit_is_authoritative"
+            ),
+        },
+    ],
 }
 
 

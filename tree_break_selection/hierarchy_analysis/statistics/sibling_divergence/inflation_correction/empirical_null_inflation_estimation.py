@@ -94,7 +94,7 @@ def _inflation_mle(
 
 def _has_internal_empirical_null_support(record: SiblingPairRecord) -> bool:
     """Return whether a record is admissible empirical-null calibration."""
-    return bool(record.is_null_like or record.is_edge_blocked)
+    return record.has_empirical_null_support
 
 
 def _effective_sample_size(weights: np.ndarray) -> float:
@@ -162,10 +162,10 @@ def fit_empirical_null_inflation_model(
             "Cannot fit sibling inflation model: no positive sibling-null calibration weight."
         )
 
-    supported_records = [
+    role_supported_records = [
         record for record in positive_weight_records if _has_internal_empirical_null_support(record)
     ]
-    if not supported_records:
+    if not role_supported_records:
         selected_nonnull_count = sum(
             not _has_internal_empirical_null_support(record) for record in positive_weight_records
         )
@@ -175,6 +175,7 @@ def fit_empirical_null_inflation_model(
             f"Found {selected_nonnull_count} selected non-null positive-weight "
             "record(s), which are not valid empirical-null calibration support."
         )
+    supported_records = role_supported_records
 
     statistics = np.array([record.stat for record in supported_records], dtype=float)
     reference_scales = np.array(
@@ -190,7 +191,10 @@ def fit_empirical_null_inflation_model(
         dtype=float,
     )
     is_strict_null = np.array(
-        [record.is_null_like for record in supported_records],
+        [
+            record.is_null_like and not record.is_edge_blocked
+            for record in supported_records
+        ],
         dtype=bool,
     )
     is_edge_blocked = np.array(
@@ -237,7 +241,7 @@ def fit_empirical_null_inflation_model(
         n_selected_nonnull_positive_weight_records=sum(
             not _has_internal_empirical_null_support(record) for record in positive_weight_records
         ),
-        n_strict_null_calibration=sum(record.is_null_like for record in supported_records),
+        n_strict_null_calibration=int(np.sum(is_strict_null)),
         n_edge_blocked_calibration=sum(record.is_edge_blocked for record in supported_records),
         n_stopped_or_null_calibration=len(supported_records),
         baseline_empirical_inflation_factor=baseline_empirical_inflation_factor,

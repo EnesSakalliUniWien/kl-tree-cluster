@@ -1,7 +1,7 @@
 """Conditional topology traversal-law diagnostics.
 
 This panel converts the current context-negative topology evidence into an
-explicit directed-neighborhood law. It is non-cross-fit and non-permutation:
+explicit directed-neighborhood law. It uses the same data and no permutation:
 rows are scored from local income/outcome topology features only, then marked
 fail-closed unless their incidence stratum has enough labeled support.
 

@@ -20,6 +20,12 @@ The modes deliberately escalate in cost:
   the repository environment. It records resolved feature families, duplicate
   burden, within/between distance signal, nearest-neighbor label purity, and
   scientific-assumption warnings before benchmark method results are interpreted.
+- `tbs-audit --mode calibration-contract --calibration-records PATH` separates
+  tested-null sibling records, stopped-subtree frontiers, and nested blocked
+  descendants. It reports the production node-record support alongside a
+  structural frontier count so their difference is explicit. Support is read
+  from the `is_role_supported` column stamped by the producing sweep, not
+  re-derived here, so the audit cannot disagree with the production rule.
 - `tbs-audit --mode quick` also runs Ruff, Vulture, jscpd, and
   pytest-deadfixtures. Test collection runs through the repository's locked
   application environment, with the plugin added as a transient overlay, so
@@ -53,6 +59,9 @@ label and cleanup recommendation for each group.
 The generator-geometry mode writes
 `reports/audits/generated/generator-geometry.csv` and
 `reports/audits/generated/generator-geometry.md` by default.
+The calibration-contract mode writes
+`reports/audits/generated/calibration-contract.json` and
+`reports/audits/generated/calibration-contract.md` by default.
 Run
 `tbs-audit --doctor` to verify that all adapters are reachable.
 

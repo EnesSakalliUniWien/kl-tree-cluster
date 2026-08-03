@@ -34,12 +34,12 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 )
 
 from benchmarks.shared.cases import get_test_cases_by_suite
-from benchmarks.shared.result_records.models import BenchmarkRunStatus
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.tree_consensus import (
     TARGET_TREE_CONSENSUS_METHOD,
     tree_inference_from_run_id,
 )
+from benchmarks.shared.types import BenchmarkRunStatus
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once
 from benchmarks.shared.util.time import format_timestamp_utc

@@ -42,7 +42,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from tree_break_selection.plot import draw_image_panel
+from tree_break_selection.plot.image_panel import draw_image_panel
 from tree_break_selection.space_separation import (
     adaptive_spectral_blocks,
     block_adaptive_diffusion_geometry,

@@ -80,6 +80,25 @@ FRAME_DIMENSION_COLUMNS: Final = (
     "n_samples",
     "n_features",
 )
+OPTIONAL_FRAME_DIMENSION_COLUMNS: Final = (
+    "tree_n_leaves",
+    "tree_n_internal_nodes",
+    "tree_n_nodes",
+    "spectral_total_descendant_leaf_rows",
+    "spectral_total_internal_distribution_rows",
+    "spectral_total_matrix_rows",
+    "spectral_max_internal_distribution_rows",
+    "root_descendant_leaf_rows",
+    "root_internal_distribution_rows",
+    "root_spectral_matrix_rows",
+)
+OPTIONAL_PARENT_SPECTRAL_FRAME_COLUMNS: Final = (
+    "parent_descendant_leaf_rows",
+    "parent_internal_distribution_rows",
+    "parent_spectral_matrix_rows",
+    "parent_active_feature_count",
+    "parent_mp_threshold_rows",
+)
 FACTOR_SKEW_COLUMNS: Final = (
     "sqrt_log_pseudodeterminant",
     "log1p_log_pseudodeterminant",
@@ -100,6 +119,15 @@ FACTOR_SKEW_COLUMNS: Final = (
     "spectrum_positive_rank",
     "spectrum_satterthwaite_df",
     "spectrum_satterthwaite_scale",
+    "log_tree_n_leaves",
+    "log_tree_n_internal_nodes",
+    "log_tree_n_nodes",
+    "spectral_internal_row_fraction",
+    "root_internal_row_fraction",
+    "log_parent_descendant_leaf_rows",
+    "parent_internal_row_fraction",
+    "parent_spectral_matrix_to_leaf_ratio",
+    "log_parent_active_feature_count",
 )
 
 
@@ -183,8 +211,13 @@ def prepare_frame_dimensions(cells: pd.DataFrame) -> pd.DataFrame:
     missing = sorted(set(FRAME_DIMENSION_COLUMNS).difference(cells.columns))
     if missing:
         raise ValueError(f"Selected quadratic law frame dimensions missing columns: {missing!r}.")
-    frame = cells[list(dict.fromkeys([*FRAME_DIMENSION_COLUMNS, "true_clusters"]))].copy()
-    for column in ("n_samples", "n_features", "true_clusters"):
+    available_optional = [
+        column for column in OPTIONAL_FRAME_DIMENSION_COLUMNS if column in cells.columns
+    ]
+    frame = cells[
+        list(dict.fromkeys([*FRAME_DIMENSION_COLUMNS, *available_optional, "true_clusters"]))
+    ].copy()
+    for column in ("n_samples", "n_features", "true_clusters", *available_optional):
         if column in frame.columns:
             frame[column] = pd.to_numeric(frame[column], errors="coerce")
     frame = frame.drop_duplicates(subset=list(GROUP_COLUMNS))
@@ -198,6 +231,25 @@ def prepare_frame_dimensions(cells: pd.DataFrame) -> pd.DataFrame:
     frame["log_sample_feature_ratio"] = np.log(frame["sample_feature_ratio"])
     if "true_clusters" in frame.columns:
         frame["log_true_clusters"] = np.log(np.clip(frame["true_clusters"], 1.0, None))
+    for column in ("tree_n_leaves", "tree_n_internal_nodes", "tree_n_nodes"):
+        if column in frame.columns:
+            frame[f"log_{column}"] = np.log(np.clip(frame[column], 1.0, None))
+    if {
+        "spectral_total_internal_distribution_rows",
+        "spectral_total_matrix_rows",
+    }.issubset(frame.columns):
+        frame["spectral_internal_row_fraction"] = (
+            frame["spectral_total_internal_distribution_rows"]
+            / np.clip(frame["spectral_total_matrix_rows"], 1.0, None)
+        )
+    if {"root_internal_distribution_rows", "root_spectral_matrix_rows"}.issubset(
+        frame.columns
+    ):
+        frame["root_internal_row_fraction"] = frame["root_internal_distribution_rows"] / np.clip(
+            frame["root_spectral_matrix_rows"],
+            1.0,
+            None,
+        )
     return frame
 
 
@@ -208,6 +260,11 @@ def prepare_parent_eigenvalue_moments(parent_eigenvalues: pd.DataFrame) -> pd.Da
         raise ValueError(f"Parent eigenvalue export missing columns: {missing!r}.")
     frame = parent_eigenvalues.copy()
     frame["eigenvalue"] = pd.to_numeric(frame["eigenvalue"], errors="coerce")
+    available_frame_columns = [
+        column for column in OPTIONAL_PARENT_SPECTRAL_FRAME_COLUMNS if column in frame.columns
+    ]
+    for column in available_frame_columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
     frame = frame[np.isfinite(frame["eigenvalue"]) & (frame["eigenvalue"] > 0.0)].copy()
     if frame.empty:
         return pd.DataFrame(
@@ -219,6 +276,7 @@ def prepare_parent_eigenvalue_moments(parent_eigenvalues: pd.DataFrame) -> pd.Da
                 "spectrum_eigenvalue_square_sum",
                 "spectrum_satterthwaite_df",
                 "spectrum_satterthwaite_scale",
+                *available_frame_columns,
             ]
         )
     rows: list[dict[str, object]] = []
@@ -245,9 +303,40 @@ def prepare_parent_eigenvalue_moments(parent_eigenvalues: pd.DataFrame) -> pd.Da
                 "spectrum_eigenvalue_square_sum": eigen_square_sum,
                 "spectrum_satterthwaite_df": float(spectrum_df),
                 "spectrum_satterthwaite_scale": float(spectrum_scale),
+                **{
+                    column: float(group[column].dropna().iloc[0])
+                    if column in group.columns and not group[column].dropna().empty
+                    else math.nan
+                    for column in available_frame_columns
+                },
             }
         )
-    return pd.DataFrame.from_records(rows)
+    moments = pd.DataFrame.from_records(rows)
+    if {
+        "parent_internal_distribution_rows",
+        "parent_spectral_matrix_rows",
+    }.issubset(moments.columns):
+        moments["parent_internal_row_fraction"] = (
+            moments["parent_internal_distribution_rows"]
+            / np.clip(moments["parent_spectral_matrix_rows"], 1.0, None)
+        )
+    if {
+        "parent_spectral_matrix_rows",
+        "parent_descendant_leaf_rows",
+    }.issubset(moments.columns):
+        moments["parent_spectral_matrix_to_leaf_ratio"] = (
+            moments["parent_spectral_matrix_rows"]
+            / np.clip(moments["parent_descendant_leaf_rows"], 1.0, None)
+        )
+    if "parent_descendant_leaf_rows" in moments.columns:
+        moments["log_parent_descendant_leaf_rows"] = np.log(
+            np.clip(moments["parent_descendant_leaf_rows"], 1.0, None)
+        )
+    if "parent_active_feature_count" in moments.columns:
+        moments["log_parent_active_feature_count"] = np.log(
+            np.clip(moments["parent_active_feature_count"], 1.0, None)
+        )
+    return moments
 
 
 def _uniformity_from_p_values(p_values: np.ndarray) -> tuple[float, float, float]:
@@ -574,6 +663,10 @@ def _single_predictor_rows(
         "median_sample_feature_ratio",
         "median_log_feature_sample_ratio",
         "median_parent_sample_fraction",
+        "mean_spectrum_positive_rank",
+        "fraction_spectrum_rank_1",
+        "fraction_spectrum_rank_2",
+        "fraction_spectrum_rank_ge_3",
     )
     rows: list[dict[str, object]] = []
     for candidate in candidates:
@@ -675,6 +768,14 @@ def build_selected_quadratic_law_audit_tables(
         )
         moment_fit = _moment_scaled_chi_square_fit(statistics)
         mle_fit = _free_scaled_chi_square_mle(statistics)
+        spectrum_rank_values = (
+            pd.to_numeric(group["spectrum_positive_rank"], errors="coerce")
+            .replace([np.inf, -np.inf], np.nan)
+            .dropna()
+            .to_numpy(dtype=float)
+            if "spectrum_positive_rank" in group.columns
+            else np.asarray([], dtype=float)
+        )
         eigen_common_scale = math.nan
         eigen_ks = math.nan
         eigen_ks_p = math.nan
@@ -787,6 +888,24 @@ def build_selected_quadratic_law_audit_tables(
             "median_log_n_parent": float(np.median(group["log_n_parent"])),
             "mean_sibling_null_weight": float(np.mean(group["sibling_null_weight"])),
         }
+        if spectrum_rank_values.size:
+            row.update(
+                {
+                    "min_spectrum_positive_rank": float(np.min(spectrum_rank_values)),
+                    "q25_spectrum_positive_rank": float(
+                        np.quantile(spectrum_rank_values, 0.25)
+                    ),
+                    "median_spectrum_positive_rank": float(np.median(spectrum_rank_values)),
+                    "q75_spectrum_positive_rank": float(
+                        np.quantile(spectrum_rank_values, 0.75)
+                    ),
+                    "max_spectrum_positive_rank": float(np.max(spectrum_rank_values)),
+                    "mean_spectrum_positive_rank": float(np.mean(spectrum_rank_values)),
+                    "fraction_spectrum_rank_1": float(np.mean(spectrum_rank_values == 1.0)),
+                    "fraction_spectrum_rank_2": float(np.mean(spectrum_rank_values == 2.0)),
+                    "fraction_spectrum_rank_ge_3": float(np.mean(spectrum_rank_values >= 3.0)),
+                }
+            )
         if "n_samples" in group.columns:
             row.update(
                 {
@@ -808,6 +927,37 @@ def build_selected_quadratic_law_audit_tables(
                     ),
                 }
             )
+        for column in (
+            "tree_n_leaves",
+            "tree_n_internal_nodes",
+            "tree_n_nodes",
+            "spectral_total_descendant_leaf_rows",
+            "spectral_total_internal_distribution_rows",
+            "spectral_total_matrix_rows",
+            "spectral_max_internal_distribution_rows",
+            "root_descendant_leaf_rows",
+            "root_internal_distribution_rows",
+            "root_spectral_matrix_rows",
+            "spectral_internal_row_fraction",
+            "root_internal_row_fraction",
+        ):
+            if column in group.columns:
+                values = pd.to_numeric(group[column], errors="coerce").dropna()
+                if not values.empty:
+                    row[f"median_{column}"] = float(np.median(values.to_numpy(dtype=float)))
+        for column in (
+            "parent_descendant_leaf_rows",
+            "parent_internal_distribution_rows",
+            "parent_spectral_matrix_rows",
+            "parent_active_feature_count",
+            "parent_mp_threshold_rows",
+            "parent_internal_row_fraction",
+            "parent_spectral_matrix_to_leaf_ratio",
+        ):
+            if column in group.columns:
+                values = pd.to_numeric(group[column], errors="coerce").dropna()
+                if not values.empty:
+                    row[f"median_{column}"] = float(np.median(values.to_numpy(dtype=float)))
         group_rows.append(row)
         for model_name, fit in (
             (
@@ -908,6 +1058,8 @@ def _best_predictor(
     *,
     target: str,
 ) -> pd.Series | None:
+    if predictor_fits.empty or "target" not in predictor_fits.columns:
+        return None
     subset = predictor_fits[predictor_fits["target"].eq(target)].copy()
     subset = subset.replace([np.inf, -np.inf], np.nan).dropna(subset=["loo_rmse"])
     if subset.empty:

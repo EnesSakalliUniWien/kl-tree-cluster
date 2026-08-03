@@ -1,8 +1,21 @@
 import math
 
+import numpy as np
 import pytest
 from benchmarks.shared.result_records.factory import build_benchmark_result_row
-from benchmarks.shared.result_records.models import BenchmarkRunStatus
+from benchmarks.shared.types import (
+    BenchmarkRunStatus,
+    MethodRunResult,
+    UnsupportedEvidence,
+    UnsupportedReason,
+    UnsupportedReasonCode,
+)
+
+
+def test_benchmark_run_status_serializes_to_its_stable_value() -> None:
+    assert str(BenchmarkRunStatus.OK) == "ok"
+    assert str(BenchmarkRunStatus.SKIP) == "skip"
+    assert str(BenchmarkRunStatus.UNSUPPORTED) == "unsupported"
 
 
 def _build_row(status, **overrides):
@@ -37,6 +50,13 @@ def _build_row(status, **overrides):
         skip_reason=None,
         labels_length=8,
     )
+    if status == BenchmarkRunStatus.SKIP or status == "skip":
+        kwargs.update(
+            found_clusters=0,
+            status="skip",
+            skip_reason="method unavailable",
+            labels_length=0,
+        )
     kwargs.update(overrides)
     return build_benchmark_result_row(**kwargs)
 
@@ -52,6 +72,104 @@ def test_build_benchmark_result_row_accepts_ok_and_skip():
 def test_build_benchmark_result_row_accepts_status_enum():
     row = _build_row(BenchmarkRunStatus.OK)
     assert row.status == BenchmarkRunStatus.OK
+
+
+def _unsupported_reason() -> UnsupportedReason:
+    return UnsupportedReason(
+        code=UnsupportedReasonCode.EMPIRICAL_NULL_NO_INTERNAL_SUPPORT,
+        stage="sibling_calibration",
+        message="No admissible internal empirical-null support.",
+        evidence=UnsupportedEvidence(
+            focal_record_count=39,
+            admissible_support_count=0,
+            invalid_record_count=39,
+            upstream_tested_count=78,
+            upstream_rejected_count=78,
+        ),
+    )
+
+
+def test_method_run_result_accepts_typed_unsupported_outcome():
+    result = MethodRunResult(
+        labels=None,
+        found_clusters=0,
+        report_df=None,
+        status="unsupported",
+        skip_reason=None,
+        extra={"stage_timings": {}},
+        unsupported_reason=_unsupported_reason(),
+    )
+
+    assert result.status is BenchmarkRunStatus.UNSUPPORTED
+    assert result.unsupported_reason == _unsupported_reason()
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        (
+            {
+                "labels": np.array([0, 0]),
+                "found_clusters": 1,
+                "status": "unsupported",
+                "unsupported_reason": _unsupported_reason(),
+            },
+            "must not include labels",
+        ),
+        (
+            {
+                "labels": None,
+                "found_clusters": 0,
+                "status": "unsupported",
+                "unsupported_reason": None,
+            },
+            "requires unsupported_reason",
+        ),
+        (
+            {
+                "labels": None,
+                "found_clusters": 0,
+                "status": "skip",
+                "skip_reason": "not available",
+                "unsupported_reason": _unsupported_reason(),
+            },
+            "must not include unsupported_reason",
+        ),
+        (
+            {
+                "labels": None,
+                "found_clusters": 0,
+                "status": "ok",
+            },
+            "requires labels",
+        ),
+    ],
+)
+def test_method_run_result_rejects_inconsistent_states(kwargs, message):
+    base = {
+        "labels": np.array([0, 1]),
+        "found_clusters": 2,
+        "report_df": None,
+        "status": "ok",
+        "skip_reason": None,
+        "extra": None,
+        "unsupported_reason": None,
+    }
+    base.update(kwargs)
+
+    with pytest.raises(ValueError, match=message):
+        MethodRunResult(**base)
+
+
+def test_unsupported_evidence_rejects_negative_counts():
+    with pytest.raises(ValueError, match="non-negative"):
+        UnsupportedEvidence(
+            focal_record_count=1,
+            admissible_support_count=0,
+            invalid_record_count=-1,
+            upstream_tested_count=2,
+            upstream_rejected_count=2,
+        )
 
 
 def test_build_benchmark_result_row_requires_explicit_unknown_cluster_count():

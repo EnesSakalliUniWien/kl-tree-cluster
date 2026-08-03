@@ -19,7 +19,7 @@ tags:
 
 ## Summary
 
-`data_independent_sibling_gate_panel.py` tests same-data, non-cross-fit repair
+`data_independent_sibling_gate_panel.py` tests a same-data repair
 candidates for the selected sibling null-law failure. It removes the adaptive
 parent PCA projection and adaptive projection dimension from the sibling gate,
 then evaluates predeclared coordinate-wise Wald p-values over a

@@ -40,6 +40,7 @@ class BenchmarkPerformanceGridArtifacts:
     nmi_grid_csv: Path
     purity_grid_csv: Path
     status_grid_csv: Path
+    support_coverage_csv: Path
 
 
 def _require_columns(results: pd.DataFrame, required: set[str]) -> None:
@@ -84,6 +85,9 @@ def _normalize_grid_frame(results: pd.DataFrame) -> pd.DataFrame:
         *METRIC_COLUMNS,
     ]:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
+
+    quality_columns = [*METRIC_COLUMNS, "cluster_count_abs_error"]
+    frame.loc[~frame["status"].eq("ok"), quality_columns] = np.nan
 
     duplicated = frame.duplicated(["case_id", "run_id"], keep=False)
     if duplicated.any():
@@ -132,8 +136,12 @@ def _first_nonempty(values: pd.Series) -> str:
 def _summary(frame: pd.DataFrame) -> pd.DataFrame:
     working = frame.copy()
     working["ok"] = working["status"].eq("ok")
+    working["unsupported"] = working["status"].eq("unsupported")
+    working["skip"] = working["status"].eq("skip")
     working["exact_k"] = np.where(
-        working["true_clusters"].notna() & working["found_clusters"].notna(),
+        working["ok"]
+        & working["true_clusters"].notna()
+        & working["found_clusters"].notna(),
         (working["true_clusters"] == working["found_clusters"]).astype(float),
         np.nan,
     )
@@ -145,9 +153,10 @@ def _summary(frame: pd.DataFrame) -> pd.DataFrame:
         benchmark_grid=("benchmark_grid", _first_nonempty),
         benchmark_repeat=("benchmark_repeat", "first"),
         params=("params", _first_nonempty),
-        rows=("case_id", "size"),
-        ok_rows=("ok", "sum"),
-        skipped_rows=("ok", lambda values: int((~values).sum())),
+        total_rows=("case_id", "size"),
+        successful_count=("ok", "sum"),
+        unsupported_count=("unsupported", "sum"),
+        skip_count=("skip", "sum"),
         mean_ari=("ari", "mean"),
         median_ari=("ari", "median"),
         mean_nmi=("nmi", "mean"),
@@ -156,25 +165,55 @@ def _summary(frame: pd.DataFrame) -> pd.DataFrame:
         mean_cluster_count_abs_error=("cluster_count_abs_error", "mean"),
     )
     summary = summary.reset_index()
-    summary["skip_rate"] = np.where(
-        summary["rows"] > 0,
-        summary["skipped_rows"] / summary["rows"],
+    summary["attempted_count"] = (
+        summary["successful_count"] + summary["unsupported_count"]
+    )
+    summary["unsupported_rate"] = np.where(
+        summary["attempted_count"] > 0,
+        summary["unsupported_count"] / summary["attempted_count"],
         np.nan,
     )
     summary = summary.sort_values(
-        ["skip_rate", "mean_ari", "mean_nmi", "ok_rows", "run_id"],
+        ["unsupported_rate", "mean_ari", "mean_nmi", "successful_count", "run_id"],
         ascending=[True, False, False, False, True],
         na_position="last",
     ).reset_index(drop=True)
-    summary.insert(0, "rank_skip_rate_then_mean_ari", np.arange(1, len(summary) + 1))
+    summary.insert(0, "rank_support_then_mean_ari", np.arange(1, len(summary) + 1))
     return summary
+
+
+def _support_coverage(frame: pd.DataFrame) -> pd.DataFrame:
+    working = frame.assign(
+        successful=frame["status"].eq("ok"),
+        unsupported=frame["status"].eq("unsupported"),
+        skipped=frame["status"].eq("skip"),
+    )
+    coverage = (
+        working.groupby(["method", "case_category"], sort=True, dropna=False)
+        .agg(
+            total_rows=("case_id", "size"),
+            successful_count=("successful", "sum"),
+            unsupported_count=("unsupported", "sum"),
+            skip_count=("skipped", "sum"),
+        )
+        .reset_index()
+    )
+    coverage["attempted_count"] = (
+        coverage["successful_count"] + coverage["unsupported_count"]
+    )
+    coverage["unsupported_rate"] = np.where(
+        coverage["attempted_count"] > 0,
+        coverage["unsupported_count"] / coverage["attempted_count"],
+        np.nan,
+    )
+    return coverage
 
 
 def _markdown_table(frame: pd.DataFrame, *, max_rows: int = 20) -> str:
     if frame.empty:
         return "_No rows._"
     visible = frame.head(max_rows).copy()
-    for column in SUMMARY_METRICS + ["skip_rate"]:
+    for column in SUMMARY_METRICS + ["unsupported_rate"]:
         if column in visible.columns:
             visible[column] = visible[column].map(
                 lambda value: "" if pd.isna(value) else f"{float(value):.4f}"
@@ -202,6 +241,7 @@ def write_benchmark_performance_grid(
     frame = _normalize_grid_frame(results)
 
     summary = _summary(frame)
+    support_coverage = _support_coverage(frame)
     ari_grid = _metric_grid(frame, "ari")
     nmi_grid = _metric_grid(frame, "nmi")
     purity_grid = _metric_grid(frame, "purity")
@@ -212,6 +252,7 @@ def write_benchmark_performance_grid(
     nmi_grid_csv = output / "benchmark_performance_grid_nmi.csv"
     purity_grid_csv = output / "benchmark_performance_grid_purity.csv"
     status_grid_csv = output / "benchmark_performance_grid_status.csv"
+    support_coverage_csv = output / "benchmark_support_coverage_by_method_case_family.csv"
     report_md = output / "benchmark_performance_grid.md"
 
     summary.to_csv(summary_csv, index=False)
@@ -219,6 +260,7 @@ def write_benchmark_performance_grid(
     nmi_grid.to_csv(nmi_grid_csv, index=False)
     purity_grid.to_csv(purity_grid_csv, index=False)
     status_grid.to_csv(status_grid_csv, index=False)
+    support_coverage.to_csv(support_coverage_csv, index=False)
 
     source_line = f"- Source rows: `{source_path}`\n" if source_path is not None else ""
     report_md.write_text(
@@ -238,10 +280,11 @@ def write_benchmark_performance_grid(
                 f"- NMI case grid: `{nmi_grid_csv.name}`",
                 f"- Purity case grid: `{purity_grid_csv.name}`",
                 f"- Status case grid: `{status_grid_csv.name}`",
+                f"- Support coverage by method/case family: `{support_coverage_csv.name}`",
                 "",
                 "## Ranked Run Cells",
                 "",
-                "Sorted by skip rate first, then mean ARI on available rows.",
+                "Sorted by unsupported rate first, then mean ARI on successful rows.",
                 "",
                 _markdown_table(summary),
                 "",
@@ -257,6 +300,7 @@ def write_benchmark_performance_grid(
         nmi_grid_csv=nmi_grid_csv,
         purity_grid_csv=purity_grid_csv,
         status_grid_csv=status_grid_csv,
+        support_coverage_csv=support_coverage_csv,
     )
 
 

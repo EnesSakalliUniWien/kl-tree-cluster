@@ -1,7 +1,7 @@
 """Data-independent sibling gate diagnostics.
 
 This panel tests same-data fixes for the selected sibling null-law failure
-without cross-fitting. The candidate repair removes PCA rows and projection
+under the same-data selected topology. The candidate repair removes PCA rows and projection
 dimension learned from the tested sample, then evaluates predeclared fixed
 global, coordinate-wise, or feature-block Wald gates with a selected-topology
 penalty.

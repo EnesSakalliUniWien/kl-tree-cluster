@@ -80,17 +80,21 @@ def _process_node(
     """
     descendant_leaf_row_indices = spectral_task.row_indices
     internal_distribution_vectors = spectral_task.internal_distributions
+    descendant_leaf_row_count = int(len(descendant_leaf_row_indices))
     stage_timings = _empty_stage_timings()
 
-    if len(descendant_leaf_row_indices) < 2:
+    if descendant_leaf_row_count < 2:
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
             raw_mp_signal_count=0,
             test_projection_dimension=0,
-            effective_independent_rows=len(descendant_leaf_row_indices),
-            mp_threshold_rows=len(descendant_leaf_row_indices),
+            effective_independent_rows=descendant_leaf_row_count,
+            mp_threshold_rows=descendant_leaf_row_count,
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            descendant_leaf_row_count=descendant_leaf_row_count,
+            internal_distribution_row_count=0,
+            spectral_matrix_row_count=descendant_leaf_row_count,
             full_eigenvalues=np.zeros(0, dtype=np.float64),
             active_feature_count=0,
             stage_timings=stage_timings,
@@ -109,10 +113,12 @@ def _process_node(
     stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
 
     descendant_feature_matrix = descendant_leaf_feature_rows
+    internal_distribution_row_count = 0
     if internal_distribution_vectors:
         internal_feature_rows = np.asarray(internal_distribution_vectors, dtype=np.float64)
         if internal_feature_rows.ndim == 3 and internal_feature_rows.shape[1] == 1:
             internal_feature_rows = internal_feature_rows[:, 0, :]
+        internal_distribution_row_count = int(internal_feature_rows.shape[0])
         whitening_start_sec = perf_counter()
         internal_feature_rows = _build_trusted_null_whitened_tangent_matrix(
             internal_feature_rows,
@@ -123,6 +129,7 @@ def _process_node(
         )
         stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
         descendant_feature_matrix = np.vstack([descendant_leaf_feature_rows, internal_feature_rows])
+    spectral_matrix_row_count = int(descendant_feature_matrix.shape[0])
 
     eigensolve_start_sec = perf_counter()
     eigendecomposition_result = eigendecompose_covariance(
@@ -136,22 +143,25 @@ def _process_node(
             node_id=spectral_task.node_id,
             raw_mp_signal_count=0,
             test_projection_dimension=0,
-            effective_independent_rows=len(descendant_leaf_row_indices),
-            mp_threshold_rows=descendant_feature_matrix.shape[0],
+            effective_independent_rows=descendant_leaf_row_count,
+            mp_threshold_rows=spectral_matrix_row_count,
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            descendant_leaf_row_count=descendant_leaf_row_count,
+            internal_distribution_row_count=internal_distribution_row_count,
+            spectral_matrix_row_count=spectral_matrix_row_count,
             full_eigenvalues=np.zeros(0, dtype=np.float64),
             active_feature_count=0,
             stage_timings=stage_timings,
         )
 
-    mp_threshold_rows = int(len(descendant_leaf_row_indices))
+    mp_threshold_rows = descendant_leaf_row_count
 
     dimension_estimate = estimate_marchenko_pastur_dimension(
         eigendecomposition_result.eigenvalues,
-        n_samples=descendant_feature_matrix.shape[0],
+        n_samples=spectral_matrix_row_count,
         n_features=eigendecomposition_result.active_feature_count,
-        effective_independent_rows=len(descendant_leaf_row_indices),
+        effective_independent_rows=descendant_leaf_row_count,
         mp_threshold_rows=mp_threshold_rows,
         minimum_projection_dimension=minimum_projection_dimension,
     )
@@ -190,6 +200,9 @@ def _process_node(
         mp_threshold_rows=dimension_estimate.mp_threshold_rows,
         projection_matrix=projection_matrix,
         eigenvalues=pca_eigenvalues,
+        descendant_leaf_row_count=descendant_leaf_row_count,
+        internal_distribution_row_count=internal_distribution_row_count,
+        spectral_matrix_row_count=spectral_matrix_row_count,
         full_eigenvalues=np.asarray(
             eigendecomposition_result.eigenvalues,
             dtype=np.float64,

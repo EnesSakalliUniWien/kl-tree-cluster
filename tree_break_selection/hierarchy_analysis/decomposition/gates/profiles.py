@@ -56,7 +56,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_only_not_production",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty and selected-root feature-subsample stability guard. "
             "Conditional topology traversal-law evidence is emitted by the "
             "diagnostic panel, not applied as a production calibration rule."
@@ -72,7 +72,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty and selected-root feature-subsample stability guard."
         ),
     ),
@@ -86,7 +86,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit full fixed-subspace chi-square sibling gate with "
+            "Same-data full fixed-subspace chi-square sibling gate with "
             "selected-topology alpha penalty and selected-root feature-subsample "
             "stability guard."
         ),
@@ -101,7 +101,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty, selected-root feature-subsample stability guard, and "
             "selected-root permutation guard."
         ),
@@ -119,7 +119,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty, selected-root feature-subsample stability guard, and "
             "selected-subtree permutation guard for traversal-open internal nodes."
         ),
@@ -138,7 +138,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty, selected-root feature-subsample stability guard, and "
             "selected-subtree permutation guard only for splits reachable through "
             "a pass-through ancestor."
@@ -158,7 +158,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty, selected-root feature-subsample stability guard, and "
             "a global selected-family sibling-min permutation guard for "
             "pass-through descendant splits."
@@ -178,7 +178,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_stability_seed=0,
         status="diagnostic_candidate",
         description=(
-            "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology "
+            "Same-data fixed coordinate-BH sibling gate with selected-topology "
             "alpha penalty, selected-root feature-subsample stability guard, and "
             "a global selected-family sibling-min permutation guard that reruns "
             "Monte Carlo floor pass-through families at higher resolution."

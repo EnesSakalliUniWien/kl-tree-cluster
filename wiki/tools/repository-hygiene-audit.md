@@ -60,6 +60,8 @@ The higher-cost modes are explicit:
 
 ```bash
 tbs-audit --mode fields
+tbs-audit --mode calibration-contract \
+  --calibration-records reports/path/to/sibling-records.csv
 tbs-audit --mode evidence
 tbs-audit --mode mutation --mutation-target tree_break_selection/tree
 ```
@@ -72,6 +74,12 @@ configuration keys, and known output-schema columns are not treated as true
 dead writes. OpenLineage is intentionally not part of this mode because its
 standard role is runtime job, dataset, and run lineage metadata for executed
 pipelines.
+
+`calibration-contract` reads an explicit sibling-record CSV and distinguishes
+tested non-significant records from stopped-subtree frontiers and their nested
+blocked descendants. It compares the production node-record count with a
+structural frontier count; it does not silently change the estimator's current
+all-descendant weighting.
 
 `evidence` adds per-test calibration coverage contexts through a transient
 pytest-cov overlay on the repository's locked environment. It records the
@@ -102,6 +110,8 @@ The repository also exposes `make audit`, `make audit-quick`, and
   dictionary fields can be reviewed by writer scope, reader scope, schema
   declaration, access kind, cleanup classification, and surface before
   deletion.
+- `tools/repository_audit/src/tbs_repo_audit/calibration_contract.py` audits
+  stopped-frontier multiplicity without changing the input records.
 - Calibration package initializers are excluded from study-module counts.
 - Statically unimported files are separated from unresolved files because
   command runners and documented reproducibility artifacts can be valid without
@@ -125,7 +135,7 @@ The repository also exposes `make audit`, `make audit-quick`, and
   that count to 2. The two retained lines choose sequential or all-core
   execution in the production spectral worker resolver. The remaining 21,936
   calibration-only lines are confined to benchmark and diagnostic modules.
-- The tool package has 27 focused tests, including compact coverage-set
+- The tool package has 36 focused tests, including compact coverage-set
   comparison, punctuation-insensitive documentation matching, and LibCST
   field-lineage read/write and cleanup-bucket classification.
 - The first responsibility-aware clone tranche split application/production

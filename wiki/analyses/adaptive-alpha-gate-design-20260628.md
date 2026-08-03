@@ -156,7 +156,7 @@ contract.
   pass-through fragmentation.
 - `wiki/concepts/projected-wald-statistic.md` records that same-sample adaptive
   sibling projection inflates selected-null tails and that fixed-coordinate
-  sibling gates are the non-cross-fit repair direction in validated diagnostic
+  sibling gates are the same-data repair direction in validated diagnostic
   paths.
 - `wiki/analyses/traversal-neighborhood-method-comparison.md` records the
   traversal skeleton: a split requires binary, edge-open, and sibling-open;

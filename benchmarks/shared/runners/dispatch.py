@@ -40,18 +40,22 @@ from tree_break_selection.tree.optimized_branch_lengths import (
 )
 
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.types import MethodRunResult
+from benchmarks.shared.types import BenchmarkRunStatus, MethodRunResult
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from benchmarks.shared.util.execution_mode import coerce_bool_param
-from benchmarks.shared.util.method_sets import TBS_RUNNER_METHODS
+from benchmarks.shared.util.method_sets import (
+    TBS_DISTANCE_TREE_NNLS_METHODS,
+    TBS_RUNNER_METHODS,
+)
 
 
 def _normalize_method_result(
     result: MethodRunResult,
     sample_index: pd.Index,
 ) -> MethodRunResult:
-    """Normalize method outputs to the stable ``ok/skip`` runner contract."""
-    if result.status == "ok" and result.labels is not None:
+    """Normalize method outputs to the stable typed runner contract."""
+    if result.status is BenchmarkRunStatus.OK:
+        assert result.labels is not None
         labels = np.asarray(result.labels)
         if len(labels) != len(sample_index):
             raise ValueError(
@@ -67,21 +71,28 @@ def _normalize_method_result(
             extra=result.extra,
         )
 
-    skip_reason = result.skip_reason
-    if not skip_reason:
-        if result.status == "ok":
-            skip_reason = "Runner returned status=ok without labels."
-        else:
-            skip_reason = f"Runner returned status={result.status!r}."
+    if result.status is BenchmarkRunStatus.SKIP:
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=None,
+            status=BenchmarkRunStatus.SKIP,
+            skip_reason=result.skip_reason,
+            extra=result.extra,
+        )
 
-    return MethodRunResult(
-        labels=None,
-        found_clusters=int(result.found_clusters),
-        report_df=None,
-        status="skip",
-        skip_reason=str(skip_reason),
-        extra=result.extra,
-    )
+    if result.status is BenchmarkRunStatus.UNSUPPORTED:
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=None,
+            status=BenchmarkRunStatus.UNSUPPORTED,
+            skip_reason=None,
+            extra=result.extra,
+            unsupported_reason=result.unsupported_reason,
+        )
+
+    raise AssertionError(f"Unhandled benchmark run status: {result.status!r}.")
 
 
 def _resolve_tbs_sibling_gate_method(
@@ -210,6 +221,186 @@ def _optional_int_sequence(value: Any) -> tuple[int, ...] | None:
     return tuple(int(item) for item in value)
 
 
+def _run_tbs_distance_tree_method(
+    *,
+    data_df: pd.DataFrame,
+    method_id: str,
+    params: Dict[str, Any],
+    spec: Any,
+    alpha: float,
+    resolved_edge_alpha: float,
+    distance_condensed: Optional[np.ndarray],
+    feature_space: FeatureSpace | None,
+    branch_length_data_df: pd.DataFrame | None = None,
+) -> MethodRunResult:
+    """Construct and run a distance-tree TBS sibling-gate method.
+
+    ``branch_length_data_df`` is an explicit, per-caller decision: distance-tree
+    methods default to ``None`` (linkage_ultrametric branch times need no
+    geometry), while methods that fit fixed-topology NNLS branch lengths must
+    pass their own geometry rather than relying on implicit reuse of the
+    distributional feature matrix.
+    """
+    metric = str(params["tree_distance_metric"])
+    if method_id == "tbs_iqtree3":
+        tbs_distance_condensed = None
+    elif distance_condensed is not None:
+        # Use precomputed distance (e.g. SBM modularity distance).
+        tbs_distance_condensed = np.asarray(distance_condensed, dtype=float)
+    elif metric == CONTINUOUS_TREE_DISTANCE_METRIC:
+        if feature_space is None:
+            raise ValueError(
+                "mahalanobis_time TBS tree distances require a continuous feature_space."
+            )
+        tbs_distance_condensed = continuous_time_distance_condensed(
+            data_df.values,
+            feature_space,
+        )
+    elif metric == CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC:
+        if feature_space is None:
+            raise ValueError(
+                "standardized_euclidean TBS tree distances require a continuous feature_space."
+            )
+        tbs_distance_condensed = standardized_euclidean_distance_condensed(
+            data_df.values,
+            feature_space,
+        )
+    else:
+        tbs_distance_condensed = pdist(data_df.values, metric=metric)
+    result = spec.runner(
+        data_df,
+        tbs_distance_condensed,
+        alpha,
+        tree_linkage_method=str(params["tree_linkage_method"]),
+        tree_builder=str(params.get("tree_builder", "linkage")),
+        tree_rooting=str(params.get("tree_rooting", "linkage_root")),
+        iqtree_executable=str(params.get("iqtree_executable", "iqtree3")),
+        iqtree_model=str(params.get("iqtree_model", "JC2")),
+        iqtree_threads=int(params.get("iqtree_threads", 1)),
+        iqtree_work_dir=params.get("iqtree_work_dir"),
+        edge_alpha=resolved_edge_alpha,
+        feature_space=feature_space,
+        branch_length_data_df=branch_length_data_df,
+        spectral_minimum_dimension=int(
+            params.get(
+                "spectral_minimum_dimension",
+                EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+            )
+        ),
+        adaptive_projection_dimension_energy_fraction=(
+            None
+            if params.get("adaptive_projection_dimension_energy_fraction") is None
+            else float(params["adaptive_projection_dimension_energy_fraction"])
+        ),
+        spectral_include_internal_barycenters=coerce_bool_param(
+            params.get("spectral_include_internal_barycenters", False),
+            name="spectral_include_internal_barycenters",
+        ),
+        spectral_internal_distribution_mode=str(
+            params.get(
+                "spectral_internal_distribution_mode",
+                "empirical_barycenter",
+            )
+        ),
+        continuous_covariance_policy=str(
+            params.get(
+                "continuous_covariance_policy",
+                DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+            )
+        ),
+        continuous_covariance_min_child_leaf_count=int(
+            params.get(
+                "continuous_covariance_min_child_leaf_count",
+                DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+            )
+        ),
+        edge_branch_length_variance_policy=str(
+            params.get("edge_branch_length_variance_policy", "none")
+        ),
+        enforce_internal_support_thresholds=coerce_bool_param(
+            params.get("enforce_internal_support_thresholds", False),
+            name="enforce_internal_support_thresholds",
+        ),
+        sibling_gate_profile=params.get("sibling_gate_profile"),
+        sibling_gate_method=_resolve_tbs_sibling_gate_method(
+            params=params,
+            feature_space=feature_space,
+        ),
+        sibling_gate_alpha_penalty=float(params.get("sibling_gate_alpha_penalty", 1.0)),
+        root_stability_guard_threshold=params.get("root_stability_guard_threshold"),
+        root_stability_subsample_replicates=int(
+            params.get("root_stability_subsample_replicates", 0)
+        ),
+        root_stability_feature_fraction=float(
+            params.get("root_stability_feature_fraction", 0.8)
+        ),
+        root_stability_seed=int(params.get("root_stability_seed", 0)),
+        root_stability_tree_distance_metric=str(
+            params.get("root_stability_tree_distance_metric", "hamming")
+        ),
+        root_stability_tree_linkage_method=params.get("root_stability_tree_linkage_method"),
+        root_selective_permutation_guard_replicates=int(
+            params.get("root_selective_permutation_guard_replicates", 0)
+        ),
+        root_selective_permutation_guard_seed=int(
+            params.get("root_selective_permutation_guard_seed", 0)
+        ),
+        root_selective_permutation_guard_alpha=params.get(
+            "root_selective_permutation_guard_alpha"
+        ),
+        root_selective_permutation_guard_scope=str(
+            params.get("root_selective_permutation_guard_scope", "root")
+        ),
+        root_selective_permutation_guard_tree_distance_metric=str(
+            params.get(
+                "root_selective_permutation_guard_tree_distance_metric",
+                "hamming",
+            )
+        ),
+        root_selective_permutation_guard_tree_linkage_method=params.get(
+            "root_selective_permutation_guard_tree_linkage_method"
+        ),
+        spectral_transport_passthrough_guard=coerce_bool_param(
+            params.get("spectral_transport_passthrough_guard", False),
+            name="spectral_transport_passthrough_guard",
+        ),
+        spectral_transport_max_cost=float(
+            params.get(
+                "spectral_transport_max_cost",
+                DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+            )
+        ),
+        spectral_transport_require_mp_blocks=coerce_bool_param(
+            params.get("spectral_transport_require_mp_blocks", True),
+            name="spectral_transport_require_mp_blocks",
+        ),
+        spectral_transport_block_log_tolerance=float(
+            params.get(
+                "spectral_transport_block_log_tolerance",
+                DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+            )
+        ),
+        spectral_transport_unmatched_mode_penalty=float(
+            params.get(
+                "spectral_transport_unmatched_mode_penalty",
+                DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+            )
+        ),
+        neighborhood_bandwidth_profile=params.get("neighborhood_bandwidth_profile"),
+        **_tbs_branch_length_optimization_kwargs(params),
+        allow_linkage_ultrametric_branch_time=coerce_bool_param(
+            params.get("allow_linkage_ultrametric_branch_time", False),
+            name="allow_linkage_ultrametric_branch_time",
+        ),
+        passthrough=coerce_bool_param(
+            params.get("passthrough", True),
+            name="passthrough",
+        ),
+        trace_level="compact",
+    )
+    return _normalize_method_result(result, data_df.index)
+
+
 def run_clustering_result(
     data_df: pd.DataFrame,
     method_id: str,
@@ -311,164 +502,30 @@ def run_clustering_result(
         )
         return _normalize_method_result(result, data_df.index)
 
-    if method_id in TBS_RUNNER_METHODS:
-        metric = str(params["tree_distance_metric"])
-        if method_id == "tbs_iqtree3":
-            tbs_distance_condensed = None
-        elif distance_condensed is not None:
-            # Use precomputed distance (e.g. SBM modularity distance).
-            tbs_distance_condensed = np.asarray(distance_condensed, dtype=float)
-        elif metric == CONTINUOUS_TREE_DISTANCE_METRIC:
-            if feature_space is None:
-                raise ValueError(
-                    "mahalanobis_time TBS tree distances require a continuous feature_space."
-                )
-            tbs_distance_condensed = continuous_time_distance_condensed(
-                data_df.values,
-                feature_space,
-            )
-        elif metric == CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC:
-            if feature_space is None:
-                raise ValueError(
-                    "standardized_euclidean TBS tree distances require a continuous feature_space."
-                )
-            tbs_distance_condensed = standardized_euclidean_distance_condensed(
-                data_df.values,
-                feature_space,
-            )
-        else:
-            tbs_distance_condensed = pdist(data_df.values, metric=metric)
-        result = spec.runner(
-            data_df,
-            tbs_distance_condensed,
-            alpha,
-            tree_linkage_method=str(params["tree_linkage_method"]),
-            tree_builder=str(params.get("tree_builder", "linkage")),
-            tree_rooting=str(params.get("tree_rooting", "linkage_root")),
-            iqtree_executable=str(params.get("iqtree_executable", "iqtree3")),
-            iqtree_model=str(params.get("iqtree_model", "JC2")),
-            iqtree_threads=int(params.get("iqtree_threads", 1)),
-            iqtree_work_dir=params.get("iqtree_work_dir"),
-            edge_alpha=resolved_edge_alpha,
+    if method_id in TBS_DISTANCE_TREE_NNLS_METHODS:
+        return _run_tbs_distance_tree_method(
+            data_df=data_df,
+            method_id=method_id,
+            params=params,
+            spec=spec,
+            alpha=alpha,
+            resolved_edge_alpha=resolved_edge_alpha,
+            distance_condensed=distance_condensed,
             feature_space=feature_space,
-            spectral_minimum_dimension=int(
-                params.get(
-                    "spectral_minimum_dimension",
-                    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-                )
-            ),
-            adaptive_projection_dimension_energy_fraction=(
-                None
-                if params.get("adaptive_projection_dimension_energy_fraction") is None
-                else float(params["adaptive_projection_dimension_energy_fraction"])
-            ),
-            spectral_include_internal_barycenters=coerce_bool_param(
-                params.get("spectral_include_internal_barycenters", False),
-                name="spectral_include_internal_barycenters",
-            ),
-            spectral_internal_distribution_mode=str(
-                params.get(
-                    "spectral_internal_distribution_mode",
-                    "empirical_barycenter",
-                )
-            ),
-            continuous_covariance_policy=str(
-                params.get(
-                    "continuous_covariance_policy",
-                    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
-                )
-            ),
-            continuous_covariance_min_child_leaf_count=int(
-                params.get(
-                    "continuous_covariance_min_child_leaf_count",
-                    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
-                )
-            ),
-            edge_branch_length_variance_policy=str(
-                params.get("edge_branch_length_variance_policy", "none")
-            ),
-            enforce_internal_support_thresholds=coerce_bool_param(
-                params.get("enforce_internal_support_thresholds", False),
-                name="enforce_internal_support_thresholds",
-            ),
-            sibling_gate_profile=params.get("sibling_gate_profile"),
-            sibling_gate_method=_resolve_tbs_sibling_gate_method(
-                params=params,
-                feature_space=feature_space,
-            ),
-            sibling_gate_alpha_penalty=float(params.get("sibling_gate_alpha_penalty", 1.0)),
-            root_stability_guard_threshold=params.get("root_stability_guard_threshold"),
-            root_stability_subsample_replicates=int(
-                params.get("root_stability_subsample_replicates", 0)
-            ),
-            root_stability_feature_fraction=float(
-                params.get("root_stability_feature_fraction", 0.8)
-            ),
-            root_stability_seed=int(params.get("root_stability_seed", 0)),
-            root_stability_tree_distance_metric=str(
-                params.get("root_stability_tree_distance_metric", "hamming")
-            ),
-            root_stability_tree_linkage_method=params.get("root_stability_tree_linkage_method"),
-            root_selective_permutation_guard_replicates=int(
-                params.get("root_selective_permutation_guard_replicates", 0)
-            ),
-            root_selective_permutation_guard_seed=int(
-                params.get("root_selective_permutation_guard_seed", 0)
-            ),
-            root_selective_permutation_guard_alpha=params.get(
-                "root_selective_permutation_guard_alpha"
-            ),
-            root_selective_permutation_guard_scope=str(
-                params.get("root_selective_permutation_guard_scope", "root")
-            ),
-            root_selective_permutation_guard_tree_distance_metric=str(
-                params.get(
-                    "root_selective_permutation_guard_tree_distance_metric",
-                    "hamming",
-                )
-            ),
-            root_selective_permutation_guard_tree_linkage_method=params.get(
-                "root_selective_permutation_guard_tree_linkage_method"
-            ),
-            spectral_transport_passthrough_guard=coerce_bool_param(
-                params.get("spectral_transport_passthrough_guard", False),
-                name="spectral_transport_passthrough_guard",
-            ),
-            spectral_transport_max_cost=float(
-                params.get(
-                    "spectral_transport_max_cost",
-                    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
-                )
-            ),
-            spectral_transport_require_mp_blocks=coerce_bool_param(
-                params.get("spectral_transport_require_mp_blocks", True),
-                name="spectral_transport_require_mp_blocks",
-            ),
-            spectral_transport_block_log_tolerance=float(
-                params.get(
-                    "spectral_transport_block_log_tolerance",
-                    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
-                )
-            ),
-            spectral_transport_unmatched_mode_penalty=float(
-                params.get(
-                    "spectral_transport_unmatched_mode_penalty",
-                    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
-                )
-            ),
-            neighborhood_bandwidth_profile=params.get("neighborhood_bandwidth_profile"),
-            **_tbs_branch_length_optimization_kwargs(params),
-            allow_linkage_ultrametric_branch_time=coerce_bool_param(
-                params.get("allow_linkage_ultrametric_branch_time", False),
-                name="allow_linkage_ultrametric_branch_time",
-            ),
-            passthrough=coerce_bool_param(
-                params.get("passthrough", True),
-                name="passthrough",
-            ),
-            trace_level="compact",
+            branch_length_data_df=data_df,
         )
-        return _normalize_method_result(result, data_df.index)
+
+    if method_id in TBS_RUNNER_METHODS:
+        return _run_tbs_distance_tree_method(
+            data_df=data_df,
+            method_id=method_id,
+            params=params,
+            spec=spec,
+            alpha=alpha,
+            resolved_edge_alpha=resolved_edge_alpha,
+            distance_condensed=distance_condensed,
+            feature_space=feature_space,
+        )
 
     if method_id in {"kmeans", "spectral"}:
         int(params["n_clusters"])

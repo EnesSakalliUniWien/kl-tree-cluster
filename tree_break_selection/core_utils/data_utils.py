@@ -220,6 +220,9 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
         The dataframe with initialized columns.
     """
     df["Sibling_Divergence_Skipped"] = False
+    df["Sibling_Role_Supported"] = False
+    df["Sibling_Null_Weight"] = np.nan
+    df["Sibling_Parent_Positive_Eigenvalue_Count"] = np.nan
     df["Sibling_Test_Statistic"] = np.nan
     df["Sibling_Degrees_of_Freedom"] = np.nan
     df["Sibling_Divergence_P_Value"] = np.nan

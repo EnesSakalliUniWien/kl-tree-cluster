@@ -287,6 +287,10 @@ def run_benchmarks():
         )
         print(f"Performance grid report written: {performance_grid_outputs.report_md}")
         print(f"Performance grid summary written: {performance_grid_outputs.summary_csv}")
+        print(
+            "Support coverage written: "
+            f"{performance_grid_outputs.support_coverage_csv}"
+        )
 
         if run_tree_consensus:
             if tree_consensus_label_dir is None:
@@ -301,7 +305,7 @@ def run_benchmarks():
             print(f"Tree consensus report written: {tree_consensus_outputs.report_md}")
             print(f"Tree consensus summary written: {tree_consensus_outputs.summary_csv}")
 
-        summary = df.groupby(["method"])["ari"].mean()
+        summary = df.loc[df["status"].eq("ok")].groupby(["method"])["ari"].mean()
         print("\nMean ARI by Method (ok rows only; skipped rows have NaN ARI):")
         print(summary)
         status_summary = df.groupby(["method", "status"]).size().unstack(fill_value=0)

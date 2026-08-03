@@ -57,10 +57,10 @@ def classify_support_role(row: Mapping[str, object]) -> SupportRole:
                 f"Invalid explicit support role in {explicit_column}: {explicit_value!r}."
             ) from exc
 
-    if _truthy(row.get("is_null_like")) or str(row.get("data_role", "")).lower() == "null":
-        return SupportRole.NULL_ANCHOR
     if _truthy(row.get("is_edge_blocked")) or _truthy(row.get("edge_blocked")):
         return SupportRole.STOPPED_EDGE_NULL_ANCHOR
+    if _truthy(row.get("is_null_like")) or str(row.get("data_role", "")).lower() == "null":
+        return SupportRole.NULL_ANCHOR
     if (
         _truthy(row.get("is_truth_signal"))
         or str(row.get("topology_signal_role", "")).lower() == "signal"

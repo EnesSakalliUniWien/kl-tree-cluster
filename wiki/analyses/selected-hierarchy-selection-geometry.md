@@ -7,7 +7,6 @@ sources:
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/questions/open-mathematical-questions.md
   - wiki/sources/edge-selection-null-audit-20260601.md
-  - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
@@ -252,14 +251,6 @@ or second-order corrections. Existing regenerated-null diagnostics are useful
 for discovering these variables; they do not license a bootstrap calibration
 path.
 
-Feature-split cross-fit is useful evidence for the same reason, although it is
-not the chosen production method. When one feature block selects the tree and
-a held-out feature block supplies node distributions and tests, the
-tree-selection noise is no longer the same noise being tested. In the null
-case, edge rejection collapses and internal sibling calibration support
-returns. Geometrically, cross-fit breaks the alignment between selected
-barycentric separation and the tested tangent coordinates.
-
 The current method therefore has three distinct geometric regimes:
 
 1. Fixed tree, fixed projection: projected-Wald geometry is clean and locally
@@ -282,9 +273,6 @@ model is provided.
 - `wiki/sources/edge-selection-null-audit-20260601.md` records that same-data
   hierarchy construction opens about `99%` of tested child-parent null edges,
   while fixed-tree permutations have median rejection rate `0.0`.
-- `wiki/sources/feature-split-selection-audit-20260601.md` records that
-  feature-split selection/testing restores null support in the null case and
-  preserves signal in the representative signal cases.
 - `wiki/sources/selected-hierarchy-null-audit-20260601.md` records the first
   selected-hierarchy null run, the richer 100-replicate root/non-root reruns,
   and the 500-replicate descriptive precision/context-relaxation study, where
@@ -326,7 +314,6 @@ model is provided.
 - [[oracle-gate-path-diagnostic]]
 - [[open-mathematical-questions]]
 - [[edge-selection-null-audit-20260601]]
-- [[feature-split-selection-audit-20260601]]
 - [[selected-hierarchy-null-audit-20260601]]
 - [[selected-hierarchy-null-support-contract]]
 - [[selected-hierarchy-geometry-covariates-20260602]]

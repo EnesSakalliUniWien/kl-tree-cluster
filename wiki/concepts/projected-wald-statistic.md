@@ -78,7 +78,7 @@ orthonormal projections are near nominal, so the broken assumption is not the
 quadratic formula itself but using a projection and dimension learned from the
 same null sample as the tested sibling contrast.
 
-The data-independent sibling-gate panel tests the corresponding non-cross-fit
+The data-independent sibling-gate panel tests the corresponding same-data
 repair direction: keep the selected topology but remove adaptive PCA and
 adaptive projection dimension from the tested statistic. Fixed coordinate-wise
 Bonferroni or BH aggregation with a predeclared selected-topology penalty is a
@@ -113,9 +113,9 @@ smoke-scale runs with fixed `coordinate_bh`, edge alpha `0.0001`, and
 selected-topology penalties `500`--`1000`. Direct categorical cases remain
 borderline: high-cardinality null false splits are selected root splits with
 small first children, but a universal min-child guard would block other valid
-signal regimes. The next non-cross-fit mathematical object is therefore a
+signal regimes. The next same-data mathematical object is therefore a
 selective/adaptive traversal null law conditioned on selected topology geometry,
-not a return to sample splitting and not a hard balance threshold.
+and not a hard balance threshold.
 
 The traversal panel now carries this boundary into the production-admissibility
 contract. Binary fixed-coordinate transfer can be represented as a
@@ -224,7 +224,7 @@ selected-subtree p-value remains small even when permutation resolution is
 increased to `999` draws. A hard barrier below every closed unstable root is
 also invalid, because it collapses strong many-cluster signal rows whose root
 binary split is unstable but whose descendant structure is real. The next
-non-cross-fit statistic is therefore a global selected-family null for
+same-data statistic is therefore a global selected-family null for
 pass-through descendants: rebuild the whole selected tree under
 feature-block permutations and compare the observed pass-through minimum
 sibling p-value against the null minimum over the selected family. Diagnostic
@@ -286,7 +286,7 @@ categorical support evidence remains open.
   decomposes fixed-topology sibling null behavior into same-sample adaptive,
   independent tree-sample, and random fixed orthonormal projection sources.
 - `benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_panel.py`
-  evaluates fixed-coordinate sibling gates as a non-cross-fit candidate repair
+  evaluates fixed-coordinate sibling gates as a same-data candidate repair
   for same-data selected topology.
 - `benchmarks/diagnostics/calibration/sibling/gates/data_independent_sibling_gate_traversal_panel.py`
   evaluates the fixed gates through the actual top-down decomposition

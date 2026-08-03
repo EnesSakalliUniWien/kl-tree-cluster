@@ -36,8 +36,8 @@ from benchmarks.diagnostics.runner_support import (
 )
 
 _DEFAULT_GAUSSIAN_BLOCKERS = (
-    "gauss_extreme_noise_highd",
-    "gauss_extreme_noise_highd_continuous",
+    "gauss_dense_signal_highd",
+    "gauss_dense_signal_highd_continuous",
 )
 
 

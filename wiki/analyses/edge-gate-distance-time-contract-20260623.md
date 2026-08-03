@@ -210,8 +210,8 @@ engines. The practical ordering is:
   Brownian variance times.
 - Brownian-motion or OU continuous-trait likelihood on a fixed or searched
   tree. This is statistically closest to the edge-gate covariance model, but it
-  is heavier and needs decisions about dimensionality, trait covariance,
-  feature splitting, and whether genes or PCs are independent replicated traits.
+  is heavier and needs decisions about dimensionality, trait covariance, and
+  whether genes or PCs are independent replicated traits.
 - Principal-graph and pseudotime methods, such as MST plus principal curves or
   elastic principal trees, optimize continuous trajectories but do not natively
   return a binary additive covariance tree. They are useful topology
@@ -248,8 +248,8 @@ engines. The practical ordering is:
 
 - Which branch-time null, if any, is justified for diffusion-derived trees in
   continuous scRNA PCA space?
-- Should the native branch-time model be cross-fit, using disjoint features for
-  topology construction, branch-length fitting, and projected gates?
+- How should same-data topology selection and branch-length fitting uncertainty
+  enter the projected gate reference law?
 - Can a Brownian or OU continuous-trait likelihood be made computationally
   practical for the pancreas-scale benchmark without collapsing the feature
   covariance into an arbitrary low-rank summary?

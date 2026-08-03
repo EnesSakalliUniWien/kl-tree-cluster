@@ -76,7 +76,7 @@ DEFAULT_CASE_NAMES = (
     "binary_many_features",
     "cat_highcard_20cat_4c",
     "dim_consolidated_4c_72f_continuous",
-    "gauss_extreme_noise_highd_continuous",
+    "gauss_dense_signal_highd_continuous",
 )
 EDGE_GATE_MINIMUM_PROJECTION_DIMENSION = 2
 

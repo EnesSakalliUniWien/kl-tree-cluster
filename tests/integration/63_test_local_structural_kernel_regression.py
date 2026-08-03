@@ -22,7 +22,11 @@ def test_strict_sibling_calibration_fails_closed_gauss_null_large_without_suppor
 
     result = run_tbs_on_distance(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
 
-    assert result.status == "ok"
+    assert result.status == "unsupported"
+    assert result.labels is None
+    assert result.found_clusters == 0
+    assert result.unsupported_reason is not None
+    assert result.unsupported_reason.evidence.admissible_support_count == 0
     annotations = result.extra["annotations"]
     fail_closed = annotations[
         annotations["Sibling_Gate_P_Value_Calibration"].eq("undefined_no_internal_support")
@@ -49,7 +53,11 @@ def test_leaf_only_cat_highcard_fails_closed_without_explicit_calibration_suppor
         feature_space=context.feature_space,
     )
 
-    assert result.status == "ok"
+    assert result.status == "unsupported"
+    assert result.labels is None
+    assert result.found_clusters == 0
+    assert result.unsupported_reason is not None
+    assert result.unsupported_reason.evidence.admissible_support_count == 0
     annotations = result.extra["annotations"]
     fail_closed = annotations[
         annotations["Sibling_Gate_P_Value_Calibration"].eq("undefined_no_internal_support")
