@@ -57,24 +57,5 @@ class CoherentSupportDecision:
             return "fail_closed_hard_negative_control"
         return f"fail_closed_{blocker}"
 
-    def as_record(self) -> dict[str, object]:
-        """Serialize to a stable benchmark/report row fragment."""
-
-        blocker = self.dominant_blocker
-        return {
-            "root_usable_or_nonroot": bool(self.root_usable_or_nonroot),
-            "topology_coherent": bool(self.topology_coherent),
-            "regional_tau_stable": bool(self.regional_tau_stable),
-            "spectral_flow_supported": bool(self.spectral_flow_supported),
-            "empirical_null_admissible_or_not_required": bool(
-                self.empirical_null_admissible_or_not_required
-            ),
-            "hard_negative_control_leak": bool(self.hard_negative_control_leak),
-            "direct_measurable_split": bool(self.direct_measurable_split),
-            "promotion_eligible": not blocker,
-            "dominant_blocker": blocker,
-            "method_action": self.method_action,
-        }
-
 
 __all__ = ["CoherentSupportDecision"]

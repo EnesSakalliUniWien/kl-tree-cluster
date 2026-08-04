@@ -5,13 +5,10 @@ from typing import TYPE_CHECKING
 
 import networkx as nx
 
-from tree_break_selection.core_utils.tree_utils import compute_node_depths
 from tree_break_selection.tree.distributions import populate_distributions
 from tree_break_selection.tree.topology import (
     compute_descendant_leaf_sets,
     get_leaf_values,
-    is_leaf,
-    lowest_common_ancestor,
     lowest_common_ancestor_for_set,
 )
 
@@ -47,7 +44,6 @@ class PosetTree(nx.DiGraph):
         """Initialize PosetTree with annotations_df property."""
         super().__init__(*args, **kwargs)
         self.annotations_df: pd.DataFrame | None = None
-        self._depths: dict[object, int] | None = None
 
     # ---------------- Poset helpers ----------------
 
@@ -89,10 +85,6 @@ class PosetTree(nx.DiGraph):
         """
         return get_leaf_values(self, node=node, use_labels=return_labels, sort=sort)
 
-    def _is_leaf(self, node_id: object) -> bool:
-        """Check if a node is a leaf."""
-        return is_leaf(self, node_id)
-
     def compute_descendant_sets(self, use_labels: bool = True) -> dict[object, frozenset]:
         """Map each node to the set of leaf labels under it.
 
@@ -109,30 +101,6 @@ class PosetTree(nx.DiGraph):
             labels/ids as a frozenset.
         """
         return compute_descendant_leaf_sets(self, use_labels=use_labels)
-
-    def _get_depths(self) -> dict[object, int]:
-        """Computes and caches node depths from the root."""
-        if self._depths is None:
-            self._depths = compute_node_depths(self)
-        return self._depths
-
-    def find_lca(self, node_a: object, node_b: object) -> object:
-        """Find the lowest common ancestor (LCA) of two nodes.
-
-        This implementation assumes the graph is a tree (each node has one parent)
-        and uses node depths for an efficient O(depth) search.
-
-        Parameters
-        ----------
-        node_a, node_b
-            Node identifiers whose LCA is sought.
-
-        Returns
-        -------
-        str
-            The node id of the lowest common ancestor.
-        """
-        return lowest_common_ancestor(self, node_a, node_b, depths=self._get_depths())
 
     def find_lca_for_set(self, nodes: Iterable[object]) -> object:
         """Find the lowest common ancestor for a collection of nodes.

@@ -84,7 +84,7 @@ def minimum_ancestor_deviation_root(
         raise ValueError("MAD rooting requires at least two leaves.")
 
     weighted = graph.copy()
-    for u, v, attrs in weighted.edges(data=True):
+    for _u, _v, attrs in weighted.edges(data=True):
         length = _edge_length(attrs)
         attrs["length"] = length
         attrs["branch_length"] = length
@@ -158,7 +158,7 @@ def minimum_ancestor_deviation_root(
 
 def _graph_with_mad_root(graph: nx.Graph, root: MadRootResult) -> tuple[nx.Graph, object]:
     rooted = graph.copy()
-    for u, v, attrs in rooted.edges(data=True):
+    for _u, _v, attrs in rooted.edges(data=True):
         length = _edge_length(attrs)
         attrs["length"] = length
         attrs["branch_length"] = length

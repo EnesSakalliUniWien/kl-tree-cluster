@@ -13,7 +13,7 @@ import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import pandas as pd
 
@@ -141,14 +141,6 @@ def _iter_files(path: Path) -> list[Path]:
     if not path.exists():
         return []
     return [candidate for candidate in path.rglob("*") if candidate.is_file()]
-
-
-def _first_existing(path: Path, candidates: Iterable[str]) -> Path | None:
-    for candidate in candidates:
-        candidate_path = path / candidate
-        if candidate_path.exists():
-            return candidate_path
-    return None
 
 
 def _read_summary_values(path: Path) -> dict[str, str]:

@@ -1107,7 +1107,7 @@ def main() -> None:
                     subspace_dir / f"{subspace_safe}__tree_dendrogram.png",
                     f"{subspace_id}: adaptive diffusion average-linkage tree",
                 )
-            except Exception as exc:  # noqa: BLE001 - diagnostic output records failures.
+            except Exception as exc:
                 diffusion_metadata = {}
                 status = "failed_diffusion"
                 error = repr(exc)
@@ -1122,7 +1122,7 @@ def main() -> None:
                     )
                     status = "ok"
                     error = ""
-                except Exception as exc:  # noqa: BLE001 - diagnostic output records failures.
+                except Exception as exc:
                     status = "failed_gate"
                     error = repr(exc)
                     labels = None

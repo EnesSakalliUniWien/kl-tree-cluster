@@ -163,12 +163,6 @@ def _bool(rows: pd.DataFrame, column: str) -> pd.Series:
     return rows[column].astype(bool)
 
 
-def _finite_difference(left: pd.Series, right: pd.Series) -> pd.Series:
-    left_numeric = pd.to_numeric(left, errors="coerce")
-    right_numeric = pd.to_numeric(right, errors="coerce")
-    return right_numeric - left_numeric
-
-
 def _incidence_signature(parent_available: bool) -> str:
     if parent_available:
         return "income1_outcome2_internal_junction"

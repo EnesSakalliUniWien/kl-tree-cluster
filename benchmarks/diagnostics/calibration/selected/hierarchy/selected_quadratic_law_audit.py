@@ -37,14 +37,6 @@ DEFAULT_RECORDS_CSV: Final = Path(
     "reports/audits/generated/nnls_null_calibration_with_spectral_rank_gap_det/"
     "nnls_null_calibration_records.csv"
 )
-DEFAULT_PARENT_EIGENVALUES_CSV: Final = Path(
-    "reports/audits/generated/nnls_null_calibration_with_spectral_rank_gap_det/"
-    "nnls_null_calibration_parent_eigenvalues.csv"
-)
-DEFAULT_CELLS_CSV: Final = Path(
-    "reports/audits/generated/nnls_null_calibration_with_spectral_rank_gap_det/"
-    "nnls_null_calibration_cells.csv"
-)
 DEFAULT_OUTPUT_DIR: Final = Path("reports/selected_quadratic_law_audit")
 GROUP_COLUMNS: Final = ("source_case_id", "branch_source", "spectral_context")
 REQUIRED_COLUMNS: Final = (

@@ -250,7 +250,7 @@ def _collect_dataset(spec: DatasetSpec) -> tuple[pd.DataFrame, pd.DataFrame, pd.
         )
     effects = pd.DataFrame(rows)
 
-    for geometry, group in effects.groupby("geometry"):
+    for _geometry, group in effects.groupby("geometry"):
         baseline = group.loc[group["variant"] == "topology_only"].iloc[0]
         baseline_labels = pd.to_numeric(
             assignments[str(baseline["assignment_key"])],

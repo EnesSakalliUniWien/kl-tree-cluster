@@ -271,7 +271,7 @@ def execute(payload: Any) -> dict[str, Any]:
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         sys.stdout.write(json.dumps(error("invalid_json", f"Could not parse JSON input: {exc}")))
         return 2
     try:

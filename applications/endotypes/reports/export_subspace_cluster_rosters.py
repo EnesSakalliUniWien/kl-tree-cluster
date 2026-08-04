@@ -30,8 +30,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from applications.endotypes.reports.artifact_index import load_artifact_index  # noqa: E402
-from applications.endotypes.reports.build_subspace_gene_annotation_pdf import (  # noqa: E402
+from applications.endotypes.reports.artifact_index import load_artifact_index
+from applications.endotypes.reports.build_subspace_gene_annotation_pdf import (
     gene_annotation_blurbs,
     load_binary_matrix,
     load_cache,
@@ -100,15 +100,6 @@ def safe_float(value: object) -> float:
         return float(value)
     except (TypeError, ValueError):
         return math.nan
-
-
-def display_number(value: object, digits: int = 3) -> str:
-    number = safe_float(value)
-    if math.isnan(number):
-        return ""
-    if abs(number) < 0.001 and number != 0:
-        return f"{number:.2e}"
-    return f"{number:.{digits}f}"
 
 
 def resolve_path(value: object, experiment_dir: Path) -> Path | None:

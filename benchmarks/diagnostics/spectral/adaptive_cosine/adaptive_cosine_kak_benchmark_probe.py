@@ -210,7 +210,7 @@ def run_case(
             total_energy = float(np.sum(eigvals))
             blocks = space.blocks
             diagnostics = space.diagnostics
-        except Exception as exc:  # noqa: BLE001 - diagnostic records failures.
+        except Exception as exc:
             rows.append(
                 {
                     **base,
@@ -291,7 +291,7 @@ def run_case(
                         "error": "",
                     }
                 )
-            except Exception as exc:  # noqa: BLE001 - diagnostic records failures.
+            except Exception as exc:
                 elapsed = time.perf_counter() - start
                 rows.append(
                     {

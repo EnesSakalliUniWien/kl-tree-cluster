@@ -311,7 +311,7 @@ def main() -> None:
                 min_segment_length=args.min_segment_length,
                 max_segments=args.max_segments,
             )
-        except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
+        except Exception as exc:
             rows.append(
                 {**base, "weighting": weighting, "status": "failed_spectrum", "error": repr(exc)}
             )
@@ -408,7 +408,7 @@ def main() -> None:
                         "error": "",
                     }
                 )
-            except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
+            except Exception as exc:
                 rows.append(
                     {
                         **block_record,

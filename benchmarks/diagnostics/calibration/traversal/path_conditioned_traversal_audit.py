@@ -242,11 +242,6 @@ def add_descendant_covariates(tuple_rows: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([out.reset_index(drop=True), pd.DataFrame(records)], axis=1)
 
 
-def _truth_counts_json(leaves: list[str], truth_by_leaf: dict[str, object]) -> str:
-    counts = Counter(str(truth_by_leaf[leaf]) for leaf in leaves if leaf in truth_by_leaf)
-    return json.dumps(dict(sorted(counts.items())), sort_keys=True)
-
-
 def _truth_summary(
     leaves: list[str],
     truth_by_leaf: dict[str, object],

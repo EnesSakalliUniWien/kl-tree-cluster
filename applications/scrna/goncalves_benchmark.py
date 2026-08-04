@@ -31,8 +31,8 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 
+from applications.scrna._shared import json_default
 from applications.scrna.pancreas_benchmark import (
-    _json_default,
     _run_benchmarks,
     _scanpy_module,
     _scanpy_version,
@@ -463,7 +463,7 @@ def main() -> None:
         "tbs_branch_time_sensitivity_rows": length_sensitivity_rows,
     }
     (args.output_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True, default=_json_default)
+        json.dumps(manifest, indent=2, sort_keys=True, default=json_default)
     )
     _write_dataset_report(
         output_dir=args.output_dir,

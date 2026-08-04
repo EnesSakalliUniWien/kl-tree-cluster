@@ -77,11 +77,6 @@ def categorical_palette(ids: list[str]) -> dict[str, tuple[float, float, float]]
     return palette
 
 
-def sorted_cluster_ids(values: pd.Series) -> list[str]:
-    ids = [str(int(value)) for value in sorted(pd.to_numeric(values).dropna().astype(int).unique())]
-    return ids
-
-
 def cluster_label(cluster_id: str) -> str:
     return "noise" if cluster_id == "-1" else f"C{cluster_id}"
 

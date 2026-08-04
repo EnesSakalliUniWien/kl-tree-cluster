@@ -5872,6 +5872,84 @@ verification, and maintenance events here in chronological order.
   explicit overrides. The global clone scan moved from 437 groups and 7,394
   lines to 409 groups and 6,797 lines; parser-containing groups moved from 62
   and 1,197 lines to 52 and 903 lines.
+- Consolidated root-calibration column validation, finite/string value parsing,
+  observed-target classification, and diagnostic JSON serialization across six
+  selected-root and tie-rank panels. The panels now call the maintained helpers
+  in `root_tail_values.py` and `reporting.py` directly while preserving manifest
+  ordering and schemas. Focused validation passed 25 tests, and the global clone
+  scan moved from 409 groups and 6,797 lines to 402 groups and 6,603 lines.
+
+### 2026-08-04
+
+- Retired the executable fixed c2ef cosine-band coherence comparator and its
+  dedicated validation suite. The active diagnostics index no longer exposes
+  that legacy entrypoint. Its raw captures and wiki source summary remain as
+  historical evidence only; no production or maintained diagnostic path imports
+  it.
+- Ran `tbs-audit --mode evidence` plus `fields` and `duplicates`, then removed
+  the dead code it proved. Deleted two fully unreferenced modules,
+  `benchmarks/diagnostics/math_trace/metamorphic_checks.py` and
+  `benchmarks/shared/cases/real_data.py`, and 18 unreferenced functions and
+  constants across `tree_break_selection`, `benchmarks`, `applications`, and
+  `tests`. Removing `PosetTree.find_lca` cascaded to `_get_depths` and the
+  `_depths` cache; `find_lca_for_set` stays because MNIST plotting and the
+  poset-tree tests still call it. Net 309 deletions against 3 insertions.
+- Kept the vulture candidates that static reachability cannot resolve: the six
+  `_run_*_method` benchmark runners and `_can_split` are reached through
+  name-string registries, the `tests/conftest.py` hooks are invoked by pytest,
+  and `epsilon_fitted`/`MAX_IMAGE_PIXELS` are writes onto third-party objects.
+- Confirmed the 130 filtered field-cleanup candidates remain false positives for
+  benchmark surfaces. The 16 flagged writes in
+  `overlap_context_negative_topology_conditioning.py` are listed in
+  `DERIVED_NUMERIC_METRICS`, so they reach `ROW_COLUMNS` and the exported CSV;
+  the tracer does not read bare string literals in module-level tuples.
+  Production cleanup candidates stay at zero.
+- Reviewed all three high-risk production-to-production clone groups and made no
+  change. The `orchestrator.py` and `contrast_covariance.py` pairs duplicate
+  explicit keyword signatures whose shared logic already lives in
+  `_resolve_contrast_inputs`, and `SpectralContext`/`SpectralDecompositionResult`
+  duplicate field lists across a deliberate projection-to-gate layer boundary.
+- Repaired a stale reference left by the in-flight scRNA refactor:
+  `goncalves_benchmark.py` still imported the deleted
+  `pancreas_benchmark._json_default` after it moved to `_shared.json_default`.
+  That single broken import was failing three pipeline tests.
+- Closed a scope gap in `tbs-audit`: its import-reachability check only covers
+  `benchmarks/diagnostics/calibration`, so 297 of 443 modules had never been
+  checked. Re-applying the tool's own disposition logic repo-wide returned zero
+  `unresolved_unimported` modules. The five suspicious candidates are all live:
+  `louvain_runner`, `spectral_runner`, and `optics_runner` are registered by
+  module-path string in `method_registry.py`, and the two `benchmarks/external/`
+  adapters are documented in `benchmarks/external/README.md`, a path the audit's
+  evidence scan does not read.
+- Ruff runs only `select = ["E", "F", "I"]`, so the dead-code rule families had
+  never executed. Scanning with `--extend-select` found and removed 18 inert
+  `noqa` directives (ten suppressing non-selected `BLE001`, one suppressing
+  already-ignored `E402`) and 11 unused loop-control bindings across eight
+  files. Two flagged items were kept as false positives: `iterations` in
+  `oracle_tree_recoverability.py` leaks deliberately and is read after the loop
+  as `dinkelbach_iterations`, and `method_registry.py:120` is prose, not code.
+
+### Retired overlapping benchmark cases
+
+Removed seven commented-out binary overlap case definitions from
+`benchmarks/shared/cases/overlapping.py` (401 to 324 lines). All were disabled
+for runtime cost, not for scientific invalidity, so their parameters are
+recorded here as the durable provenance:
+
+| Case | Samples x features | Clusters | Entropy | Balanced | Seed |
+| --- | --- | --- | --- | --- | --- |
+| `overlap_extreme_6c_highd` | 600 x 1000 | 6 | 0.45 | yes | 8004 |
+| `overlap_mod_10c_highd` | 1000 x 800 | 10 | 0.32 | yes | 8103 |
+| `overlap_part_10c_highd` | 1000 x 600 | 10 | 0.23 | yes | 8203 |
+| `overlap_hd_6c_2k` | 600 x 2000 | 6 | 0.33 | yes | 8301 |
+| `overlap_hd_8c_3k` | 800 x 3000 | 8 | 0.30 | yes | 8302 |
+| `overlap_hd_10c_5k` | 1000 x 5000 | 10 | 0.28 | yes | 8303 |
+| `overlap_unbal_10c_highd` | 1000 x 1000 | 10 | 0.28 | no | 8403 |
+
+All seven use `generator: binary` with `feature_sparsity: 0.05`. The active case
+counts are unchanged: four heavy, three moderate, three partial, one
+high-dimensional, three unbalanced binary groups, plus eight Gaussian and three
+Gaussian-quantile cases.
 
 ## Evidence
 

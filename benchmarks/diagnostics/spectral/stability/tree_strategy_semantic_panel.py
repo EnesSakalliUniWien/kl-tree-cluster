@@ -117,15 +117,6 @@ def method_to_lens(method: str) -> tuple[str, str, str]:
     return "unknown", method, method
 
 
-def lens_id_from_parts(lens_family: object, weighting: object, block_name: object) -> str:
-    family = str(lens_family)
-    return f"{family}__{weighting}__{block_name}"
-
-
-def lens_id_from_lens(family: object, lens: object) -> str:
-    return f"{family}__{lens}"
-
-
 def lens_key_from_id(lens_id: object) -> tuple[str, str]:
     text = str(lens_id)
     parts = text.split("__", 1)

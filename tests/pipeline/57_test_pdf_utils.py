@@ -9,13 +9,7 @@ from benchmarks.shared.util.pdf.figure_split import (
 )
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from matplotlib import pyplot as plt
-from PIL import Image
 from pypdf import PdfReader
-
-
-def _write_dummy_png(path: Path, color=(255, 0, 0)):
-    img = Image.new("RGB", (100, 80), color=color)
-    img.save(path)
 
 
 def test_split_collected_figs_to_pdfs(tmp_path: Path):

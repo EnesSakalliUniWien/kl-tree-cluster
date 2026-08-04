@@ -526,7 +526,7 @@ def run_alpha_grid(
                     **score_assignments(assignments, main_labels, data.index),
                 }
             )
-        except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
+        except Exception as exc:
             rows.append(
                 {
                     "edge_alpha": float(edge_alpha),
@@ -713,7 +713,7 @@ def main() -> None:
                             **row,
                         }
                     )
-        except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
+        except Exception as exc:
             rows.append(
                 {
                     "schema_version": SCHEMA,

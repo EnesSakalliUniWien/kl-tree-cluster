@@ -400,7 +400,7 @@ def top_pathways_chart(
     cmap = plt.cm.tab20(np.linspace(0, 1, min(20, len(cluster_ids))))
     y_pos = np.arange(n_top)
     left = np.zeros(n_top)
-    for i, cid in enumerate(cluster_ids):
+    for i, _cid in enumerate(cluster_ids):
         bar_vals = matrix[i]
         colour = cmap[i % 20]
         ax.barh(y_pos, bar_vals, left=left, color=colour, height=0.8)

@@ -119,7 +119,7 @@ def _normalize_case_list(cases: list[dict], category: str) -> list[dict]:
     normalized: list[dict] = []
     seen_names: dict[str, int] = {}
 
-    for idx, case in enumerate(cases, start=1):
+    for _idx, case in enumerate(cases, start=1):
         item = case.copy()
         item["category"] = category
         base_name = item["name"]
@@ -153,20 +153,6 @@ def get_default_test_cases() -> list[dict]:
             flattened.append(case)
 
     return flattened
-
-
-def get_test_cases_by_category(category: str) -> list[dict]:
-    """Get test cases for a specific category."""
-    if category not in ALL_CASE_CATEGORIES:
-        raise ValueError(
-            f"Unknown category: {category}. Available: {list(ALL_CASE_CATEGORIES.keys())}"
-        )
-    return _normalize_case_list(ALL_CASE_CATEGORIES[category], category)
-
-
-def list_categories() -> list[str]:
-    """List all available test case categories."""
-    return list(ALL_CASE_CATEGORIES.keys())
 
 
 def get_test_cases_by_suite(suite: str) -> list[dict]:

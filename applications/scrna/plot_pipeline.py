@@ -482,10 +482,6 @@ def classify_extra_plot(
     )
 
 
-def _append_note(notes: str, extra: str) -> str:
-    return f"{notes} {extra}".strip() if notes else extra
-
-
 def build_manifest(dataset: str, output_dir: Path) -> list[dict[str, Any]]:
     rows_by_name: dict[str, dict[str, Any]] = {}
     add_known_rows(dataset, output_dir, rows_by_name)

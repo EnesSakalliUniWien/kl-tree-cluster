@@ -192,7 +192,7 @@ def matrix_inventory(feature_root: Path, extra_paths: Sequence[Path]) -> pd.Data
             rows_count, columns_count = numeric.shape
             density = float(numeric.to_numpy(dtype=float).mean()) if numeric.size else 0.0
             load_error = ""
-        except Exception as exc:  # noqa: BLE001 - inventory should record bad inputs.
+        except Exception as exc:
             binary = False
             missing = -1
             zero_rows = -1

@@ -1,5 +1,4 @@
 """One-page NNLS branch-length fit summary for the selected scRNA application."""
-# ruff: noqa: I001
 
 from __future__ import annotations
 

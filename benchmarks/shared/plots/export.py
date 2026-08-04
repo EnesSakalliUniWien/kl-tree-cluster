@@ -5,12 +5,10 @@ from __future__ import annotations
 import logging
 import os
 import textwrap
-from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.axes import Axes
 from matplotlib.backends.backend_pdf import PdfPages
 from tree_break_selection.plot.cluster_tree_visualization import plot_tree_with_clusters
 
@@ -230,43 +228,6 @@ def _create_tree_figures_for_case(
         figs.append(fig)
 
     return figs
-
-
-def _create_tree_panel_renderers_for_case(
-    *,
-    case_results: list[ComputedResultRecord],
-) -> list[tuple[str, Callable[[Axes], None]]]:
-    """Return compact tree renderers that can be embedded in comparison pages."""
-    tree_results = [r for r in case_results if r.tree is not None and r.decomposition is not None]
-    panels: list[tuple[str, Callable[[Axes], None]]] = []
-
-    for idx, result in enumerate(tree_results, start=1):
-        method_name = result.method_name
-        params_display = format_params_for_display(result.params)
-        metrics_text = _format_ari_nmi(result, compact=True)
-        title_parts = [f"{method_name} tree ({idx}/{len(tree_results)})"]
-        if metrics_text:
-            title_parts.append(metrics_text)
-        if params_display:
-            title_parts.append(params_display)
-        panel_title = "\n".join(title_parts[:3])
-
-        def _render_tree(ax: Axes, *, result: ComputedResultRecord = result) -> None:
-            plot_tree_with_clusters(
-                tree=result.tree,
-                decomposition_results=result.decomposition,
-                annotations_df=result.annotations,
-                node_size=8,
-                font_size=6,
-                title="",
-                layout=_benchmark_tree_layout(),
-                ax=ax,
-                show_legend=False,
-            )
-
-        panels.append((panel_title, _render_tree))
-
-    return panels
 
 
 def create_case_report_pages_from_results(

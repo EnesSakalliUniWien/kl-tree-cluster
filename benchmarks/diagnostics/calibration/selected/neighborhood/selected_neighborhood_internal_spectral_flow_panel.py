@@ -92,13 +92,6 @@ EDGE_KEY_COLUMNS = (
     "child_id",
 )
 
-NODE_KEY_COLUMNS = (
-    "case_id",
-    "data_role",
-    "method_id",
-    "replicate",
-    "node_id",
-)
 
 
 @dataclass(frozen=True)

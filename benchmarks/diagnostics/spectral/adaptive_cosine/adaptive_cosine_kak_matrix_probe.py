@@ -130,7 +130,7 @@ def main() -> None:
                 min_segment_length=args.min_segment_length,
                 max_segments=args.max_segments,
             )
-        except Exception as exc:  # noqa: BLE001 - diagnostic records failures.
+        except Exception as exc:
             rows.append(
                 {
                     **base,
@@ -221,7 +221,7 @@ def main() -> None:
                         "error": "",
                     }
                 )
-            except Exception as exc:  # noqa: BLE001 - diagnostic records failures.
+            except Exception as exc:
                 rows.append(
                     {
                         **block_record,

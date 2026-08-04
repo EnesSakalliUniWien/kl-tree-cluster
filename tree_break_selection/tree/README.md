@@ -66,7 +66,6 @@ NetworkX `DiGraph` subclass. Central data structure for the entire pipeline.
 | `root()`                                    | Return the root node (in-degree 0), cached after first call.                                   |
 | `get_leaves(node, return_labels)`           | Collect leaf labels globally or under a subtree.                                               |
 | `compute_descendant_sets()`                 | Map every node → frozenset of its descendant leaf labels.                                      |
-| `find_lca(a, b)`                            | Lowest common ancestor of two nodes using depth-based walk. O(depth).                          |
 | `find_lca_for_set(nodes)`                   | LCA for a non-empty collection of nodes.                                                       |
 | `populate_node_divergences(leaf_data, feature_space=None)` | Populate flat raw-coordinate distributions and leaf counts. Categorical and continuous data require an explicit feature-space contract. Stores result in `annotations_df`. |
 | `decompose(annotations_df, leaf_data, **kw)` | Thin facade: builds `TreeDecomposition` and runs `decompose_tree()`.                           |

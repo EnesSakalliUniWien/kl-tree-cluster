@@ -166,10 +166,6 @@ def _as_numeric(rows: pd.DataFrame, column: str) -> pd.Series:
     return pd.to_numeric(rows[column], errors="coerce")
 
 
-def _safe_log1p_positive(values: pd.Series) -> pd.Series:
-    return np.log1p(pd.to_numeric(values, errors="coerce").clip(lower=0.0))
-
-
 def _sigmoid(values: pd.Series) -> pd.Series:
     clipped = pd.to_numeric(values, errors="coerce").clip(lower=-700.0, upper=700.0)
     return 1.0 / (1.0 + np.exp(-clipped))

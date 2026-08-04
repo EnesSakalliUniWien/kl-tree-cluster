@@ -252,7 +252,7 @@ def inter_vs_intra(fm: pd.DataFrame, assign: pd.DataFrame, min_size: int = 2) ->
 
     # Intra
     intra_scores = []
-    for cid, genes in cluster_map.items():
+    for _cid, genes in cluster_map.items():
         vecs = fm.loc[genes].values.astype(int)
         j = _pairwise_jaccard(vecs)
         if not np.isnan(j):

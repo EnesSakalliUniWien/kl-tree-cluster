@@ -192,7 +192,7 @@ def append_method_tree_run(
             cluster_size_rows.append(
                 {**base, "cluster_id": int(cluster_id), "cluster_size": int(size)}
             )
-    except Exception as exc:  # noqa: BLE001 - diagnostic matrix records failures.
+    except Exception as exc:
         append_failure(rows, base=base, start_sec=start_sec, exc=exc)
 
     if summary_path is not None:

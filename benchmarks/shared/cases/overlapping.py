@@ -54,17 +54,6 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
         "noise_features": 0,
         "seed": 8003,
     },
-    # {  # Commented out — too slow (600x1000)
-    #     "name": "overlap_extreme_6c_highd",
-    #     "generator": "binary",
-    #     "n_samples": 600,
-    #     "n_features": 1000,
-    #     "n_clusters": 6,
-    #     "entropy_param": 0.45,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8004,
-    # },
 ]
 
 OVERLAPPING_BINARY_MODERATE_CASES = [
@@ -105,17 +94,6 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
         "noise_features": 0,
         "seed": 8102,
     },
-    # {  # Commented out — too slow (1000x800)
-    #     "name": "overlap_mod_10c_highd",
-    #     "generator": "binary",
-    #     "n_samples": 1000,
-    #     "n_features": 800,
-    #     "n_clusters": 10,
-    #     "entropy_param": 0.32,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8103,
-    # },
 ]
 
 OVERLAPPING_BINARY_PARTIAL_CASES = [
@@ -156,17 +134,6 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
         "noise_features": 0,
         "seed": 8202,
     },
-    # {  # Commented out — too slow (1000x600)
-    #     "name": "overlap_part_10c_highd",
-    #     "generator": "binary",
-    #     "n_samples": 1000,
-    #     "n_features": 600,
-    #     "n_clusters": 10,
-    #     "entropy_param": 0.23,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8203,
-    # },
 ]
 
 OVERLAPPING_BINARY_HIGHD_CASES = [
@@ -183,39 +150,6 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
         "noise_features": 0,
         "seed": 8300,
     },
-    # {  # Commented out — too slow (600x2000)
-    #     "name": "overlap_hd_6c_2k",
-    #     "generator": "binary",
-    #     "n_samples": 600,
-    #     "n_features": 2000,
-    #     "n_clusters": 6,
-    #     "entropy_param": 0.33,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8301,
-    # },
-    # {  # Commented out — too slow (800x3000)
-    #     "name": "overlap_hd_8c_3k",
-    #     "generator": "binary",
-    #     "n_samples": 800,
-    #     "n_features": 3000,
-    #     "n_clusters": 8,
-    #     "entropy_param": 0.30,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8302,
-    # },
-    # {  # Commented out — too slow (1000x5000)
-    #     "name": "overlap_hd_10c_5k",
-    #     "generator": "binary",
-    #     "n_samples": 1000,
-    #     "n_features": 5000,
-    #     "n_clusters": 10,
-    #     "entropy_param": 0.28,
-    #     "balanced_clusters": True,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8303,
-    # },
 ]
 
 OVERLAPPING_BINARY_UNBALANCED_CASES = [
@@ -256,17 +190,6 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
         "noise_features": 0,
         "seed": 8402,
     },
-    # {  # Commented out — too slow (1000x1000)
-    #     "name": "overlap_unbal_10c_highd",
-    #     "generator": "binary",
-    #     "n_samples": 1000,
-    #     "n_features": 1000,
-    #     "n_clusters": 10,
-    #     "entropy_param": 0.28,
-    #     "balanced_clusters": False,
-    #     "feature_sparsity": 0.05,
-    #     "seed": 8403,
-    # },
 ]
 
 OVERLAPPING_GAUSSIAN_CASES = [

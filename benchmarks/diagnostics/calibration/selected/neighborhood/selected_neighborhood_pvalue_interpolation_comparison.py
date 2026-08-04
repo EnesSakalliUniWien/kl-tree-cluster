@@ -765,7 +765,7 @@ def compute_holdout_interpolated_p_like(
     stable_p_values: list[float] = []
     stable_weights: list[float] = []
     support_distances: list[float] = []
-    for support_idx, support_row in group.loc[support_index].iterrows():
+    for _support_idx, support_row in group.loc[support_index].iterrows():
         p_value = _probability_or_nan(support_row.get("sibling_p_value", math.nan))
         if not math.isfinite(p_value):
             continue
@@ -807,7 +807,7 @@ def compute_holdout_interpolated_p_like(
 
     signal_p_values: list[float] = []
     signal_distances: list[float] = []
-    for signal_idx, signal_row in group.loc[signal_index].iterrows():
+    for _signal_idx, signal_row in group.loc[signal_index].iterrows():
         p_value = _probability_or_nan(signal_row.get("sibling_p_value", math.nan))
         if not math.isfinite(p_value):
             continue

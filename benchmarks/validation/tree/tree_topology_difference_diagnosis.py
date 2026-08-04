@@ -41,9 +41,6 @@ NULL_RECOMMENDATIONS_NAME = "topology_difference_null_recommendations.csv"
 REPORT_NAME = "topology_difference_diagnosis_report.md"
 MANIFEST_NAME = "topology_difference_diagnosis_manifest.json"
 
-EDGE_ALPHA = 0.001
-SIBLING_ALPHA = 0.01
-
 
 @dataclass(frozen=True)
 class DiagnosisInputs:
@@ -82,11 +79,6 @@ def _finite(value: object) -> float:
 def _nanmin(values: Sequence[object]) -> float:
     finite = [_finite(value) for value in values if math.isfinite(_finite(value))]
     return min(finite) if finite else math.nan
-
-
-def _nanmax(values: Sequence[object]) -> float:
-    finite = [_finite(value) for value in values if math.isfinite(_finite(value))]
-    return max(finite) if finite else math.nan
 
 
 def _ratio(max_value: float, min_value: float) -> float:

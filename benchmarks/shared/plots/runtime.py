@@ -11,7 +11,6 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 from benchmarks.shared.result_records import (
-    RESULT_COLUMNS,
     ComputedResultRecord,
 )
 from benchmarks.shared.util.pdf.layout import prepare_pdf_figure
@@ -26,55 +25,6 @@ from .export import (
 from .summary import create_validation_plot
 
 logger = logging.getLogger(__name__)
-
-_DETAILED_LOG_EXCLUSIONS = frozenset(
-    {
-        "case_category",
-        "source_family",
-        "feature_representation",
-        "run_id",
-        "benchmark_class",
-        "benchmark_grid",
-        "benchmark_repeat",
-        "tree_build_sec",
-        "populate_divergences_sec",
-        "edge_gate_sec",
-        "edge_gate_contrast_covariance_sec",
-        "edge_gate_projection_sec",
-        "edge_gate_wald_statistic_sec",
-        "edge_gate_tree_bh_sec",
-        "spectral_context_sec",
-        "tangent_whitening_sec",
-        "eigensolve_sec",
-        "pca_projection_sec",
-        "sibling_gate_sec",
-        "sibling_gate_pair_record_collection_sec",
-        "sibling_gate_inflation_fit_sec",
-        "sibling_gate_adjusted_tests_sec",
-        "sibling_gate_fdr_sec",
-        "traversal_sec",
-        "skip_reason",
-        "unsupported_reason_code",
-        "unsupported_stage",
-        "unsupported_reason",
-        "unsupported_focal_record_count",
-        "unsupported_admissible_support_count",
-        "unsupported_invalid_record_count",
-        "unsupported_upstream_tested_count",
-        "unsupported_upstream_rejected_count",
-        "labels_length",
-    }
-)
-
-
-def log_detailed_results(df_results: pd.DataFrame) -> None:
-    """Log the detailed results table row by row to avoid truncation."""
-    logger.info("Detailed Results:")
-    columns = [column for column in RESULT_COLUMNS if column not in _DETAILED_LOG_EXCLUSIONS]
-    available = [col for col in columns if col in df_results.columns]
-    results_str = df_results[available].to_string(index=False)
-    for line in results_str.split("\n"):
-        logger.info(line)
 
 
 def generate_benchmark_plots(

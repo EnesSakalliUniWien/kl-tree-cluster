@@ -1,5 +1,4 @@
 """Matched adult/Goncalves NNLS report with identical page structure."""
-# ruff: noqa: I001
 
 from __future__ import annotations
 

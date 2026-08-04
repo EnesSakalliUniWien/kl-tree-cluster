@@ -312,7 +312,7 @@ def run_feature_block(
             feature_cluster_summary_path=str(cluster_summary_path),
             error="",
         )
-    except Exception as exc:  # noqa: BLE001 - diagnostic rows preserve failures.
+    except Exception as exc:
         pd.DataFrame().to_csv(assignments_path)
         pd.DataFrame().to_csv(cluster_summary_path)
         return FeatureSubspaceResult(

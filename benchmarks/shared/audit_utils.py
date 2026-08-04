@@ -63,7 +63,7 @@ def export_decomposition_audit(
 
                 # Extract branch lengths from edges
                 branch_lengths = {}
-                for p, c, data in tree.edges(data=True):
+                for _p, c, data in tree.edges(data=True):
                     branch_lengths[c] = data.get("branch_length")
 
                 # Enrich with Label, Parent context, and Branch Length
