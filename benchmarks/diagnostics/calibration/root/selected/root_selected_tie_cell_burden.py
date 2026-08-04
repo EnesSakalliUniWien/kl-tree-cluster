@@ -12,15 +12,16 @@ does not change traversal.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, require_columns
 
 SCHEMA_VERSION = "root_selected_tie_cell_burden/v1"
 STUDY_ROLE = "diagnostic_root_selected_tie_cell_burden_not_calibration"
@@ -132,32 +133,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedTieCellBurdenConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
 def _finite_median(values: pd.Series) -> float:
     numeric = pd.to_numeric(values, errors="coerce")
     numeric = numeric[np.isfinite(numeric)]
@@ -192,7 +167,7 @@ def _side_log_burden(construction: pd.DataFrame, side: str) -> float:
 def _summary_lookup(root_summary: pd.DataFrame) -> dict[str, dict[str, object]]:
     if root_summary.empty:
         return {}
-    _require_columns(root_summary, {"case_id"}, "root summary")
+    require_columns(root_summary, {"case_id"}, "root summary")
     return {str(row["case_id"]): dict(row) for _, row in root_summary.iterrows()}
 
 
@@ -203,7 +178,7 @@ def build_root_selected_tie_cell_burden_rows(
     near_zero_tolerance: float = DEFAULT_NEAR_ZERO_TOLERANCE,
 ) -> pd.DataFrame:
     """Return one tie-cell burden row per case."""
-    _require_columns(
+    require_columns(
         merge_margins,
         {
             "case_id",
@@ -300,10 +275,10 @@ def build_root_selected_tie_cell_burden_rows(
                 "study_role": STUDY_ROLE,
                 "case_id": str(case_id),
                 "root_selected_region_law_status": law_status,
-                "root_sibling_selected_ratio": _finite_float(
+                "root_sibling_selected_ratio": finite_float(
                     summary.get("root_sibling_selected_ratio", math.nan)
                 ),
-                "root_child_balance": _finite_float(summary.get("root_child_balance", math.nan)),
+                "root_child_balance": finite_float(summary.get("root_child_balance", math.nan)),
                 "root_child_construction_merge_count": construction_count,
                 "root_tie_step_count": tie_step_count,
                 "root_tie_step_fraction": _safe_fraction(
@@ -344,7 +319,7 @@ def summarize_tie_cell_relationships(rows: pd.DataFrame) -> pd.DataFrame:
     """Relate tie-cell burden variables to root selected ratio."""
     if rows.empty:
         return pd.DataFrame(columns=RELATIONSHIP_COLUMNS)
-    _require_columns(rows, {"root_sibling_selected_ratio"}, "tie burden rows")
+    require_columns(rows, {"root_sibling_selected_ratio"}, "tie burden rows")
     target = pd.to_numeric(rows["root_sibling_selected_ratio"], errors="coerce")
     records: list[dict[str, object]] = []
     for covariate in RELATIONSHIP_COVARIATES:
@@ -419,35 +394,21 @@ def run_root_selected_tie_cell_burden(
 ) -> dict[str, Path]:
     """Write tie-cell burden outputs."""
     rows, relationships = evaluate_root_selected_tie_cell_burden(config)
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    rows_out = output_dir / ROWS_OUTPUT
-    relationships_out = output_dir / RELATIONSHIPS_OUTPUT
-    manifest_out = output_dir / MANIFEST_OUTPUT
-    rows.to_csv(rows_out, index=False)
-    relationships.to_csv(relationships_out, index=False)
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_count": int(rows.shape[0]),
-        "relationship_row_count": int(relationships.shape[0]),
-        "outputs": {
-            "rows": rows_out,
-            "relationships": relationships_out,
+    return write_diagnostic_bundle(
+        output_dir=Path(config.output_dir),
+        tables={"rows": rows, "relationships": relationships},
+        filenames={"rows": ROWS_OUTPUT, "relationships": RELATIONSHIPS_OUTPUT},
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "row_count": int(rows.shape[0]),
+            "relationship_row_count": int(relationships.shape[0]),
         },
-    }
-    manifest_out.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+        manifest_filename=MANIFEST_OUTPUT,
+        include_row_counts=False,
     )
-    return {
-        "rows": rows_out,
-        "relationships": relationships_out,
-        "manifest": manifest_out,
-    }
 
 
 def main() -> None:

@@ -19,15 +19,22 @@ import argparse
 import json
 import math
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Iterable
 
 import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
-from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
+from benchmarks.diagnostics.calibration.root.root_tail_values import (
+    finite_float,
+    is_observed_target,
+    require_columns,
+    string_value,
+)
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
 )
@@ -129,45 +136,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--minimum-bulk-eigenvalue-count", type=int, default=3)
     return parser.parse_args()
-
-
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedHUObservabilityConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def string_value(
-    row: pd.Series | dict[str, object],
-    column: str,
-    default: str = "",
-) -> str:
-    if column not in row:
-        return default
-    value = row[column]
-    if pd.isna(value):
-        return default
-    return str(value)
-
-
-def is_observed_target(row: pd.Series) -> bool:
-    return (
-        string_value(row, "proposal_family") == "observed_target"
-        or string_value(row, "calibration_role") == "observed_target_not_null_support"
-        or string_value(row, "data_role") == "observed_target"
-    )
 
 
 def _has_finite(row: pd.Series, column: str, *, positive: bool = False) -> bool:
@@ -285,7 +253,7 @@ def build_root_selected_h_u_observability_rows(
     minimum_bulk_eigenvalue_count: int = 3,
 ) -> pd.DataFrame:
     """Build target-level rows describing whether H_u can be estimated."""
-    _require_columns(
+    require_columns(
         joined_feasibility_rows,
         {
             "case_id",
@@ -296,7 +264,7 @@ def build_root_selected_h_u_observability_rows(
         },
         "joined feasibility rows",
     )
-    _require_columns(
+    require_columns(
         population_law_requirement_rows,
         {
             "target_case_id",
@@ -449,29 +417,21 @@ def evaluate_root_selected_h_u_observability_panel(
 def run_root_selected_h_u_observability_panel(
     config: RootSelectedHUObservabilityConfig,
 ) -> dict[str, Path]:
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_selected_h_u_observability_panel(config)
-    rows_path = config.output_dir / ROWS_OUTPUT
-    summary_path = config.output_dir / SUMMARY_OUTPUT
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    tables["rows"].to_csv(rows_path, index=False)
-    tables["summary"].to_csv(summary_path, index=False)
-    manifest = {
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={"rows": ROWS_OUTPUT, "summary": SUMMARY_OUTPUT},
+        manifest={
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
         "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
         "config": asdict(config),
-        "outputs": {
-            "rows": str(rows_path),
-            "summary": str(summary_path),
         },
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True, default=_json_default) + "\n",
-        encoding="utf-8",
+        manifest_filename=MANIFEST_OUTPUT,
+        include_row_counts=False,
+        sort_keys=True,
     )
-    return {"rows": rows_path, "summary": summary_path, "manifest": manifest_path}
 
 
 def main() -> None:

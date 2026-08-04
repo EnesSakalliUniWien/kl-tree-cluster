@@ -13,15 +13,16 @@ tie-rank null law is calibrated.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, require_columns
 
 SCHEMA_VERSION = "root_selected_mixed_region_law/v1"
 STUDY_ROLE = "diagnostic_root_selected_mixed_region_law_not_calibration"
@@ -198,32 +199,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedMixedRegionLawConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
 def _finite_median(values: pd.Series) -> float:
     numeric = pd.to_numeric(values, errors="coerce")
     numeric = numeric[np.isfinite(numeric)]
@@ -253,7 +228,7 @@ def _safe_nonnegative_log1p(value: float) -> float:
 def _summary_lookup(frame: pd.DataFrame, label: str) -> dict[str, dict[str, object]]:
     if frame.empty:
         return {}
-    _require_columns(frame, {"case_id"}, label)
+    require_columns(frame, {"case_id"}, label)
     return {str(row["case_id"]): dict(row) for _, row in frame.iterrows()}
 
 
@@ -262,7 +237,7 @@ def _aggregate_root_frontier(
 ) -> dict[str, dict[str, object]]:
     if topology_frontier_rows is None or topology_frontier_rows.empty:
         return {}
-    _require_columns(topology_frontier_rows, {"case_id"}, "topology frontier rows")
+    require_columns(topology_frontier_rows, {"case_id"}, "topology frontier rows")
     frontier = topology_frontier_rows.copy()
     if "candidate_scope" in frontier.columns:
         scope = frontier["candidate_scope"].astype(str)
@@ -422,7 +397,7 @@ def build_root_selected_mixed_region_law_rows(
     margin_tolerance: float = DEFAULT_MARGIN_TOLERANCE,
 ) -> pd.DataFrame:
     """Return one mixed root selected-region law row per case."""
-    _require_columns(
+    require_columns(
         root_summary,
         {
             "case_id",
@@ -432,7 +407,7 @@ def build_root_selected_mixed_region_law_rows(
         },
         "root selected-region summary",
     )
-    _require_columns(
+    require_columns(
         tie_cell_burden_rows,
         {
             "case_id",
@@ -452,15 +427,15 @@ def build_root_selected_mixed_region_law_rows(
         tie = tie_by_case.get(case_id, {})
         frontier = frontier_by_case.get(case_id, {})
         law_status = str(root.get("root_selected_region_law_status", "missing"))
-        min_margin = _finite_float(root.get("root_child_min_merge_margin", math.nan))
+        min_margin = finite_float(root.get("root_child_min_merge_margin", math.nan))
         min_margin_abs = abs(min_margin) if math.isfinite(min_margin) else math.nan
-        discrete_count = int(_finite_float(root.get("root_child_discrete_tie_cell_count", 0)))
-        smooth_count = int(_finite_float(root.get("root_child_smooth_constraint_count", 0)))
-        tie_step_count = int(_finite_float(tie.get("root_tie_step_count", 0)))
-        tie_log_burden = _finite_float(tie.get("root_tie_cell_log_burden", math.nan))
-        rank_log_burden = _finite_float(tie.get("root_tie_rank_log_burden", math.nan))
-        rank_mean_fraction = _finite_float(tie.get("root_tie_rank_mean_fraction", math.nan))
-        rank_median_fraction = _finite_float(tie.get("root_tie_rank_median_fraction", math.nan))
+        discrete_count = int(finite_float(root.get("root_child_discrete_tie_cell_count", 0)))
+        smooth_count = int(finite_float(root.get("root_child_smooth_constraint_count", 0)))
+        tie_step_count = int(finite_float(tie.get("root_tie_step_count", 0)))
+        tie_log_burden = finite_float(tie.get("root_tie_cell_log_burden", math.nan))
+        rank_log_burden = finite_float(tie.get("root_tie_rank_log_burden", math.nan))
+        rank_mean_fraction = finite_float(tie.get("root_tie_rank_mean_fraction", math.nan))
+        rank_median_fraction = finite_float(tie.get("root_tie_rank_median_fraction", math.nan))
         representative_rank_fraction = (
             rank_median_fraction if math.isfinite(rank_median_fraction) else rank_mean_fraction
         )
@@ -476,8 +451,8 @@ def build_root_selected_mixed_region_law_rows(
             if math.isfinite(rank_log_burden) and math.isfinite(tie_log_burden)
             else math.nan
         )
-        edge_margin = _finite_float(root.get("root_edge_path_statistic_margin", math.nan))
-        spectral_ratio = _finite_float(
+        edge_margin = finite_float(root.get("root_edge_path_statistic_margin", math.nan))
+        spectral_ratio = finite_float(
             root.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
         )
         rank_edge_product = (
@@ -536,32 +511,30 @@ def build_root_selected_mixed_region_law_rows(
                 "root_continuous_margin_status": continuous_status,
                 "root_discrete_tie_status": discrete_status,
                 "root_tie_rank_status": rank_status,
-                "root_sibling_selected_ratio": _finite_float(
+                "root_sibling_selected_ratio": finite_float(
                     root.get("root_sibling_selected_ratio", math.nan)
                 ),
-                "root_child_balance": _finite_float(root.get("root_child_balance", math.nan)),
+                "root_child_balance": finite_float(root.get("root_child_balance", math.nan)),
                 "root_child_construction_merge_count": int(
-                    _finite_float(root.get("root_child_construction_merge_count", 0))
+                    finite_float(root.get("root_child_construction_merge_count", 0))
                 ),
                 "root_child_min_merge_margin": min_margin,
                 "root_child_min_merge_margin_abs": min_margin_abs,
                 "root_child_near_active_merge_count": int(
-                    _finite_float(root.get("root_child_near_active_merge_count", 0))
+                    finite_float(root.get("root_child_near_active_merge_count", 0))
                 ),
                 "root_child_tied_minimum_merge_count": int(
-                    _finite_float(root.get("root_child_tied_minimum_merge_count", 0))
+                    finite_float(root.get("root_child_tied_minimum_merge_count", 0))
                 ),
                 "root_child_discrete_tie_cell_count": discrete_count,
                 "root_child_smooth_constraint_count": smooth_count,
                 "root_tie_step_count": tie_step_count,
-                "root_tie_step_fraction": _finite_float(
-                    tie.get("root_tie_step_fraction", math.nan)
-                ),
+                "root_tie_step_fraction": finite_float(tie.get("root_tie_step_fraction", math.nan)),
                 "root_tie_cell_log_burden": tie_log_burden,
-                "root_tie_cell_mean_log_multiplicity": _finite_float(
+                "root_tie_cell_mean_log_multiplicity": finite_float(
                     tie.get("root_tie_cell_mean_log_multiplicity", math.nan)
                 ),
-                "root_tie_cell_geometric_mean_multiplicity": _finite_float(
+                "root_tie_cell_geometric_mean_multiplicity": finite_float(
                     tie.get(
                         "root_tie_cell_geometric_mean_multiplicity",
                         math.nan,
@@ -572,27 +545,27 @@ def build_root_selected_mixed_region_law_rows(
                 "root_tie_rank_median_fraction": rank_median_fraction,
                 "root_tie_rank_to_tie_burden_fraction": rank_to_tie_fraction,
                 "root_tie_rank_shortfall_log_burden": rank_shortfall,
-                "root_edge_path_radial_distance": _finite_float(
+                "root_edge_path_radial_distance": finite_float(
                     root.get("root_edge_path_radial_distance", math.nan)
                 ),
                 "root_edge_path_statistic_margin": edge_margin,
-                "root_edge_extra_parent_projection_energy": _finite_float(
+                "root_edge_extra_parent_projection_energy": finite_float(
                     root.get("root_edge_extra_parent_projection_energy", math.nan)
                 ),
                 "root_selected_eigenvalue_over_mp_upper_bound": spectral_ratio,
-                "root_selected_eigenvalue_mass_fraction": _finite_float(
+                "root_selected_eigenvalue_mass_fraction": finite_float(
                     root.get("root_selected_eigenvalue_mass_fraction", math.nan)
                 ),
-                "root_raw_mp_signal_count": _finite_float(
+                "root_raw_mp_signal_count": finite_float(
                     root.get("root_raw_mp_signal_count", math.nan)
                 ),
-                "root_mp_threshold_rows": _finite_float(
+                "root_mp_threshold_rows": finite_float(
                     root.get("root_mp_threshold_rows", math.nan)
                 ),
-                "root_active_feature_count": _finite_float(
+                "root_active_feature_count": finite_float(
                     root.get("root_active_feature_count", math.nan)
                 ),
-                "root_full_eigenvalue_count": _finite_float(
+                "root_full_eigenvalue_count": finite_float(
                     root.get("root_full_eigenvalue_count", math.nan)
                 ),
                 "root_full_component_eigenvalues_json": str(
@@ -601,7 +574,7 @@ def build_root_selected_mixed_region_law_rows(
                 "root_projected_eigenvalues_json": str(
                     root.get("root_projected_eigenvalues_json", "")
                 ),
-                "root_mp_upper_bound": _finite_float(root.get("root_mp_upper_bound", math.nan)),
+                "root_mp_upper_bound": finite_float(root.get("root_mp_upper_bound", math.nan)),
                 "root_rank_fraction_edge_margin_product": rank_edge_product,
                 "root_rank_fraction_spectral_product": rank_spectral_product,
                 "root_frontier_row_count": frontier_row_count,
@@ -614,10 +587,10 @@ def build_root_selected_mixed_region_law_rows(
                     frontier.get("root_structural_proxy_pass_count", 0)
                 ),
                 "root_hybrid_strict_support_count": hybrid_support_count,
-                "root_frontier_min_best_case_tau_s": _finite_float(
+                "root_frontier_min_best_case_tau_s": finite_float(
                     frontier.get("root_frontier_min_best_case_tau_s", math.nan)
                 ),
-                "root_frontier_median_best_case_tau_s": _finite_float(
+                "root_frontier_median_best_case_tau_s": finite_float(
                     frontier.get("root_frontier_median_best_case_tau_s", math.nan)
                 ),
                 "root_bandwidth_locality_status": bandwidth_status,
@@ -631,7 +604,7 @@ def summarize_mixed_region_relationships(rows: pd.DataFrame) -> pd.DataFrame:
     """Relate mixed-law coordinates to root selected-ratio scale."""
     if rows.empty:
         return pd.DataFrame(columns=RELATIONSHIP_COLUMNS)
-    _require_columns(rows, {"root_sibling_selected_ratio"}, "mixed-law rows")
+    require_columns(rows, {"root_sibling_selected_ratio"}, "mixed-law rows")
     target = pd.to_numeric(rows["root_sibling_selected_ratio"], errors="coerce")
     target_values = target.to_numpy(dtype=float)
     records: list[dict[str, object]] = []
@@ -766,40 +739,26 @@ def run_root_selected_mixed_region_law(
 ) -> dict[str, Path]:
     """Write mixed root selected-region law outputs."""
     rows, relationships, summary = evaluate_root_selected_mixed_region_law(config)
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    rows_out = output_dir / ROWS_OUTPUT
-    relationships_out = output_dir / RELATIONSHIPS_OUTPUT
-    summary_out = output_dir / SUMMARY_OUTPUT
-    manifest_out = output_dir / MANIFEST_OUTPUT
-    rows.to_csv(rows_out, index=False)
-    relationships.to_csv(relationships_out, index=False)
-    summary.to_csv(summary_out, index=False)
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_count": int(rows.shape[0]),
-        "relationship_row_count": int(relationships.shape[0]),
-        "summary_row_count": int(summary.shape[0]),
-        "outputs": {
-            "rows": rows_out,
-            "relationships": relationships_out,
-            "summary": summary_out,
+    return write_diagnostic_bundle(
+        output_dir=Path(config.output_dir),
+        tables={"rows": rows, "relationships": relationships, "summary": summary},
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "relationships": RELATIONSHIPS_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
         },
-    }
-    manifest_out.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "row_count": int(rows.shape[0]),
+            "relationship_row_count": int(relationships.shape[0]),
+            "summary_row_count": int(summary.shape[0]),
+        },
+        manifest_filename=MANIFEST_OUTPUT,
+        include_row_counts=False,
     )
-    return {
-        "rows": rows_out,
-        "relationships": relationships_out,
-        "summary": summary_out,
-        "manifest": manifest_out,
-    }
 
 
 def main() -> None:

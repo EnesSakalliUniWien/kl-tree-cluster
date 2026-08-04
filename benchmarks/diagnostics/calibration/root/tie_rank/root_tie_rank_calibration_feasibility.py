@@ -13,14 +13,15 @@ missing simulation support.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from benchmarks.diagnostics.calibration.reporting import write_diagnostic_bundle
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float, require_columns
 
 SCHEMA_VERSION = "root_tie_rank_calibration_feasibility/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_calibration_feasibility_not_calibration"
@@ -135,32 +136,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootTieRankCalibrationFeasibilityConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def _finite_float(value: object) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return math.nan
-    return numeric if math.isfinite(numeric) else math.nan
-
-
 def _finite_median(values: pd.Series) -> float:
     numeric = pd.to_numeric(values, errors="coerce")
     numeric = numeric[np.isfinite(numeric)]
@@ -273,7 +248,7 @@ def _bandwidth_count_for_stratum(row: pd.Series) -> float:
     locality_status = _string_value(row, "root_bandwidth_locality_status", "")
     if locality_status == "topology_frontier_not_joined":
         return math.nan
-    return _finite_float(row.get("root_bandwidth_reopen_count", 0))
+    return finite_float(row.get("root_bandwidth_reopen_count", 0))
 
 
 def _stratum_key(
@@ -318,9 +293,9 @@ def _annotate_conditioning_strata(mixed_rows: pd.DataFrame) -> pd.DataFrame:
             "root_mixed_region_component",
             "component_missing",
         )
-        tie_fraction = _finite_float(row.get("root_tie_rank_median_fraction", math.nan))
-        edge_margin = _finite_float(row.get("root_edge_path_statistic_margin", math.nan))
-        spectral_ratio = _finite_float(
+        tie_fraction = finite_float(row.get("root_tie_rank_median_fraction", math.nan))
+        edge_margin = finite_float(row.get("root_edge_path_statistic_margin", math.nan))
+        spectral_ratio = finite_float(
             row.get("root_selected_eigenvalue_over_mp_upper_bound", math.nan)
         )
         bandwidth_count = _bandwidth_count_for_stratum(row)
@@ -345,7 +320,7 @@ def _annotate_conditioning_strata(mixed_rows: pd.DataFrame) -> pd.DataFrame:
                     spectral_band=spectral_band,
                     bandwidth_band=bandwidth_band,
                 ),
-                "root_sibling_selected_ratio": _finite_float(
+                "root_sibling_selected_ratio": finite_float(
                     row.get("root_sibling_selected_ratio", math.nan)
                 ),
                 "root_tie_rank_median_fraction": tie_fraction,
@@ -365,7 +340,7 @@ def build_root_tie_rank_calibration_feasibility_rows(
     relative_se_target: float = DEFAULT_RELATIVE_SE_TARGET,
 ) -> pd.DataFrame:
     """Return row-level feasibility annotations for mixed root-law rows."""
-    _require_columns(
+    require_columns(
         mixed_region_rows,
         {
             "case_id",
@@ -389,7 +364,7 @@ def build_root_tie_rank_calibration_feasibility_rows(
         key = str(row["root_conditioning_stratum_key"])
         stratum = annotated[annotated["root_conditioning_stratum_key"].eq(key)]
         null_support = stratum[stratum["_is_calibration_null_support"]]
-        observed_ratio = _finite_float(row["root_sibling_selected_ratio"])
+        observed_ratio = finite_float(row["root_sibling_selected_ratio"])
         null_ratios = pd.to_numeric(
             null_support["root_sibling_selected_ratio"],
             errors="coerce",
@@ -421,16 +396,14 @@ def build_root_tie_rank_calibration_feasibility_rows(
                 "root_bandwidth_reopen_band": str(row["root_bandwidth_reopen_band"]),
                 "root_conditioning_stratum_key": key,
                 "root_sibling_selected_ratio": observed_ratio,
-                "root_tie_rank_median_fraction": _finite_float(
-                    row["root_tie_rank_median_fraction"]
-                ),
-                "root_edge_path_statistic_margin": _finite_float(
+                "root_tie_rank_median_fraction": finite_float(row["root_tie_rank_median_fraction"]),
+                "root_edge_path_statistic_margin": finite_float(
                     row["root_edge_path_statistic_margin"]
                 ),
-                "root_selected_eigenvalue_over_mp_upper_bound": _finite_float(
+                "root_selected_eigenvalue_over_mp_upper_bound": finite_float(
                     row["root_selected_eigenvalue_over_mp_upper_bound"]
                 ),
-                "root_bandwidth_reopen_count": _finite_float(row["root_bandwidth_reopen_count"]),
+                "root_bandwidth_reopen_count": finite_float(row["root_bandwidth_reopen_count"]),
                 "stratum_observed_count": int(stratum.shape[0]),
                 "stratum_calibration_null_support_count": null_count,
                 "stratum_calibration_null_exceedance_count": exceedance_count,
@@ -589,40 +562,26 @@ def run_root_tie_rank_calibration_feasibility(
 ) -> dict[str, Path]:
     """Write root tie-rank calibration feasibility outputs."""
     rows, strata, summary = evaluate_root_tie_rank_calibration_feasibility(config)
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    rows_out = output_dir / ROWS_OUTPUT
-    strata_out = output_dir / STRATA_OUTPUT
-    summary_out = output_dir / SUMMARY_OUTPUT
-    manifest_out = output_dir / MANIFEST_OUTPUT
-    rows.to_csv(rows_out, index=False)
-    strata.to_csv(strata_out, index=False)
-    summary.to_csv(summary_out, index=False)
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_count": int(rows.shape[0]),
-        "stratum_count": int(strata.shape[0]),
-        "summary_row_count": int(summary.shape[0]),
-        "outputs": {
-            "rows": rows_out,
-            "strata": strata_out,
-            "summary": summary_out,
+    return write_diagnostic_bundle(
+        output_dir=Path(config.output_dir),
+        tables={"rows": rows, "strata": strata, "summary": summary},
+        filenames={
+            "rows": ROWS_OUTPUT,
+            "strata": STRATA_OUTPUT,
+            "summary": SUMMARY_OUTPUT,
         },
-    }
-    manifest_out.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+            "row_count": int(rows.shape[0]),
+            "stratum_count": int(strata.shape[0]),
+            "summary_row_count": int(summary.shape[0]),
+        },
+        manifest_filename=MANIFEST_OUTPUT,
+        include_row_counts=False,
     )
-    return {
-        "rows": rows_out,
-        "strata": strata_out,
-        "summary": summary_out,
-        "manifest": manifest_out,
-    }
 
 
 def main() -> None:

@@ -18,24 +18,27 @@ tail p-value. Nearest support is diagnostic localization only.
 from __future__ import annotations
 
 import argparse
-import json
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     action_band,
     finite_float,
     is_calibration_support,
     is_observed_target,
+    require_columns,
     root_tail_stratum_key,
     safe_log1p,
     spectral_excess_log,
+    string_value,
 )
 from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tail_law_panel import (
     DEFAULT_RESULT_ROOT,
@@ -130,37 +133,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _json_default(value: object) -> object:
-    if isinstance(value, RootSelectedSpectralTailNearestSupportConfig):
-        return asdict(value)
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
-
-
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
-def string_value(row: pd.Series | dict[str, object], column: str, default: str = "") -> str:
-    if column not in row:
-        return default
-    value = row[column]
-    if pd.isna(value):
-        return default
-    return str(value)
-
-
 def _target_tail_lookup(root_tail_rows: pd.DataFrame) -> dict[str, pd.Series]:
     if root_tail_rows.empty:
         return {}
-    _require_columns(root_tail_rows, {"target_case_id"}, "root tail rows")
+    require_columns(root_tail_rows, {"target_case_id"}, "root tail rows")
     return {
         str(row["target_case_id"]): row
         for _, row in root_tail_rows.set_index("target_case_id", drop=False).iterrows()
@@ -289,7 +265,7 @@ def build_root_selected_spectral_tail_nearest_support_rows(
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated",
 ) -> pd.DataFrame:
     """Return nearest-support localization rows for observed roots."""
-    _require_columns(
+    require_columns(
         joined_feasibility_rows,
         {
             "case_id",
@@ -457,30 +433,20 @@ def run_root_selected_spectral_tail_nearest_support_panel(
     config: RootSelectedSpectralTailNearestSupportConfig,
 ) -> dict[str, Path]:
     start = datetime.now(UTC)
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_root_selected_spectral_tail_nearest_support_panel(config)
-    paths = {
-        "rows": config.output_dir / ROWS_OUTPUT,
-        "summary": config.output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": start.isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, default=_json_default) + "\n",
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={"rows": ROWS_OUTPUT, "summary": SUMMARY_OUTPUT},
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
+        generated_at=start.isoformat(),
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:

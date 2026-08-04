@@ -26,6 +26,9 @@ from benchmarks.diagnostics.calibration.reporting import (
 from benchmarks.diagnostics.calibration.root.selected.root_selected_region_margins import (
     collect_observed_root_selected_region_row,
 )
+from benchmarks.diagnostics.calibration.root.tie_rank.proposal_generators import (
+    ensure_nonempty_binary_feature_columns,
+)
 from benchmarks.diagnostics.calibration.root.tie_rank.root_tie_rank_null_proposal_frontier import (
     IMPORTANCE_COUPLED_EXTERNAL_NULL,
     IMPORTANCE_TWO_BLOCK_EXTERNAL_NULL,
@@ -345,18 +348,6 @@ def _setting_records(
     return settings
 
 
-def _ensure_nonempty_feature_columns(
-    matrix: np.ndarray,
-    *,
-    rng: np.random.Generator,
-) -> np.ndarray:
-    fixed = np.asarray(matrix, dtype=int).copy()
-    n_samples = fixed.shape[0]
-    for feature_index in np.where(fixed.sum(axis=0) == 0)[0]:
-        fixed[int(rng.integers(0, n_samples)), int(feature_index)] = 1
-    return fixed
-
-
 def generate_unbalanced_two_block_importance_matrix(
     *,
     base_case: dict[str, object],
@@ -394,7 +385,7 @@ def generate_unbalanced_two_block_importance_matrix(
         right_probabilities[None, :],
     )
     matrix = rng.binomial(1, probability_matrix).astype(int)
-    matrix = _ensure_nonempty_feature_columns(matrix, rng=rng)
+    matrix = ensure_nonempty_binary_feature_columns(matrix, rng=rng)
     target_probability_matrix = np.full_like(
         np.asarray(matrix, dtype=float),
         base_probability,
@@ -474,7 +465,7 @@ def generate_correlated_two_factor_importance_matrix(
     )
     probability_matrix = np.clip(base_probability + shift, 1e-3, 1.0 - 1e-3)
     matrix = rng.binomial(1, probability_matrix).astype(int)
-    matrix = _ensure_nonempty_feature_columns(matrix, rng=rng)
+    matrix = ensure_nonempty_binary_feature_columns(matrix, rng=rng)
     target_probability_matrix = np.full_like(
         np.asarray(matrix, dtype=float),
         base_probability,

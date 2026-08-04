@@ -2,82 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pandas as pd
 from benchmarks.diagnostics.calibration.root.tie_rank import (
     root_tie_rank_spectral_action_dominance_panel as panel,
 )
+from tests.validation.calibration.root.tie_rank.fixtures import feasibility_rows
 
 
-def _row(
-    *,
-    case_id: str,
-    proposal_family: str,
-    calibration_role: str,
-    bandwidth_band: str,
-    selected_ratio: float,
-    tie_fraction: float,
-    edge_margin: float,
-    spectral_ratio: float,
-) -> dict[str, object]:
-    return {
-        "case_id": case_id,
-        "data_role": "observed_target"
-        if proposal_family == "observed_target"
-        else "diagnostic_proposal",
-        "calibration_role": calibration_role,
-        "proposal_family": proposal_family,
-        "root_bandwidth_reopen_band": bandwidth_band,
-        "root_sibling_selected_ratio": selected_ratio,
-        "root_tie_rank_median_fraction": tie_fraction,
-        "root_edge_path_statistic_margin": edge_margin,
-        "root_selected_eigenvalue_over_mp_upper_bound": spectral_ratio,
-    }
-
-
-def _combined_rows() -> pd.DataFrame:
-    return pd.DataFrame.from_records(
-        [
-            _row(
-                case_id="target",
-                proposal_family="observed_target",
-                calibration_role="observed_target_not_null_support",
-                bandwidth_band="bandwidth_root_reopen_observed",
-                selected_ratio=100.0,
-                tie_fraction=0.80,
-                edge_margin=1000.0,
-                spectral_ratio=5.0,
-            ),
-            _row(
-                case_id="full",
-                proposal_family="full_family",
-                calibration_role="diagnostic_proposal_not_null_support",
-                bandwidth_band="bandwidth_root_reopen_observed",
-                selected_ratio=120.0,
-                tie_fraction=0.85,
-                edge_margin=1200.0,
-                spectral_ratio=6.0,
-            ),
-            _row(
-                case_id="dense",
-                proposal_family="dense_family",
-                calibration_role="diagnostic_proposal_not_null_support",
-                bandwidth_band="bandwidth_reopen_missing",
-                selected_ratio=150.0,
-                tie_fraction=0.82,
-                edge_margin=2000.0,
-                spectral_ratio=1.5,
-            ),
-            _row(
-                case_id="sparse",
-                proposal_family="sparse_family",
-                calibration_role="diagnostic_proposal_not_null_support",
-                bandwidth_band="bandwidth_reopen_missing",
-                selected_ratio=5.0,
-                tie_fraction=0.83,
-                edge_margin=20.0,
-                spectral_ratio=6.0,
-            ),
-        ]
+def _combined_rows():
+    return feasibility_rows(
+        full=(120.0, 0.85, 1200.0, 6.0),
+        dense=(150.0, 0.82, 2000.0, 1.5),
+        sparse=(5.0, 0.83, 20.0, 6.0),
     )
 
 

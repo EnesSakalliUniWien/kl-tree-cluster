@@ -51,7 +51,10 @@ from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 
-from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.statistics.spectral_summary import (
     effective_rank,
 )
@@ -1567,37 +1570,32 @@ def run_root_selected_region_margin_diagnostic(
     root_table = pd.DataFrame.from_records(root_rows)
     merge_margin_table = pd.concat(margin_tables, ignore_index=True)
     relationship_table = summarize_root_selected_region_relationships(root_table)
-    root_path = resolved_output_dir / "root_selected_region_summary.csv"
-    merge_path = resolved_output_dir / "root_selected_region_merge_margins.csv"
-    relationship_path = resolved_output_dir / "root_selected_region_relationships.csv"
-    manifest_path = resolved_output_dir / "manifest.json"
-    root_table.to_csv(root_path, index=False)
-    merge_margin_table.to_csv(merge_path, index=False)
-    relationship_table.to_csv(relationship_path, index=False)
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "generated_by": GENERATED_BY,
-        "diagnostic_role": DIAGNOSTIC_ROLE,
-        "suite": suite,
-        "case_names": [str(row["case_id"]) for row in root_rows],
-        "near_active_absolute_tolerance": float(near_active_absolute_tolerance),
-        "root_rows": int(root_table.shape[0]),
-        "merge_margin_rows": int(merge_margin_table.shape[0]),
-        "relationship_rows": int(relationship_table.shape[0]),
-        "elapsed_seconds": float(perf_counter() - start),
-        "outputs": {
-            "root_selected_region_summary": str(root_path),
-            "root_selected_region_merge_margins": str(merge_path),
-            "root_selected_region_relationships": str(relationship_path),
+    return write_diagnostic_bundle(
+        output_dir=resolved_output_dir,
+        tables={
+            "root_selected_region_summary": root_table,
+            "root_selected_region_merge_margins": merge_margin_table,
+            "root_selected_region_relationships": relationship_table,
         },
-    }
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    return {
-        "root_selected_region_summary": root_path,
-        "root_selected_region_merge_margins": merge_path,
-        "root_selected_region_relationships": relationship_path,
-        "manifest": manifest_path,
-    }
+        filenames={
+            "root_selected_region_summary": "root_selected_region_summary.csv",
+            "root_selected_region_merge_margins": "root_selected_region_merge_margins.csv",
+            "root_selected_region_relationships": "root_selected_region_relationships.csv",
+        },
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "generated_by": GENERATED_BY,
+            "diagnostic_role": DIAGNOSTIC_ROLE,
+            "suite": suite,
+            "case_names": [str(row["case_id"]) for row in root_rows],
+            "near_active_absolute_tolerance": float(near_active_absolute_tolerance),
+            "root_rows": int(root_table.shape[0]),
+            "merge_margin_rows": int(merge_margin_table.shape[0]),
+            "relationship_rows": int(relationship_table.shape[0]),
+            "elapsed_seconds": float(perf_counter() - start),
+        },
+        include_row_counts=False,
+    )
 
 
 def _parse_args() -> argparse.Namespace:

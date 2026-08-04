@@ -36,6 +36,9 @@ from benchmarks.diagnostics.calibration.root.root_tail_values import (
 from benchmarks.diagnostics.calibration.root.selected.root_selected_region_margins import (
     collect_observed_root_selected_region_row,
 )
+from benchmarks.diagnostics.calibration.root.tie_rank.proposal_generators import (
+    ensure_nonempty_binary_feature_columns,
+)
 from benchmarks.diagnostics.calibration.root.tie_rank.root_tie_rank_null_proposal_frontier import (
     COUPLED_EDGE_SPECTRAL_PROPOSAL,
     TWO_BLOCK_TILT_PROPOSAL,
@@ -431,8 +434,7 @@ def generate_coherent_rank_one_spike_matrix(
     )
     matrix = rng.binomial(1, probability_matrix).astype(int)
     feature_probabilities = np.mean(probability_matrix, axis=0)
-    for feature_index in np.where(matrix.sum(axis=0) == 0)[0]:
-        matrix[int(rng.integers(0, n_samples)), int(feature_index)] = 1
+    matrix = ensure_nonempty_binary_feature_columns(matrix, rng=rng)
     metadata = {
         "null_feature_probability": float(base_probability),
         "proposal_beta_concentration": math.nan,

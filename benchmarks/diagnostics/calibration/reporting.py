@@ -37,8 +37,15 @@ def write_diagnostic_bundle(
     filenames: Mapping[str, str],
     manifest: Mapping[str, object],
     manifest_filename: str = "manifest.json",
+    generated_at: str | None = None,
+    include_row_counts: bool = True,
+    sort_keys: bool = False,
 ) -> dict[str, Path]:
-    """Write named tables and their common manifest envelope."""
+    """Write named tables and their common manifest envelope.
+
+    Optional fields allow pre-existing diagnostic contracts to keep their
+    manifest shape while migrating the shared persistence mechanics.
+    """
     unknown_tables = sorted(set(tables).difference(filenames))
     missing_tables = sorted(set(filenames).difference(tables))
     if unknown_tables or missing_tables:
@@ -53,14 +60,21 @@ def write_diagnostic_bundle(
         tables[key].to_csv(path, index=False)
 
     manifest_path = output_dir / manifest_filename
-    payload = {
+    payload: dict[str, object] = {
         **dict(manifest),
-        "generated_at": datetime.now(UTC).isoformat(),
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
+        "generated_at": generated_at or datetime.now(UTC).isoformat(),
         "outputs": paths,
     }
+    if include_row_counts:
+        payload["row_counts"] = {key: int(table.shape[0]) for key, table in tables.items()}
     manifest_path.write_text(
-        json.dumps(payload, indent=2, default=diagnostic_json_default) + "\n",
+        json.dumps(
+            payload,
+            indent=2,
+            sort_keys=sort_keys,
+            default=diagnostic_json_default,
+        )
+        + "\n",
         encoding="utf-8",
     )
     paths["manifest"] = manifest_path

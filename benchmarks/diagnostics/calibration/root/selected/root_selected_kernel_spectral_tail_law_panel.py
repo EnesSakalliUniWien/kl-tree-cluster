@@ -17,13 +17,15 @@ import argparse
 import json
 import math
 from dataclasses import asdict, dataclass, replace
-from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.calibration.reporting import print_diagnostic_output_paths
+from benchmarks.diagnostics.calibration.reporting import (
+    print_diagnostic_output_paths,
+    write_diagnostic_bundle,
+)
 from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     finite_int,
@@ -1176,30 +1178,20 @@ def run_kernel_spectral_tail_law_panel(
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> dict[str, Path]:
     """Run the diagnostic and write outputs."""
-    config.output_dir.mkdir(parents=True, exist_ok=True)
     tables = evaluate_kernel_spectral_tail_law_panel(config)
-    paths = {
-        "rows": config.output_dir / ROWS_OUTPUT,
-        "summary": config.output_dir / SUMMARY_OUTPUT,
-    }
-    for key, path in paths.items():
-        tables[key].to_csv(path, index=False)
-    manifest_path = config.output_dir / MANIFEST_OUTPUT
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "study_role": STUDY_ROLE,
-        "generated_by": GENERATED_BY,
-        "generated_at": datetime.now(UTC).isoformat(),
-        "config": config,
-        "row_counts": {key: int(table.shape[0]) for key, table in tables.items()},
-        "outputs": paths,
-    }
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True, default=_json_default),
-        encoding="utf-8",
+    return write_diagnostic_bundle(
+        output_dir=config.output_dir,
+        tables=tables,
+        filenames={"rows": ROWS_OUTPUT, "summary": SUMMARY_OUTPUT},
+        manifest={
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "generated_by": GENERATED_BY,
+            "config": config,
+        },
+        manifest_filename=MANIFEST_OUTPUT,
+        sort_keys=True,
     )
-    paths["manifest"] = manifest_path
-    return paths
 
 
 def main() -> None:

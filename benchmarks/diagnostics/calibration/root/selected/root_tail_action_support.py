@@ -11,12 +11,24 @@ from benchmarks.diagnostics.calibration.root.root_tail_values import (
     finite_float,
     is_calibration_support,
     is_observed_target,
+    require_columns,
     root_tail_stratum_key,
     safe_log1p,
     spectral_excess_log,
     string_value,
     tie_band,
 )
+
+ROOT_TAIL_ACTION_SUPPORT_COLUMNS = {
+    "case_id",
+    "data_role",
+    "calibration_role",
+    "proposal_family",
+    "root_sibling_selected_ratio",
+    "root_tie_rank_median_fraction",
+    "root_edge_path_statistic_margin",
+    "root_selected_eigenvalue_over_mp_upper_bound",
+}
 
 
 def calibration_support_rows(rows: pd.DataFrame) -> pd.DataFrame:
@@ -85,9 +97,38 @@ def annotate_root_tail_support(
     return rows
 
 
+def prepare_root_tail_action_support(
+    joined_feasibility_rows: pd.DataFrame,
+    *,
+    h_u_population_law_status: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return observed targets and annotated admissible support rows.
+
+    This is the shared preparation seam for selected-root action diagnostics;
+    individual panels retain their own conditioning and inference laws.
+    """
+    require_columns(
+        joined_feasibility_rows,
+        ROOT_TAIL_ACTION_SUPPORT_COLUMNS,
+        "joined feasibility rows",
+    )
+    rows = joined_feasibility_rows.copy()
+    if "root_bandwidth_reopen_band" not in rows.columns:
+        rows["root_bandwidth_reopen_band"] = ""
+    if "root_mixed_region_component" not in rows.columns:
+        rows["root_mixed_region_component"] = "root_component_missing"
+    targets = rows.loc[rows.apply(is_observed_target, axis=1)].copy()
+    support = annotate_root_tail_support(
+        calibration_support_rows(rows),
+        h_u_population_law_status=h_u_population_law_status,
+    )
+    return targets, support
+
+
 __all__ = [
     "annotate_root_tail_support",
     "calibration_support_rows",
+    "prepare_root_tail_action_support",
     "root_tail_coordinates",
     "string_value",
 ]

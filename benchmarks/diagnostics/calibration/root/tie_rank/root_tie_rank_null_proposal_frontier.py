@@ -35,6 +35,9 @@ from benchmarks.diagnostics.calibration.root.selected.root_selected_region_margi
 from benchmarks.diagnostics.calibration.root.selected.root_selected_tie_cell_burden import (
     build_root_selected_tie_cell_burden_rows,
 )
+from benchmarks.diagnostics.calibration.root.tie_rank.proposal_generators import (
+    ensure_nonempty_binary_feature_columns,
+)
 from benchmarks.diagnostics.calibration.root.tie_rank.root_tie_rank_calibration_feasibility import (
     build_root_tie_rank_calibration_feasibility_rows,
     summarize_root_tie_rank_calibration_feasibility,
@@ -335,18 +338,6 @@ def _safe_family_id(family: str) -> str:
     return family.replace("-", "_").replace("/", "_")
 
 
-def _ensure_nonempty_feature_columns(
-    matrix: np.ndarray,
-    *,
-    rng: np.random.Generator,
-) -> np.ndarray:
-    fixed = np.asarray(matrix, dtype=int).copy()
-    n_samples = fixed.shape[0]
-    for feature_index in np.where(fixed.sum(axis=0) == 0)[0]:
-        fixed[int(rng.integers(0, n_samples)), int(feature_index)] = 1
-    return fixed
-
-
 def _bernoulli_log_probability(
     matrix: np.ndarray,
     probabilities: np.ndarray | float,
@@ -500,7 +491,7 @@ def generate_binary_proposal_matrix(
         )
         feature_probabilities = np.mean(probability_matrix, axis=0)
         matrix = rng.binomial(1, probability_matrix)
-    matrix = _ensure_nonempty_feature_columns(matrix.astype(int), rng=rng)
+    matrix = ensure_nonempty_binary_feature_columns(matrix.astype(int), rng=rng)
     target_probability_matrix = np.full_like(
         np.asarray(matrix, dtype=float),
         base_probability,

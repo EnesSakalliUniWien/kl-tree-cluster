@@ -19,6 +19,10 @@ from benchmarks.diagnostics.calibration.reporting import (
     write_diagnostic_bundle,
 )
 from benchmarks.diagnostics.calibration.root.tie_rank.cli import parse_proposal_panel_args
+from benchmarks.diagnostics.calibration.root.tie_rank.comparison import (
+    partition_target_and_generated_rows,
+    row_bandwidth_gap_status,
+)
 
 SCHEMA_VERSION = "root_tie_rank_spectral_action_dominance_panel/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_spectral_action_dominance_panel_not_calibration"
@@ -97,12 +101,6 @@ class RootTieRankSpectralActionDominanceConfig:
     proposal_feasibility_rows_path: Path = DEFAULT_PROPOSAL_FEASIBILITY_ROWS
 
 
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
 def _finite_float(value: object) -> float:
     try:
         numeric = float(value)
@@ -138,29 +136,6 @@ def _string_value(row: pd.Series, column: str, default: str = "") -> str:
     if pd.isna(value):
         return default
     return str(value)
-
-
-def _is_observed_target(row: pd.Series) -> bool:
-    family = _string_value(row, "proposal_family", "")
-    role = _string_value(row, "calibration_role", "")
-    data_role = _string_value(row, "data_role", "")
-    return (
-        family == "observed_target"
-        or role == "observed_target_not_null_support"
-        or data_role == "observed_target"
-    )
-
-
-def _bandwidth_gap_status(target: pd.Series, generated: pd.Series) -> str:
-    target_band = _string_value(target, "root_bandwidth_reopen_band")
-    generated_band = _string_value(generated, "root_bandwidth_reopen_band")
-    if target_band == generated_band:
-        return "bandwidth_band_match"
-    if generated_band == "bandwidth_reopen_missing":
-        return "generated_bandwidth_unmeasured"
-    if target_band == "bandwidth_reopen_missing":
-        return "target_bandwidth_unmeasured"
-    return "bandwidth_band_mismatch"
 
 
 def _dominance_pattern(
@@ -216,7 +191,7 @@ def _dominance_record(target: pd.Series, generated: pd.Series) -> dict[str, obje
     full_dominates = bool(
         tie_dominates and selected_ratio_dominates and edge_dominates and spectral_dominates
     )
-    bandwidth_status = _bandwidth_gap_status(target, generated)
+    bandwidth_status = row_bandwidth_gap_status(target, generated)
     bandwidth_measured_match = bandwidth_status == "bandwidth_band_match"
     score = (
         tie_deficit
@@ -268,9 +243,9 @@ def build_root_tie_rank_spectral_action_dominance_rows(
     combined_feasibility_rows: pd.DataFrame,
 ) -> pd.DataFrame:
     """Return best continuous-dominance row for each target and proposal family."""
-    _require_columns(
+    targets, generated = partition_target_and_generated_rows(
         combined_feasibility_rows,
-        {
+        required_columns={
             "case_id",
             "calibration_role",
             "proposal_family",
@@ -280,12 +255,8 @@ def build_root_tie_rank_spectral_action_dominance_rows(
             "root_edge_path_statistic_margin",
             "root_selected_eigenvalue_over_mp_upper_bound",
         },
-        "combined feasibility rows",
+        label="combined feasibility rows",
     )
-    rows = combined_feasibility_rows.copy()
-    target_mask = rows.apply(_is_observed_target, axis=1)
-    targets = rows[target_mask].copy()
-    generated = rows[~target_mask].copy()
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
         for family, family_rows in generated.groupby("proposal_family", sort=True):

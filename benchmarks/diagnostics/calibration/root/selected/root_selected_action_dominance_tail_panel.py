@@ -22,10 +22,7 @@ from benchmarks.diagnostics.calibration.reporting import (
     print_diagnostic_output_paths,
     write_diagnostic_bundle,
 )
-from benchmarks.diagnostics.calibration.root.root_tail_values import (
-    finite_float,
-    is_observed_target,
-)
+from benchmarks.diagnostics.calibration.root.root_tail_values import finite_float
 from benchmarks.diagnostics.calibration.root.selected.cli import (
     parse_action_support_panel_args,
 )
@@ -33,8 +30,7 @@ from benchmarks.diagnostics.calibration.root.selected.root_selected_spectral_tai
     DEFAULT_RESULT_ROOT,
 )
 from benchmarks.diagnostics.calibration.root.selected.root_tail_action_support import (
-    annotate_root_tail_support,
-    calibration_support_rows,
+    prepare_root_tail_action_support,
     root_tail_coordinates,
     string_value,
 )
@@ -101,12 +97,6 @@ class RootSelectedActionDominanceTailConfig:
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated"
 
 
-def _require_columns(frame: pd.DataFrame, columns: set[str], label: str) -> None:
-    missing = columns - set(frame.columns)
-    if missing:
-        raise ValueError(f"{label} missing required columns: {sorted(missing)!r}.")
-
-
 def _exact_support_mask(support: pd.DataFrame, target: dict[str, object]) -> pd.Series:
     return (
         support["_tie_band"].eq(str(target["tie_band"]))
@@ -142,28 +132,8 @@ def build_root_selected_action_dominance_tail_rows(
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated",
 ) -> pd.DataFrame:
     """Build one-sided action-dominance tail diagnostic rows."""
-    _require_columns(
+    targets, support = prepare_root_tail_action_support(
         joined_feasibility_rows,
-        {
-            "case_id",
-            "data_role",
-            "calibration_role",
-            "proposal_family",
-            "root_sibling_selected_ratio",
-            "root_tie_rank_median_fraction",
-            "root_edge_path_statistic_margin",
-            "root_selected_eigenvalue_over_mp_upper_bound",
-        },
-        "joined feasibility rows",
-    )
-    rows = joined_feasibility_rows.copy()
-    if "root_bandwidth_reopen_band" not in rows.columns:
-        rows["root_bandwidth_reopen_band"] = ""
-    if "root_mixed_region_component" not in rows.columns:
-        rows["root_mixed_region_component"] = "root_component_missing"
-    targets = rows.loc[rows.apply(is_observed_target, axis=1)].copy()
-    support = annotate_root_tail_support(
-        calibration_support_rows(rows),
         h_u_population_law_status=h_u_population_law_status,
     )
     records: list[dict[str, object]] = []
