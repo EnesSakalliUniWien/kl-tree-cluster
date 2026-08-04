@@ -4,8 +4,29 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 import pandas as pd
+
+
+def json_default(value: Any) -> Any:
+    """Serialize standard scRNA report values without changing their schema."""
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.floating):
+        return float(value)
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, Path):
+        return str(value)
+    return str(value)
+
+
+def top_counts_text(values: pd.Series, n: int = 8) -> str:
+    """Return the most frequent string values in stable report form."""
+    counts = values.astype(str).value_counts()
+    return "; ".join(f"{label}:{count}" for label, count in counts.head(n).items())
 
 
 def sha256_file(path: Path) -> str:

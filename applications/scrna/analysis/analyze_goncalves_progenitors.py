@@ -26,6 +26,8 @@ import pandas as pd
 import requests
 from scipy import sparse
 
+from applications.scrna._shared import json_default, top_counts_text
+
 DEFAULT_OUTPUT_DIR = (
     Path(__file__).resolve().parents[3]
     / "raw"
@@ -47,18 +49,6 @@ SIGNATURES: dict[str, list[str]] = {
     "blood": ["ALAS2", "HBG1"],
 }
 ALL_MARKERS = sorted({marker for markers in SIGNATURES.values() for marker in markers})
-
-
-def _json_default(value: Any) -> Any:
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, Path):
-        return str(value)
-    return str(value)
 
 
 def _query_symbol(symbol: str) -> list[str]:
@@ -167,11 +157,6 @@ def entropy(counts: np.ndarray) -> float:
         return 0.0
     probabilities = values[values > 0] / total
     return float(-(probabilities * np.log(probabilities)).sum())
-
-
-def top_counts_text(values: pd.Series, n: int = 8) -> str:
-    counts = values.astype(str).value_counts()
-    return "; ".join(f"{label}:{count}" for label, count in counts.head(n).items())
 
 
 def summarize_group(
@@ -662,9 +647,9 @@ def main() -> None:
         "progenitor_populations": sorted(PROGENITOR_POPULATIONS),
     }
     (output_dir / "goncalves_progenitor_analysis_manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True, default=_json_default)
+        json.dumps(manifest, indent=2, sort_keys=True, default=json_default)
     )
-    print(json.dumps(manifest, indent=2, sort_keys=True, default=_json_default))
+    print(json.dumps(manifest, indent=2, sort_keys=True, default=json_default))
     print("\nTop population rows:")
     print(
         population_df[

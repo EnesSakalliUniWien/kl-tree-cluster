@@ -58,6 +58,8 @@ from tree_break_selection.tree.continuous_distance import (
 )
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 
+from applications.scrna._shared import json_default
+
 DATA_URL = "https://www.dropbox.com/s/qj1jlm9w10wmt0u/pancreas.h5ad?dl=1"
 AMBIGUOUS_LABELS = {
     "not applicable",
@@ -110,18 +112,6 @@ class MethodConfig:
 
 def _project_root() -> Path:
     return Path(__file__).resolve().parents[2]
-
-
-def _json_default(value: Any) -> Any:
-    if isinstance(value, np.integer):
-        return int(value)
-    if isinstance(value, np.floating):
-        return float(value)
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, Path):
-        return str(value)
-    return str(value)
 
 
 def _prepare_adata(input_h5ad: Path, output_dir: Path, n_pcs: int) -> Any:
@@ -408,7 +398,7 @@ def _score_labels(
     row: dict[str, object] = {
         "method": method_label,
         "method_id": method_id,
-        "params": json.dumps(params, sort_keys=True, default=_json_default),
+        "params": json.dumps(params, sort_keys=True, default=json_default),
         "significance_level": params.get("_significance_level"),
         "edge_alpha": params.get("_edge_alpha"),
         "status": status,
@@ -656,9 +646,9 @@ def _branch_time_multipliers(
 
 def _serialize_trace_value(value: object) -> object:
     if isinstance(value, tuple | list):
-        return json.dumps(list(value), default=_json_default)
+        return json.dumps(list(value), default=json_default)
     if isinstance(value, dict):
-        return json.dumps(value, sort_keys=True, default=_json_default)
+        return json.dumps(value, sort_keys=True, default=json_default)
     return value
 
 
@@ -995,7 +985,7 @@ def _write_distance_time_model_analysis(
         tree_table = "_No TBS tree diagnostics were produced._"
 
     adaptive_text = (
-        json.dumps(adaptive_metadata, indent=2, sort_keys=True, default=_json_default)
+        json.dumps(adaptive_metadata, indent=2, sort_keys=True, default=json_default)
         if adaptive_metadata is not None
         else "adaptive diffusion distance was unavailable in this run"
     )
@@ -1449,7 +1439,7 @@ def _write_report(
         else "_No TBS tree summaries were produced._"
     )
     adaptive_summary = (
-        json.dumps(adaptive_metadata, sort_keys=True, default=_json_default)
+        json.dumps(adaptive_metadata, sort_keys=True, default=json_default)
         if adaptive_metadata is not None
         else "adaptive diffusion distance unavailable"
     )
@@ -1642,7 +1632,7 @@ def main() -> None:
         "tbs_branch_time_sensitivity_rows": length_sensitivity_rows,
     }
     (output_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True, default=_json_default)
+        json.dumps(manifest, indent=2, sort_keys=True, default=json_default)
     )
     _write_report(
         output_dir=output_dir,

@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 
+from applications.scrna._shared import top_counts_text
+
 METHOD_KEY = "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001"
 
 SIGNATURES: dict[str, list[str]] = {
@@ -94,11 +96,6 @@ def output_dir() -> Path:
         / "benchmark-results"
         / "pancreas_scrna_cluster_benchmark_20260623"
     )
-
-
-def top_counts_text(values: pd.Series, n: int = 8) -> str:
-    counts = values.astype(str).value_counts()
-    return "; ".join(f"{key}:{value}" for key, value in counts.head(n).items())
 
 
 def read_expression(adata_path: Path) -> tuple[pd.DataFrame, pd.Series]:
