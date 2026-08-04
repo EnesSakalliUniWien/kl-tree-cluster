@@ -543,10 +543,10 @@ renamed, or promoted.
   loadings before clustering; a binary feature-side `Q_B sqrt(Lambda_B)`
   subspace diagnostic now exposes that feature leaves are not yet supported by
   the current gate equations.
-- [[cosine-band-coherence-comparator-20260615]] - current-framework diagnostic
-  comparator for the c2ef fixed cosine-band sweep and biological coherence
-  checks; keeps the historical band labels but marks outputs diagnostic-only,
-  not production calibration.
+- [[cosine-band-coherence-comparator-20260615]] - archived evidence for the
+  retired c2ef fixed cosine-band sweep and biological-coherence study; the
+  historical labels and captured outputs are preserved, but no executable
+  comparator remains.
 - [[old-vs-current-method-stack-comparison-20260615]] - corrected old/current
   comparison over bandwidths, calibration strategies, heuristic guards, and
   traversal laws, identifying the old topology-aware sibling-null bandwidth
